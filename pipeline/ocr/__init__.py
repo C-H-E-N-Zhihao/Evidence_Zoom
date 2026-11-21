@@ -105,7 +105,7 @@ def _locate_with(spans, field, side, left, right):
         s = inline[0]
         if s["confidence"] < .8:
             return None
-        return {**s, "text": s["text"].split(":", 1)[1].strip()}
+        return {**s, "text": s["text"].split(":", 1)[1].strip()}, s["text"].split(":", 1)[0].strip()
     if matches[0]["confidence"] < .8:
         return None
     label = matches[0]["box"]
@@ -116,23 +116,31 @@ def _locate_with(spans, field, side, left, right):
         overlap = min(bottom, candidate_bottom) - max(top, candidate_top)
         if span["box"][0] > label[2] and overlap > .4 * (bottom - top):
             values.append(span)
-    return values[0] if len(values) == 1 and values[0]["confidence"] >= .8 else None
+    if len(values) == 1 and values[0]["confidence"] >= .8:
+        return values[0], matches[0]["text"].strip().rstrip(":").strip()  # (value span, printed field label)
+    return None
 
 
-def locate(spans, field, side):
-    """Value span for `field` of vehicle `side`, or None. Tries every header pair; answers only if exactly
-    one distinct value is found (two pairs disagreeing = ambiguous = None). If the built-in rules find no
-    header pair at all, a declarative template (pipeline/templates) may read the layout instead."""
+def locate_labeled(spans, field, side):
+    """(value span, printed label text) for `field` of vehicle `side`, or None. Tries every header pair; answers
+    only if exactly one distinct value is found (two pairs disagreeing = ambiguous = None). If the built-in rules
+    find no header pair at all, a declarative template (pipeline/templates) may read the layout instead."""
     found = {}
     pairs = header_pairs(spans)
     for left, right in pairs:
         v = _locate_with(spans, field, side, left, right)
         if v is not None:
-            found[v["text"]] = v
+            found[v[0]["text"]] = v
     if not pairs:
         from pipeline import templates
-        return templates.field(spans, field, side)
+        return templates.field_labeled(spans, field, side)
     return next(iter(found.values())) if len(found) == 1 else None
+
+
+def locate(spans, field, side):
+    """Value span (the OCR span itself) for `field` of vehicle `side`, or None."""
+    v = locate_labeled(spans, field, side)
+    return v[0] if v else None
 
 
 # Each worker keeps recent recognition results in memory. Cache spans, never page images.
@@ -178,8 +186,10 @@ def answer(image, question):
             result.route[0].note = "Reused page OCR" if reused else "Recognized page locally"
             span = None
             response = None
+            label_text = None
             if field:
-                span = locate(spans, *field)
+                found = locate_labeled(spans, *field)
+                span, label_text = found if found else (None, None)
                 if span:
                     response = span["text"]
                     if field[0] in ("policy", "registration"):
@@ -189,13 +199,13 @@ def answer(image, question):
                         span = span if response else None
             else:
                 # Require readable values in both columns to establish uniqueness.
-                insurers = [locate(spans, "insurer", side) for side in "ab"]
-                if all(insurers):
+                labeled = [locate_labeled(spans, "insurer", side) for side in "ab"]
+                if all(labeled):
                     target = insurer.group(1).strip().casefold()
-                    matches = [(side, value) for side, value in zip("AB", insurers)
+                    matches = [(side, value, lab) for side, (value, lab) in zip("AB", labeled)
                                if value["text"].strip().casefold() == target]
                     if len(matches) == 1:
-                        response, span = matches[0]
+                        response, span, label_text = matches[0]
         except (OSError, subprocess.SubprocessError, ValueError) as exc:
             result.error = str(exc)
             span = None
@@ -203,7 +213,9 @@ def answer(image, question):
         if span:
             result.answer = response
             result.abstained = False
-            result.evidence_boxes.append(EvidenceBox(span["box"], source="ocr", label=result.answer))
+            # label = the printed field label that located the value (e.g. "Policy number"), so a reader can see
+            # WHICH line answered, not just a box (message 124). None if no label span was matched.
+            result.evidence_boxes.append(EvidenceBox(span["box"], source="ocr", label=label_text))
             result.route.append(RouteStep("answer", box=span["box"]))
             return result
     result.route.append(RouteStep("fallback", target="overview", note="Visual inspection required"))

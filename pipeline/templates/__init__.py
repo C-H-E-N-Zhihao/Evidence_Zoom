@@ -41,6 +41,13 @@ def match(spans: list[dict]) -> Optional[dict]:
 
 # ---- fields ----------------------------------------------------------------------------------------------
 def field(spans: list[dict], name: str, side: str) -> Optional[dict]:
+    """Value span (the OCR span itself), or None."""
+    v = field_labeled(spans, name, side)
+    return v[0] if v else None
+
+
+def field_labeled(spans: list[dict], name: str, side: str):
+    """(value span, printed label text), or None."""
     t = match(spans)
     if t is None or name not in t["fields"] or t["field_value"] != "below":
         return None
@@ -57,7 +64,9 @@ def field(spans: list[dict], name: str, side: str) -> Optional[dict]:
     below = [s for s in spans if _key(s["text"]) not in all_labels
              and lb[0] - 0.01 <= s["box"][0] <= lb[0] + 0.03          # left-aligned with the label
              and lb[3] - 0.002 <= s["box"][1] <= lb[3] + 0.03]        # directly below it
-    return below[0] if len(below) == 1 and below[0]["confidence"] >= 0.8 else None
+    if len(below) == 1 and below[0]["confidence"] >= 0.8:
+        return below[0], labels[order.index(side)]["text"].strip().rstrip(":").strip()
+    return None
 
 
 # ---- anchor layout -----------------------------------------------------------------------------------------
