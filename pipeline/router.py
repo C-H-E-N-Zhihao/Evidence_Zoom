@@ -15,6 +15,7 @@ are always charged. A stage that is missing or raises is recorded in `route`/`er
 Eval harness:  python -m eval.run_eval --items ... --pipelines pipeline.router:factory
 App:           PIPELINE=pipeline.router uvicorn app.server:app
 Env: ROUTER_SKIP_OCR=1 disables the OCR stage (ablation: visual path alone).
+     ROUTER_ANCHOR=1 inserts the OCR-anchored crop (pipeline.anchor) between OCR and the overview.
      ROUTER_REQUIRE_OCR=1 raises if the OCR helper is unavailable (use for paid runs: without it the
      OCR-answerable questions silently go to the paid visual path).
 
@@ -78,7 +79,10 @@ def _is_fallback(r: PipelineResult) -> bool:
     return r.error is not None and r.error != "refusal"
 
 
-def answer(image, question: str) -> PipelineResult:
+def answer(image, question: str, anchor: bool | None = None) -> PipelineResult:
+    """anchor: also try the OCR-anchored crop (pipeline.anchor) before the overview; default from ROUTER_ANCHOR=1."""
+    if anchor is None:
+        anchor = os.environ.get("ROUTER_ANCHOR") == "1"
     prior: PipelineResult | None = None
     notes: list[str] = []
 
@@ -104,6 +108,20 @@ def answer(image, question: str) -> PipelineResult:
         prior = PipelineResult(None, abstained=True, pipeline=NAME)
         prior.route.append(RouteStep("fallback", target="overview", note="; ".join(notes) or "OCR skipped"))
 
+    if anchor:  # OCR answer -> anchor crop (one zoom call, region from the layout) -> overview
+        anc, err = _stage("pipeline.anchor")
+        if anc is None:
+            notes.append(err)
+        else:
+            try:
+                prior = anc(image, question, prior=prior)
+            except Exception as e:
+                notes.append(f"pipeline.anchor raised {type(e).__name__}: {e}")
+            else:
+                if not _is_fallback(prior):
+                    prior.pipeline = NAME
+                    return prior
+
     visual, err = _stage("pipeline.visual")
     if visual is None:
         prior.answer, prior.abstained = None, True
@@ -119,6 +137,13 @@ def answer(image, question: str) -> PipelineResult:
         return prior
     result.pipeline = NAME
     return result
+
+
+def factory_anchor():
+    """run_eval: `--pipelines pipeline.router:factory_anchor` (OCR -> anchor crop -> overview)."""
+    from eval.pipelines.compose import from_answer_fn
+
+    return from_answer_fn(lambda image, question: answer(image, question, anchor=True), NAME + "+anchor")
 
 
 def factory():

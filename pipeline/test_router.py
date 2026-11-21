@@ -87,8 +87,30 @@ def run():
     except RuntimeError:
         pass
     del os.environ["ROUTER_REQUIRE_OCR"]
+
+    # anchor stage (ROUTER_ANCHOR / anchor=True): answers -> no overview; falls back -> overview continues
+    router.ensure_ocr_bin = lambda: "stub"
+
+    def _anchor_hit(image, question, prior=None):
+        prior.route += [RouteStep("zoom", target="anchor:ticks"), RouteStep("answer")]
+        prior.answer, prior.abstained = "8", False
+        return prior
+
+    def _anchor_miss(image, question, prior=None):
+        prior.route.append(RouteStep("fallback", target="overview", note="no OCR anchor"))
+        return prior
+
+    _install("pipeline.ocr", _ocr_fallback); _install("pipeline.visual", _visual); _install("pipeline.anchor", _anchor_hit)
+    r = router.answer(None, "q", anchor=True)
+    assert [s.step for s in r.route] == ["ocr", "fallback", "zoom", "answer"] and r.answer == "8", r.route
+    r = router.answer(None, "q")  # default off: anchor not used
+    assert "zoom" in [s.step for s in r.route] and r.answer == "10, 16"
+    _install("pipeline.anchor", _anchor_miss)
+    r = router.answer(None, "q", anchor=True)
+    assert [s.step for s in r.route] == ["ocr", "fallback", "fallback", "overview", "zoom", "answer"], r.route
+    sys.modules.pop("pipeline.anchor", None)
     router.ensure_ocr_bin = real_ensure; _clear()
-    print("router: 8 checks passed")
+    print("router: 11 checks passed")
 
 
 if __name__ == "__main__":
