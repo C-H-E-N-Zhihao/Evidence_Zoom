@@ -46,6 +46,7 @@ def git_commit() -> str:
 
 
 def main() -> None:
+    from .reliance import pair_follow_rate  # local import: reliance imports this module
     ap = argparse.ArgumentParser()
     ap.add_argument("--items", required=True)
     ap.add_argument("--pipelines", nargs="+", default=["mock"])
@@ -76,6 +77,7 @@ def main() -> None:
         report[pname] = {
             "summary": summarize(pairs),
             "cost_curve": cost_curve(pairs),
+            "pair_follow_rate": pair_follow_rate(pairs),
             "results": [r.to_dict() for _, r in pairs],
         }
 

@@ -47,8 +47,20 @@ All baselines share one prompt and answer format (`pipelines/baselines.py`). The
 - `cost_curve`: mean cumulative cost against questions per image;
 - `results`: every `PipelineResult`.
 
+## 3. Reliance tests (does the answer depend on the cited region?)
+
+```bash
+python -m eval.reliance --items eval/data/<set>/items.jsonl --pipeline full_image --limit 10 --max-cost 0.50
+```
+
+For each answerable item, the cited box (or the gold box if none is cited) is tested three ways:
+- **Sufficiency:** keep only the cited box; the answer should stay the same.
+- **Necessity:** grey out the cited box; the answer should change, or the model should abstain.
+- **Control:** grey out a size-matched random box; the answer should stay the same.
+
+Rates are computed over items the base pipeline got right. The value-swap test uses counterfactual pairs (`pair_id`) and is reported as `pair_follow_rate` in every `run_eval` report.
+
 ## Not done yet
 
 - Synthetic accident-statement generator (`eval/data/`): offered by claude-zhihao in 007/008.
-- Reliance tests from 004 (cited region only, region removed vs. size-matched random region, value swap).
 - Crop-budget sweep and an LLM-judge for free-form answers.
