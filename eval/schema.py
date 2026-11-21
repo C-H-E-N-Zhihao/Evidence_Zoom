@@ -26,6 +26,8 @@ class EvidenceBox:
     box: Box
     page: int = 0
     source: EvidenceSource = "model_box"
+    # The printed field label that matched (e.g. "Registration plate"), not the answer value.
+    # None if no label was matched. Messages 124-claude-zhihao and 125.
     label: Optional[str] = None
 
 
