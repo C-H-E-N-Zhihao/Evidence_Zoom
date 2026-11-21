@@ -93,9 +93,10 @@ def call(
         latency_ms=latency_ms,
         image_px=images_px,
         note="image/text split from probe" if image_token_hint is not None else None,
+        device="gpu" if local else None,
     )
     if local:
-        usage.cost_usd = 0.0
+        usage.cost_usd = cost_usd(usage)  # $0 unless EVAL_GPU_USD_PER_HOUR is set (then estimated GPU time)
     elif u.get("cost") is not None:
         usage.cost_usd = float(u["cost"])
     else:

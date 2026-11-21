@@ -73,6 +73,18 @@ def t_pricing() -> None:
     check("opus cache read $0.20 + write 1.25x", abs(cost_usd(u) - (0.20 + 5.0)) < 1e-9)
     u = Usage(0, "local", "Apple Vision OCR", latency_ms=600)
     check("local is $0 and not estimated", cost_usd(u) == 0 and not u.estimated)
+    import os
+
+    g = Usage(0, "local", "Qwen", latency_ms=3_600_000, device="gpu")
+    check("local GPU $0 by default", cost_usd(g) == 0)
+    os.environ["EVAL_GPU_USD_PER_HOUR"] = "2.0"
+    try:
+        g = Usage(0, "local", "Qwen", latency_ms=1_800_000, device="gpu")
+        c = Usage(0, "local", "OCR", latency_ms=1_800_000, device="cpu")
+        check("GPU priced at assumed rate, marked estimated", abs(cost_usd(g) - 1.0) < 1e-9 and g.estimated)
+        check("CPU-local stays $0 under a GPU rate", cost_usd(c) == 0)
+    finally:
+        del os.environ["EVAL_GPU_USD_PER_HOUR"]
     u = Usage(0, "openrouter", "unknown/model", input_text_tokens=10)
     check("unknown API model flagged estimated", cost_usd(u) == 0 and u.estimated)
 

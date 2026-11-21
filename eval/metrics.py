@@ -115,6 +115,7 @@ def summarize(pairs: list[tuple[EvalItem, PipelineResult]]) -> dict:
             "input_text_tokens": sum(u.input_text_tokens for _, r in ps for u in r.usage),
             "cache_read_tokens": sum(u.cache_read_tokens for _, r in ps for u in r.usage),
             "output_tokens": sum(u.output_tokens for _, r in ps for u in r.usage),
+            "gpu_seconds": sum(u.latency_ms for _, r in ps for u in r.usage if u.device == "gpu") / 1000,
             "any_estimated": any(u.estimated for _, r in ps for u in r.usage),
         }
     return out

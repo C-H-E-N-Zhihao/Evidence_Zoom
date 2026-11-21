@@ -22,10 +22,29 @@ CACHE_WRITE_MULT = 1.25
 CACHE_READ_MULT = 0.10
 
 
+def gpu_usd_per_hour() -> float:
+    """Assumed hourly price of one self-hosted GPU, for pricing local model calls (EVAL_GPU_USD_PER_HOUR).
+
+    Default 0: local calls are reported as $0 plus GPU-seconds. Set it to a cloud on-demand rate to show what the
+    local route would cost on rented hardware; state the rate you used. One request at a time on one GPU makes
+    latency ~ GPU time; batching would lower it, queueing/tunnel overhead raises it.
+    """
+    import os
+
+    try:
+        return float(os.environ.get("EVAL_GPU_USD_PER_HOUR", "0") or 0)
+    except ValueError:
+        return 0.0
+
+
 def cost_usd(u: Usage) -> float:
     """Cost of one call. Local calls cost $0 (latency still counts). Unknown API models return 0.0 and are
     marked as estimated."""
     if u.provider == "local":
+        rate = gpu_usd_per_hour()
+        if u.device == "gpu" and rate > 0:
+            u.estimated = True  # wall-clock latency x an assumed hourly rate, not a bill
+            return u.latency_ms / 3.6e6 * rate
         return 0.0
     if u.model not in PRICES:
         u.estimated = True
