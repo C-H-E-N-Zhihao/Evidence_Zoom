@@ -78,8 +78,10 @@ def main() -> int:
     zoom = next((s for s in d["result"]["route"] if s["step"] == "zoom"), {})
     want = "anchor:ticks" if sys.platform == "darwin" else "full page"
     check(f"route is one zoom ({want}) -> answer, no overview", steps[-2:] == ["zoom", "answer"]
-          and "overview" not in steps and (zoom.get("target") or "").startswith(want), str(d["result"]["route"]))
-    check("one image returned (the crop sent)", [v["step"] for v in d["views"]] == ["zoom"], str(d["views"]))
+          and "overview" not in steps and (zoom.get("target") or "").startswith(want),
+          " > ".join(f"{s['step']}:{s.get('target')}" for s in d["result"]["route"]))
+    views = [(v["step"], v.get("px")) for v in d["views"]]
+    check("one image returned (the crop sent)", [v[0] for v in views] == ["zoom"], str(views))
     box = d["result"]["evidence_boxes"][0]["box"] if d["result"]["evidence_boxes"] else None
     gold = FIXTURES["eas-002a"]["items"][_qkey(TICKS)].evidence_boxes[0]
     check("evidence box lands on B's tick 8", box is not None and abs(box[1] - gold[1]) < 0.005,
