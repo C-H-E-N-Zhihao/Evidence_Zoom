@@ -30,8 +30,11 @@ async function init() {
   if (cfg.live) {
     $("banner").hidden = false;
     $("banner").innerHTML = `<b>Live demo.</b> <span class='src ocr'>LIVE OCR</span> answers are local ($0). ` +
-      `<span class='src model'>MODEL</span> answers come from a real call to <code>${cfg.model || "the model"}</code> ` +
-      `on the crop (or the full page when no template anchor applies); their cost is billed.` +
+      (String(cfg.model || "").startsWith("local:")
+        ? `<span class='src model'>MODEL</span> answers come from <code>${cfg.model.slice(6)}</code> running <b>on this laptop</b> ` +
+          `(no API call, $0, the document never leaves the machine), on the crop or the full page.`
+        : `<span class='src model'>MODEL</span> answers come from a real call to <code>${cfg.model || "the model"}</code> ` +
+          `on the crop (or the full page when no template anchor applies); their cost is billed.`) +
       (cfg.replay ? " If a live call fails, that answer is replayed from fixture labels and marked REPLAY." : "");
   } else if (cfg.replay) {
     $("banner").hidden = false;
@@ -148,6 +151,14 @@ $("ask").onsubmit = async (e) => {
 async function askQ(q) {
   $("q").value = ""; $("send").disabled = true;
   addQ(q);
+  // visible progress while a (possibly slow, on-device) model call runs
+  const wait = document.createElement("div"); wait.className = "msg-a waiting";
+  const who = !cfg.live ? "Running the route" : String(cfg.model || "").startsWith("local:")
+    ? `OCR, then ${cfg.model.slice(6)} on this laptop if pixels are needed` : `OCR, then ${cfg.model} if pixels are needed`;
+  const t0 = Date.now();
+  const tick = () => { wait.textContent = `${who}… ${((Date.now() - t0) / 1000).toFixed(0)} s`; };
+  tick(); const timer = setInterval(tick, 500);
+  $("chat").append(wait); wait.scrollIntoView({ block: "end" });
   try {
     const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ image_id: image.image_id, question: q }) });
@@ -166,7 +177,7 @@ async function askQ(q) {
     updateMeter();
   } catch (err) {
     addError(String(err));
-  } finally { $("send").disabled = false; $("q").focus(); }
+  } finally { clearInterval(timer); wait.remove(); $("send").disabled = false; $("q").focus(); }
 }
 
 function addQ(q) {

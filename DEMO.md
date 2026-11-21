@@ -53,6 +53,20 @@ It runs six offline checks and ends with `ALL CHECKS PASSED`:
 
 ---
 
+## Three ways to run it
+
+| command | visual answers from | needs | cost |
+|---|---|---|---|
+| `./scripts/demo.sh` | stored answers, **replayed** and labelled REPLAY | nothing | $0 |
+| `./scripts/demo-live.sh` | **Claude Haiku 5.5** via OpenRouter, labelled MODEL | `OPENROUTER_API_KEY` (env or git-ignored `.env`) | ≈ $0.0002 per visual question, capped by `APP_LIVE_MAX_USD` (default $1) |
+| `./scripts/demo-local.sh` | **Qwen2.5-VL-7B on this Mac** via Ollama, labelled MODEL | `brew install ollama`, `ollama serve`, `ollama pull qwen2.5vl:7b` (6 GB) | $0, and the document never leaves the machine |
+
+All three use local OCR for printed fields and fall back to the labelled replay if a model call fails.
+**On-device measurement** (Andrew's M3 Pro, 18 GB; layout 1, 96 questions; `eval/results/ondevice_qwen7b/`):
+83/96 correct: printed fields 48/48 (OCR), not-on-form 12/12 (abstained), B's ticks 10/12, "did A tick 8" 8/12,
+sketch 5/12. Each model call takes ~9 s (median) and up to ~23 s, so the app shows a waiting line while it works.
+Present the tick questions on-device; the sketch question is answered better by Haiku (live mode).
+
 ## Presenting: the guided tour
 
 Click **▶ Guided tour** (top bar). Each **Next ▶** performs one step of the judge script below (pick the form, ask,

@@ -101,3 +101,4 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 16px; pa
 .claim-limits { color: var(--muted); }
 .claim-src { font-size: 11px; color: var(--muted); }
 .claims-about { font-size: 13px; color: var(--muted); }
+.waiting { color: var(--muted); font-style: italic; }
