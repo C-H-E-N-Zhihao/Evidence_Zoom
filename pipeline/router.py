@@ -15,7 +15,8 @@ are always charged. A stage that is missing or raises is recorded in `route`/`er
 Eval harness:  python -m eval.run_eval --items ... --pipelines pipeline.router:factory
 App:           PIPELINE=pipeline.router uvicorn app.server:app
 Env: ROUTER_SKIP_OCR=1 disables the OCR stage (ablation: visual path alone).
-     ROUTER_ANCHOR=1 inserts the OCR-anchored crop (pipeline.anchor) between OCR and the overview.
+     ROUTER_ANCHOR=0 removes the OCR-anchored crop stage (pipeline.anchor) between OCR and the overview
+     (default on, except under DEMO_REPLAY=1).
      ROUTER_REQUIRE_OCR=1 raises if the OCR helper is unavailable (use for paid runs: without it the
      OCR-answerable questions silently go to the paid visual path).
 
@@ -82,7 +83,14 @@ def _is_fallback(r: PipelineResult) -> bool:
 def answer(image, question: str, anchor: bool | None = None) -> PipelineResult:
     """anchor: also try the OCR-anchored crop (pipeline.anchor) before the overview; default from ROUTER_ANCHOR=1."""
     if anchor is None:
-        anchor = os.environ.get("ROUTER_ANCHOR") == "1"
+        # Default ON for real models (message 052: the anchor crop is the measured winner). Exception: when a
+        # replay/test oracle is installed (pipeline.visual.CALL_OVERRIDE: key-free demo, visual selftest,
+        # eval.scorecard) or DEMO_REPLAY=1. Those oracles expect the overview as the first model call, so the
+        # anchor stays off there unless ROUTER_ANCHOR=1 is set explicitly.
+        vis = sys.modules.get("pipeline.visual")
+        oracle = vis is not None and getattr(vis, "CALL_OVERRIDE", None) is not None
+        default = "0" if oracle or os.environ.get("DEMO_REPLAY") == "1" else "1"
+        anchor = os.environ.get("ROUTER_ANCHOR", default) == "1"
     prior: PipelineResult | None = None
     notes: list[str] = []
 
@@ -139,8 +147,15 @@ def answer(image, question: str, anchor: bool | None = None) -> PipelineResult:
     return result
 
 
+def factory_no_anchor():
+    """run_eval: `--pipelines pipeline.router:factory_no_anchor` (OCR -> overview, the pre-052 route)."""
+    from eval.pipelines.compose import from_answer_fn
+
+    return from_answer_fn(lambda image, question: answer(image, question, anchor=False), NAME + "-anchor")
+
+
 def factory_anchor():
-    """run_eval: `--pipelines pipeline.router:factory_anchor` (OCR -> anchor crop -> overview)."""
+    """run_eval: `--pipelines pipeline.router:factory_anchor` (OCR -> anchor crop -> overview; = factory by default)."""
     from eval.pipelines.compose import from_answer_fn
 
     return from_answer_fn(lambda image, question: answer(image, question, anchor=True), NAME + "+anchor")

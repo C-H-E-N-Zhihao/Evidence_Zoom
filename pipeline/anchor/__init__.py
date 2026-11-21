@@ -189,13 +189,16 @@ def regions(question: str, lay: Layout) -> Optional[Selection]:
         n = int(m.group(1) or m.group(2))
         if n not in lay.rows:
             return None
-        lo, hi = max(1, n - 1), min(17, n + 1)
+        ctx = int(os.environ.get("ANCHOR_CONTEXT_ROWS", "1"))  # rows shown above/below row N
+        lo, hi = max(1, n - ctx), min(17, n + ctx)
         label = (lay.label_x0 - 0.008, min(0.5, lay.label_x1.get(n, lay.label_x0 + 0.25) + 0.01))
         return Selection([(lay.rows[lo][0] - pad, lay.rows[hi][1] + pad)], [col, label], "tick_row",
-                         f"driver {side.upper()}'s tick boxes for circumstances {lo}-{hi}, next to their labels (same rows)")
+                         f"driver {side.upper()}'s tick boxes for circumstances {lo}-{hi}, next to their labels (same rows); "
+                         f"look at the box on the row labelled {n}: a mark inside means ticked, an empty box means not ticked")
     num = (lay.label_x0 - 0.008, lay.label_x0 + 0.035)
     return Selection([(lay.rows[1][0] - pad, lay.rows[17][1] + pad)], [col, num], "ticks",
-                     f"driver {side.upper()}'s tick boxes next to the circumstance numbers 1-17 (same rows)")
+                     f"driver {side.upper()}'s tick boxes next to the circumstance numbers 1-17 (same rows); "
+                     "a mark inside a box means ticked, an empty box means not ticked")
 
 
 MIN_DESKEW_DEG, MAX_DESKEW_DEG = 0.7, 10.0

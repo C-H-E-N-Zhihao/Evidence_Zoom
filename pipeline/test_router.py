@@ -103,14 +103,20 @@ def run():
     _install("pipeline.ocr", _ocr_fallback); _install("pipeline.visual", _visual); _install("pipeline.anchor", _anchor_hit)
     r = router.answer(None, "q", anchor=True)
     assert [s.step for s in r.route] == ["ocr", "fallback", "zoom", "answer"] and r.answer == "8", r.route
-    r = router.answer(None, "q")  # default off: anchor not used
-    assert "zoom" in [s.step for s in r.route] and r.answer == "10, 16"
+    r = router.answer(None, "q")  # default on: anchor used
+    assert r.answer == "8", r.route
+    os.environ["DEMO_REPLAY"] = "1"  # demo replay: default off
+    r = router.answer(None, "q")
+    assert r.answer == "10, 16", r.route
+    del os.environ["DEMO_REPLAY"]
+    r = router.answer(None, "q", anchor=False)
+    assert r.answer == "10, 16", r.route
     _install("pipeline.anchor", _anchor_miss)
     r = router.answer(None, "q", anchor=True)
     assert [s.step for s in r.route] == ["ocr", "fallback", "fallback", "overview", "zoom", "answer"], r.route
     sys.modules.pop("pipeline.anchor", None)
     router.ensure_ocr_bin = real_ensure; _clear()
-    print("router: 11 checks passed")
+    print("router: 13 checks passed")
 
 
 if __name__ == "__main__":
