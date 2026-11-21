@@ -10,4 +10,4 @@
 
 This is the development layout: the anchor and OCR rules were written while looking at these forms. The
 generalisation check is the held-out layout v2 (`../e2e_heldout_v2/`), run from tag `freeze-anchor-ocr-v1`.
-Raw: `run_20261121-160458.json` (7B), `run_20261121-160810.json` (72B).
+Raw: `run_20261121-160458.json` (7B, HEAD recorded f3a5fef), `run_20261121-160810.json` (72B, HEAD recorded b42ece9). `pipeline/ocr`, `pipeline/anchor` and `pipeline/router.py` are identical at both commits (no changes between them); the 055 q5 note came later (0b2a138).
