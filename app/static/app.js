@@ -180,6 +180,13 @@ function addA(data, i, ours) {
     ? (result.error ? "No answer: " + result.error : "Cannot answer from the available evidence.")
     : result.answer;
   head.append(src, txt);
+  // which printed line answered (message 124): the OCR'd field label, or an explicit "not verified" for model answers
+  if (!result.abstained) {
+    const lab = (result.evidence_boxes || []).map((e) => e.label).find(Boolean);
+    const from = document.createElement("div"); from.className = "route";
+    from.textContent = lab ? `from the line labelled "${lab}"` : (source === "ocr" ? "" : "field label not verified");
+    if (from.textContent) head.append(from);
+  }
   if (data.live_error) {
     const le = document.createElement("div"); le.className = "route";
     le.textContent = "live call failed (" + data.live_error.slice(0, 120) + "); " +
@@ -268,6 +275,10 @@ function draw() {
     const [x0, y0, x1, y1] = e.box;
     ctx.lineWidth = 3; ctx.strokeStyle = e.source === "ocr" ? css("--ocr") : css("--zoom");
     ctx.strokeRect(x0 * W - 2, y0 * H - 2, (x1 - x0) * W + 4, (y1 - y0) * H + 4);
+    if (e.label) {  // caption: the printed label that located this value
+      ctx.font = "600 11px ui-sans-serif, system-ui"; ctx.fillStyle = ctx.strokeStyle;
+      ctx.fillText(e.label, x0 * W, Math.max(11, y0 * H - 5));
+    }
   });
 }
 
