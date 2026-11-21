@@ -14,15 +14,16 @@
    **full page** instead: the frugal path only exists for configured templates.
 3. **Grounded answer.** The answer comes back with a box on the original page, so a human can check it.
 
-This branch runs **without any API key**. OCR is real. The vision model's replies are **replayed** from the
-answers stored with each test form, and every replayed answer is labelled as such.
+By default the demo runs **without any API key**. OCR is real. The vision model's replies are **replayed** from the
+answers stored with each test form, and every replayed answer is labelled as such. A labelled **live mode** also
+exists (`DEMO_LIVE=1` with an OpenRouter key; see `app/README.md`), checked end to end on Andrew's Mac.
 
 ---
 
 ## Run it (macOS, about 2 minutes the first time)
 
 ```bash
-git clone -b demo/human-readable git@github.com:Andrew1207-Yang/LauzHack.git evidence-zoom
+git clone git@github.com:Andrew1207-Yang/LauzHack.git evidence-zoom
 cd evidence-zoom
 ./scripts/demo.sh
 ```
@@ -46,7 +47,8 @@ It runs six offline checks and ends with `ALL CHECKS PASSED`:
 | OCR field lookup | reading a field next to its label; refusing partial or uncertain IDs |
 | router unit checks | OCR → visual hand-off, error handling (stubbed stages) |
 | visual path geometry | on 96 test questions, grid → selected cells → crop → box mapped back to the page lands exactly on the true evidence (IoU 1.0) |
-| eval harness | ~40 unit checks on scoring, pricing and guards, plus an end-to-end run |
+| eval harness unit checks | ~40 checks on scoring, pricing and guards |
+| eval harness end to end | a mock run over the demo questions |
 | demo smoke test | the exact judge script below, through the app's HTTP API |
 
 ---
@@ -90,6 +92,20 @@ with and without prompt caching. **All costs are estimates** from token arithmet
    Optional: on **`layout 2 · eas2-001`** the policy number is *not* answered by OCR. Vision reads `J1-…` for
    `JI-…`, and the look-alike guard sends it to the page instead of risking a wrong ID.
 
+## Measured, billed (OpenRouter receipts; synthetic forms)
+
+- Accident statement, 96 questions: Haiku 5.5 on our route **96/96 for $0.0098**; Sonnet 5.5 on the cached whole
+  page **96/96 for $0.2425** (24.7× lower API charge). Same model (Sonnet on both sides): $0.162 vs $0.243; the
+  saving is the 48 questions OCR answers locally.
+- Second configured layout, 12 new forms generated after the template was frozen: route **96/96 for $0.010**,
+  original page 93/96 for $0.052 (Haiku on both sides).
+- Five unconfigured layouts, 416 questions: all went to a full-page call; Haiku 401 through the router, 397 from
+  the original page. The cost difference there comes from the page resolution, not routing.
+- Total API spend for all experiments: about $1.50 of the $10 credit.
+
+Sources and limits: `docs/NARRATIVE.md` §3. The app's session meter is a per-question **estimate**; the figures
+above are receipts.
+
 ## What is real, what is replayed, what is estimated
 
 | | status |
@@ -97,12 +113,12 @@ with and without prompt caching. **All costs are estimates** from token arithmet
 | OCR answers and their boxes | **real**: Apple Vision on your machine |
 | routing decision, anchor selection, crop (or full page), box mapping | **real** code path |
 | the vision model's reply (the answer and its box) | **replayed** from the test form's stored answer (`pipeline/visual/replay.py`) |
-| token counts and $ | **estimated** (~width × height / 750 tokens per image; list prices in `eval/pricing.py`) |
+| token counts and $ | **estimated**, calibrated on billed usage (~width × height / 800 tokens per image, no downscale; list prices in `eval/pricing.py`) |
 
 Measured results, their limits and their provenance are in `docs/NARRATIVE.md` (the reviewed source for any
-number you quote). In short: on this one form template, OCR answers the printed fields locally and the
-template-anchored crop lets a small model answer the visual questions; on an unseen layout and on other
-document types the anchors find nothing and the page fallback applies.
+number you quote). In short: on the configured templates (the accident statement and a second layout), OCR
+answers the printed fields locally and the anchored crop lets a small model answer the visual questions; on
+layouts and document types we did not configure, the anchors find nothing and the page fallback applies.
 
 ---
 
@@ -111,7 +127,8 @@ document types the anchors find nothing and the page fallback applies.
 | path | what |
 |---|---|
 | `app/` | web app (FastAPI + one HTML page): `server.py`, `static/` |
-| `pipeline/router.py` | router@v2: OCR answer → anchored crop (`pipeline/anchor/`) → full-page fallback |
+| `pipeline/router.py` | router v3: OCR answer → anchored crop (`pipeline/anchor/`) → full-page fallback |
+| `pipeline/templates/` | declarative per-layout templates (short config + one generic engine) used when the built-in rules cannot read a layout |
 | `pipeline/ocr/` | OCR route (Apple Vision helper + field lookup) |
 | `pipeline/visual/` | crop stitching (`View`), `zoom_answer`, overview path (not the default); `replay.py` = key-free stand-in for the model |
 | `eval/` | evaluation harness, test forms (`eval/data/accident_statement/`), scorecard |
