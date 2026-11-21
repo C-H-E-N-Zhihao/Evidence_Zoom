@@ -12,13 +12,18 @@ A pipeline is any callable (item, image) -> PipelineResult; `ocr` and the router
 from __future__ import annotations
 
 import json
+import os
 import re
 from typing import Callable, Optional
 
 from PIL import Image
 
-from ..backends import anthropic_backend as ab
+from .. import backends
 from ..schema import EvalItem, EvidenceBox, PipelineResult, RouteStep
+
+# Model strings: "claude-…" (Anthropic), "or:<openrouter id>", "local:<served model>" (see eval/backends/__init__.py).
+# Override the default for a whole run with EVAL_MODEL, e.g. EVAL_MODEL=or:google/gemini-2.5-flash.
+DEFAULT_MODEL = os.environ.get("EVAL_MODEL", "claude-opus-5-5")
 
 Pipeline = Callable[[EvalItem, Image.Image], PipelineResult]
 
@@ -61,13 +66,14 @@ def _ask(
     step: str,
     region: tuple[float, float, float, float] = (0.0, 0.0, 1.0, 1.0),
     cache: bool = False,
-    model: str = ab.DEFAULT_MODEL,
+    model: str = DEFAULT_MODEL,
 ) -> PipelineResult:
     res = PipelineResult(answer=None, pipeline=name, question_id=item.question_id, image_id=item.image_id)
     res.route.append(RouteStep(step=step, box=list(region), note=f"{img.width}x{img.height}px"))
-    content = [ab.image_block(img, cache=cache), {"type": "text", "text": item.question}]
+    be, _ = backends.get(model)
+    content = [be.image_block(img, cache=cache), {"type": "text", "text": item.question}]
     try:
-        text, usage, stop = ab.call(content, step_index=0, system=SYSTEM, model=model,
+        text, usage, stop = be.call(content, step_index=0, system=SYSTEM, model=model,
                                     images_px=[[img.width, img.height]])
     except Exception as e:  # recorded, not raised: a failed call is a result
         res.error = f"{type(e).__name__}: {e}"
@@ -84,12 +90,12 @@ def _ask(
     return res
 
 
-def full_image(cache: bool = False, model: str = ab.DEFAULT_MODEL) -> Pipeline:
+def full_image(cache: bool = False, model: str = DEFAULT_MODEL) -> Pipeline:
     name = f"full_image{'_cached' if cache else ''}"
     return lambda item, img: _ask(item, img, name=name, step="overview", cache=cache, model=model)
 
 
-def lowres(long_side: int = 512, model: str = ab.DEFAULT_MODEL) -> Pipeline:
+def lowres(long_side: int = 512, model: str = DEFAULT_MODEL) -> Pipeline:
     def run(item: EvalItem, img: Image.Image) -> PipelineResult:
         s = min(1.0, long_side / max(img.size))
         small = img.resize((max(1, round(img.width * s)), max(1, round(img.height * s))), Image.LANCZOS)
@@ -97,7 +103,7 @@ def lowres(long_side: int = 512, model: str = ab.DEFAULT_MODEL) -> Pipeline:
     return run
 
 
-def gold_crop(pad: float = 0.05, model: str = ab.DEFAULT_MODEL) -> Pipeline:
+def gold_crop(pad: float = 0.05, model: str = DEFAULT_MODEL) -> Pipeline:
     """Union of gold boxes + `pad` (fraction of image size) on each side, native pixels, no resizing."""
     def run(item: EvalItem, img: Image.Image) -> PipelineResult:
         if not item.evidence_boxes:  # unanswerable items have no gold box: fall back to the full image
@@ -130,7 +136,7 @@ def _crop(img: Image.Image, region: tuple[float, float, float, float]) -> Image.
                      round(region[2] * img.width), round(region[3] * img.height)))
 
 
-def gold_crop_px(side_px: int, model: str = ab.DEFAULT_MODEL) -> Pipeline:
+def gold_crop_px(side_px: int, model: str = DEFAULT_MODEL) -> Pipeline:
     """Crop-budget sweep: fixed-size native-pixel window around the gold evidence."""
     def run(item: EvalItem, img: Image.Image) -> PipelineResult:
         name = f"gold_crop_px{side_px}"
@@ -147,7 +153,7 @@ OVERVIEW_CROP_NOTE = (
 )
 
 
-def overview_plus_gold_crop(overview_px: int = 512, crop_px: int = 384, model: str = ab.DEFAULT_MODEL) -> Pipeline:
+def overview_plus_gold_crop(overview_px: int = 512, crop_px: int = 384, model: str = DEFAULT_MODEL) -> Pipeline:
     """Upper bound for the 006 policy at this budget: overview + the *correct* crop, in one call.
     The gap between this and the model-selected crop is the price of finding the region (006)."""
     def run(item: EvalItem, img: Image.Image) -> PipelineResult:
@@ -162,9 +168,10 @@ def overview_plus_gold_crop(overview_px: int = 512, crop_px: int = 384, model: s
         res.route += [RouteStep(step="overview", note=f"{ov.width}x{ov.height}px"),
                       RouteStep(step="zoom", box=list(region), note=f"gold, {crop.width}x{crop.height}px")]
         note = OVERVIEW_CROP_NOTE.format(region=[round(v, 3) for v in region])
-        content = [ab.image_block(ov), ab.image_block(crop), {"type": "text", "text": f"{note}\n\n{item.question}"}]
+        be, _ = backends.get(model)
+        content = [be.image_block(ov), be.image_block(crop), {"type": "text", "text": f"{note}\n\n{item.question}"}]
         try:
-            text, usage, stop = ab.call(content, step_index=1, system=SYSTEM, model=model,
+            text, usage, stop = be.call(content, step_index=1, system=SYSTEM, model=model,
                                         images_px=[[ov.width, ov.height], [crop.width, crop.height]])
         except Exception as e:
             res.error = f"{type(e).__name__}: {e}"

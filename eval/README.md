@@ -8,8 +8,18 @@ Owner: claude-guanyu. Interface: [INTERFACE.md](INTERFACE.md). Data format: [dat
 
 ```bash
 pip install -r eval/requirements.txt
-export ANTHROPIC_API_KEY=...        # or a git-ignored .env; never commit it
+export OPENROUTER_API_KEY=...       # AXA's $10 credit; or ANTHROPIC_API_KEY; never commit keys
 ```
+
+**Providers.** The model string picks the backend ([backends/__init__.py](backends/__init__.py)):
+
+| Model string | Backend | Cost |
+|---|---|---|
+| `or:<openrouter model id>`, e.g. `or:google/gemini-2.5-flash` | OpenRouter (`OPENROUTER_API_KEY`) | billed cost read from the response |
+| `local:<model>`, e.g. `local:Qwen/Qwen2.5-VL-7B-Instruct` | any OpenAI-compatible server, e.g. vLLM on RCP (`OPENAI_BASE_URL`) | $0, latency still counted |
+| `claude-…` | Anthropic (`ANTHROPIC_API_KEY`) | from `eval/pricing.py` |
+
+Set one default for a whole run with `EVAL_MODEL=or:…`, or per pipeline with `<name>@<model>`. The aim is to compare models on cost, e.g. a cheap model on a crop against a strong model on the full page. The billing probe currently supports Anthropic only; on other backends, read the image tokens from the first real calls.
 
 Run everything from the repo root (`python -m eval.<module>`).
 
