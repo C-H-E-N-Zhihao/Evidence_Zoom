@@ -18,8 +18,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 os.chdir(ROOT)
-os.environ.setdefault("PIPELINE", "pipeline.router")
-os.environ.setdefault("DEMO_REPLAY", "1")
+# Pinned, not defaulted: an inherited live configuration must not change what this test exercises.
+os.environ["PIPELINE"] = "pipeline.router"
+os.environ["DEMO_REPLAY"] = "1"
 
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -47,7 +48,11 @@ def main() -> int:
     cfg = c.get("/api/config").json()
     print(f"pipeline={cfg['pipeline']} replay={cfg['replay']} fixture pairs={len(cfg['pairs'])}")
     check("replay mode on", cfg["replay"] is True)
+    check("router pipeline", cfg["pipeline"] == "pipeline.router", cfg["pipeline"])
     check("fixture eas-002 present", "eas-002a" in FIXTURES and "eas-002b" in FIXTURES)
+    if failures:  # wrong configuration: the remaining checks would test the wrong thing
+        print("\nsmoke test: ABORTED, configuration checks failed:", failures)
+        return 1
 
     a = c.post("/api/images/fixture/eas-002a").json()["image_id"]
     b = c.post("/api/images/fixture/eas-002b").json()["image_id"]
