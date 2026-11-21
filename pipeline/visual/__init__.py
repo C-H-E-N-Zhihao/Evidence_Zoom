@@ -358,6 +358,63 @@ def answer(
     return finish(d, view, "zoom", shown)
 
 
+def zoom_answer(
+    image: Image.Image,
+    question: str,
+    row_spans: list[Span],
+    col_spans: list[Span],
+    prior: Optional[PipelineResult] = None,
+    *,
+    model: str = DEFAULT_MODEL,
+    max_crop_side: int = 1568,
+    look_for: str = "",
+    target: str = "selected regions",
+    call: Optional[Callable] = None,
+    name: str = "zoom_answer",
+) -> PipelineResult:
+    """One zoom call on regions chosen by someone else (e.g. an OCR-anchored selector), no overview.
+
+    row_spans / col_spans: normalized [(y0, y1), ...] / [(x0, x1), ...] on the ORIGINAL image. Several spans
+    give the same row-aligned mosaic as a model-chosen selection. The route gets a "zoom" step whose box is
+    the bounding box of the selection (score it with eval.metrics.zoom_coverage), then answer/abstain.
+    """
+    injected = call or CALL_OVERRIDE
+    if injected is not None:
+        from eval.backends.anthropic_backend import image_block
+        call_fn = injected
+    else:
+        from eval.backends import get
+        be, _ = get(model)
+        image_block, call_fn = be.image_block, be.call
+    res = prior if prior is not None else PipelineResult(answer=None)
+    res.pipeline = (f"{prior.pipeline}+" if prior is not None and prior.pipeline else "") + name
+    view = View(image.convert("RGB"), row_spans, col_spans, max_side=max_crop_side)
+    system = SYSTEM_ZOOM.replace("{grid_note}", _NO_GRID_NOTE + (_MOSAIC_NOTE if view.mosaic else ""))
+    text = f"Question: {question}\nWhat to inspect: {look_for or 'the evidence for the question'}"
+    res.route.append(RouteStep(step="zoom", target=target, box=[round(v, 4) for v in view.bounds],
+                               note=f"{view.image.width}x{view.image.height}px to {model}"
+                                    + (" mosaic" if view.mosaic else "")))
+    if VIEW_SINK is not None:
+        VIEW_SINK("zoom", view.image)
+    try:
+        reply, usage, stop = call_fn([image_block(view.image), {"type": "text", "text": text}],
+                                     step_index=len(res.route) - 1, system=system, model=model,
+                                     images_px=[[view.image.width, view.image.height]])
+    except Exception as e:
+        res.error, res.answer, res.abstained = f"{type(e).__name__}: {e}", None, True
+        res.route.append(RouteStep(step="abstain", note="zoom call failed"))
+        return res
+    res.usage.append(usage)
+    d = parse(reply)
+    ans = d.get("answer")
+    abstain = stop == "refusal" or bool(d.get("abstain")) or ans is None or d.get("action") == "zoom"
+    res.answer, res.abstained = (None if abstain else str(ans)), abstain
+    boxes = view.boxes_to_orig(normalize_box(d["box"], view.image)) if _valid_box(d.get("box")) and not abstain else []
+    res.route.append(RouteStep(step="abstain" if abstain else "answer", box=boxes[0] if boxes else None))
+    res.evidence_boxes += [EvidenceBox(box=b, source="zoom") for b in boxes]
+    return res
+
+
 # ---------------------------------------------------------------------------------------- eval factories
 def eval_pipeline(**cfg):
     """(item, image) -> PipelineResult, for eval/run_eval.py."""
