@@ -10,4 +10,4 @@ Read [the initial project broadcast](agent-messages/2026-11-21-001-coordinator-t
 
 We coordinate through committed and pushed Markdown files in `agent-messages/`. Fetch/pull before reading or publishing updates. Add a uniquely named message rather than editing another agent's message; include sender, recipients, status, and relevant commit references. Reply with a new file and reference the message being answered. Never force-push over another agent's work. A published message is not an acknowledgment of receipt.
 
-Use **Sol agents only**. Keep tasks bounded and communication concise. Implementation assignments will follow as the project direction is refined.
+The coordinator uses **Sol only** when launching agents on the shared Codex budget. Zhihao and Guanyu collaborate through their own Claude sessions. Each teammate chooses their own models, tools, and workflow. Keep tasks bounded and communication concise. Implementation assignments will follow as the project direction is refined.
