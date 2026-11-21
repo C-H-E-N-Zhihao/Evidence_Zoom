@@ -22,14 +22,22 @@ from typing import Optional
 from eval.schema import EvidenceBox, PipelineResult, RouteStep, Usage
 
 MAX_LINES = 220
+# Size rule (realdocs_v1, d3ade46): for a small image, sending the image costs less than sending its OCR text plus the
+# text step's prompt and longer JSON answer. Image tokens ~ w*h/800 (app/costs.py calibration); the text step costs its
+# text (~chars/4) plus about TEXT_STEP_OVERHEAD input-equivalent tokens (system prompt ~400 + extra output ~120 tokens
+# priced ~5x input). If the image is cheaper, skip the text step and send the page.
+TEXT_STEP_OVERHEAD = 1000
+PIXELS_PER_TOKEN = 800.0
 BAND_ABOVE, BAND_BELOW = 0.30, 0.30  # crop band around the named lines (page fractions). Drawings sit above their
 # labels (axis labels, legends, keys) as often as below their question text: homework_v2 held-out, 8264c05.
 
 SYSTEM_TEXT = (
     "You answer questions about an image using ONLY its OCR text, given as numbered lines [L1], [L2], ... in reading "
     "order. If the lines contain what is needed, answer and cite the ids of the lines you used (at most 6). Put only "
-    "the short answer in \"answer\" (a number, word or short phrase); for tutoring questions (solve, explain, check my "
-    "work) add a short step-by-step explanation in \"explanation\" (at most 60 words). If the answer depends on "
+    "the shortest answer in \"answer\", copied exactly as the page writes it (same words, numbers and spelling; no "
+    "added units, articles like \"the\", or comments; if OCR garbled a word, give the intended word). For tutoring "
+    "questions (solve, explain, check my work) add a short step-by-step explanation in \"explanation\" (at most 60 "
+    "words); any other comment also goes there, never in \"answer\". If the answer depends on "
     "something OCR cannot capture, do not guess: ask for the image and list the ids of the lines nearest to what must "
     "be looked at. That includes: a drawing, diagram, map, graph, chart or picture; which cell of a table is empty or "
     "where things sit in a table or grid; a tick, cross, circle, highlight, sticker, line or arrow (OCR often reads a "
@@ -83,7 +91,8 @@ def _band(boxes: list[list[float]]) -> tuple[float, float]:
 
 
 def answer(image, question: str, prior: Optional[PipelineResult] = None, model: Optional[str] = None,
-           call=None, text_step: bool = True, thumb_px: Optional[int] = None) -> PipelineResult:
+           call=None, text_step: bool = True, thumb_px: Optional[int] = None,
+           size_rule: Optional[bool] = None) -> PipelineResult:
     """text_step=False skips the OCR-text call and sends the whole page: for small models that do not reliably ask
     for pixels when text is not enough (Qwen2.5-VL-7B: REPORT_homework_v3_qwen7b.md). OCR still runs (boxes, $0)."""
     from pipeline.ocr import recognize_page
@@ -113,6 +122,17 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
     res.usage.append(Usage(len(res.route) - 1, "local", "Apple Vision OCR", latency_ms=(time.perf_counter() - t0) * 1000))
 
     look_for, named = "", None
+    if size_rule is None:
+        size_rule = os.environ.get("GENERAL_SIZE_RULE", "1") != "0"
+    if lines and text_step and size_rule:
+        img_tok = image.width * image.height / PIXELS_PER_TOKEN
+        txt_tok = sum(len(s["text"]) + 6 for s in lines) / 4 + TEXT_STEP_OVERHEAD
+        if img_tok <= txt_tok:
+            res.route.append(RouteStep("fallback", target="image",
+                                       note=f"small image: whole page (~{img_tok:.0f} tok) is cheaper than its OCR text "
+                                            f"(~{txt_tok:.0f} tok)"))
+            return zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=res, model=model,
+                               look_for="the evidence for the question", target="full page", call=call, name="page")
     if lines and not text_step:
         res.route.append(RouteStep("fallback", target="image", note="small model: whole page (text step off)"))
         return zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=res, model=model,

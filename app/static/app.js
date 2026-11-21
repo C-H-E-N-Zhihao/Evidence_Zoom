@@ -251,6 +251,10 @@ function explain(data) {
       `~${inTok} input tokens${est} instead of ~${pageTok} (estimated) for the whole page, ${pct}% fewer` +
       (t.includes("deskew") ? "; the tilted page was straightened first." : ".");
   }
+  const small = r.route.find((st) => /^small image/.test(st.note || ""));
+  if (t === "full page" && small)
+    return `This image is small, so sending it whole (${size}, ~${inTok} input tokens${est}) costs less than sending its OCR ` +
+      `text and asking first; OCR still ran locally.`;
   if (t === "full page" && r.route.some((st) => /text step off/.test(st.note || "")))
     return `Small on-device models did not reliably tell when OCR text is not enough (measured on Qwen2.5-VL-7B), so this one was sent the whole page ` +
       `(${size}, ~${inTok} input tokens${est}); OCR still ran locally for the green boxes.`;
