@@ -29,6 +29,38 @@ def answer_correct(item: EvalItem, res: PipelineResult) -> bool:
     return any(pred == g or (g and re.search(rf"\b{re.escape(g)}\b", pred)) for g in golds)
 
 
+def _lev(a: str, b: str) -> int:
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
+        prev = cur
+    return prev[-1]
+
+
+def anls(item: EvalItem, res: PipelineResult, tau: float = 0.5) -> float:
+    """Average Normalized Levenshtein Similarity, the DocVQA metric (Biten et al., 2019), for one item.
+
+    max over gold variants of 1 - NL(pred, gold), set to 0 when NL >= tau; strings lower-cased and whitespace-collapsed.
+    Our extension for unanswerable items (not in DocVQA): 1 if the pipeline abstained, else 0. Abstaining on an
+    answerable item scores 0. Report it next to `accuracy` (substring match), which is more lenient on long answers.
+    """
+    if not item.answerable:
+        return 1.0 if res.abstained else 0.0
+    if res.abstained or res.answer is None:
+        return 0.0
+    pred = " ".join(res.answer.lower().split())
+    best = 0.0
+    for g in [item.answer, *item.accepted_answers]:
+        if not g:
+            continue
+        g = " ".join(g.lower().split())
+        nl = _lev(pred, g) / max(len(pred), len(g), 1)
+        best = max(best, 1.0 - nl if nl < tau else 0.0)
+    return best
+
+
 def iou(a: list[float], b: list[float]) -> float:
     ix = max(0.0, min(a[2], b[2]) - max(a[0], b[0]))
     iy = max(0.0, min(a[3], b[3]) - max(a[1], b[1]))
@@ -95,6 +127,7 @@ def summarize(pairs: list[tuple[EvalItem, PipelineResult]]) -> dict:
         out[g] = {
             "n": len(ps),
             "accuracy": mean(correct) if correct else None,
+            "anls": mean(anls(i, r) for i, r in ps) if ps else None,
             "evidence_hit@0.3": mean(hits) if hits else None,
             "evidence_iou_mean": mean(ious) if ious else None,
             "joint_answer_evidence": mean(joint) if joint else None,

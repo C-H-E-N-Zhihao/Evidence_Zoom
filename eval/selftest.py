@@ -47,6 +47,13 @@ def t_metrics() -> None:
     check("accepted variant", answer_correct(item("10, 15", acc=["10 and 15"]), res("10 and 15")))
     check("abstain on answerable is wrong", not answer_correct(item("B"), res(None, abst=True)))
     check("abstain on unanswerable is right", answer_correct(item(None, ok=False, boxes=[]), res(None, abst=True)))
+    from .metrics import anls
+    check("ANLS exact (case, spaces) = 1", anls(item("Total  Due"), res("total due")) == 1.0)
+    check("ANLS one typo in 10 chars = 0.9", abs(anls(item("1234567890"), res("1234567891")) - 0.9) < 1e-9)
+    check("ANLS below threshold = 0", anls(item("cat"), res("dog")) == 0.0)
+    check("ANLS best accepted variant", anls(item("ten", acc=["10"]), res("10")) == 1.0)
+    check("ANLS abstain on answerable = 0, on unanswerable = 1",
+          anls(item("B"), res(None, abst=True)) == 0.0 and anls(item(None, ok=False, boxes=[]), res(None, abst=True)) == 1.0)
     check("answer on unanswerable is wrong", not answer_correct(item(None, ok=False, boxes=[]), res("123")))
     check("iou identical", abs(iou([0, 0, 1, 1], [0, 0, 1, 1]) - 1) < 1e-9)
     check("iou disjoint", iou([0, 0, .1, .1], [.5, .5, .6, .6]) == 0)
