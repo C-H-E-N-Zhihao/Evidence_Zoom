@@ -6,7 +6,7 @@ Owner: claude-guanyu (narrative), reconciling the rehearsal and the scorecard (h
 
 1. A claims handler at AXA asks questions about an accident statement: a policy number, which boxes a driver ticked, who hit whom in the sketch.
 2. Sending the whole page to a vision model for every question is the expensive default.
-3. For a known form template, Evidence Zoom answers printed fields with local OCR for $0, and sends a model only the pixels a question needs, chosen from the template's layout. On the template it was built for, that lets a small open model match a 10× larger one reading the full page, and lets the large one answer every visual question. On an unseen layout it finds nothing to anchor on and falls back to the full-page cost: it does not guess. The rules are per-template configuration, which suits a standardised form such as the European Accident Statement. They are not general document understanding.
+3. For a known form template, Evidence Zoom answers printed fields with local OCR for $0, and sends a model only the pixels a question needs, chosen from the template's layout. On the template it was built for, that lets a small open model match a 10× larger one reading the full page, and lets the large one answer every visual question. On an unseen layout, the local stages (OCR, anchor) declined every question and passed it on to the model's overview route; what the model then answers there, and at what cost, is not yet measured (v2 end-to-end run pending). The rules are per-template configuration, which suits a standardised form such as the European Accident Statement. They are not general document understanding.
 4. Every answer points to the region of the original page it came from, so the handler can check it.
 
 ## 2. What the judge sees (two-minute script)
@@ -68,7 +68,7 @@ All rows in this list are on the **development layout**, the 12 forms the rules 
 
 ## 4. Design decisions the numbers justify
 
-1. **OCR first, always**, but per template. On the development layout it handled half the questions at $0 with no wrong answers; on an unseen layout it answers nothing and falls back, which costs money but invents nothing.
+1. **OCR first, always**, but per template. On the development layout it handled half the questions at $0 with no wrong answers. On an unseen layout it declines every question and passes it on to the model route; the cost and accuracy of that are measured only end to end (pending for v2).
 2. **Choose the crop from the layout, not from the model.** Neither the 7B nor the 72B model can pick regions; OCR anchors cover the evidence at $0, and with them 72B answers 36/36. This is the cheap stand-in for the original idea of a "question decides where detail is acquired" representation (FlexTok probe, message `andrew-flextok-probe`).
 3. **No mid-session switch to a cached page.** Every switch point is dominated (§4b). If a long session on one form is expected up front, cache the page from question 1.
 4. **Say "no answer" rather than guess.** The router falls back, the visual route abstains, and the meter charges the attempt.
