@@ -55,7 +55,7 @@ It runs four offline checks and ends with `ALL CHECKS PASSED`:
    You see the **LIVE OCR** badge, the policy number, a green box on it in the page, and the route
    `ocr → answer` at **$0**.
 3. Click **"Which circumstance boxes did driver B tick?"**
-   You see the **REPLAY** badge and the answer **8**. The route is `fallback → overview → zoom → answer`.
+   You see the **REPLAY** badge and the answer **8**. The route is `OCR not enough → overview → zoom → answer`.
    Under the answer are the two images that would be sent to a model: the gridded **overview** (434×536 px)
    and the **zoom mosaic**, with the row numbers stitched next to driver B's tick column. On the page, a pink
    box marks the tick.

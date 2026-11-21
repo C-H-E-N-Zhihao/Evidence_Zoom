@@ -139,7 +139,8 @@ function addA(data, i, ours) {
   result.route.forEach((s, k) => {
     if (k) route.insertAdjacentHTML("beforeend", '<span class="arrow">→</span>');
     const c = document.createElement("span"); c.className = `chip ${s.step}`;
-    c.textContent = s.target ? `${s.step} ${s.target.length > 18 ? s.target.slice(0, 18) + "…" : s.target}` : s.step;
+    c.textContent = s.step === "fallback" ? "OCR not enough"
+      : s.target ? `${s.step} ${s.target.length > 18 ? s.target.slice(0, 18) + "…" : s.target}` : s.step;
     c.title = [s.target, s.note].filter(Boolean).join(" · ");
     route.append(c);
   });
