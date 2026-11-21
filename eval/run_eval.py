@@ -110,7 +110,9 @@ def code_provenance() -> dict:
     try:
         tree = git("rev-parse", "HEAD:pipeline")
         frozen = git("rev-parse", f"{FREEZE_TAG}^{{commit}}:pipeline")
-        dirty = {d: bool(git("status", "--porcelain", "--", d)) for d in ("pipeline", "eval")}
+        # eval/results/ holds run outputs and reports, not code: excluded from the dirty check
+        dirty = {"pipeline": bool(git("status", "--porcelain", "--", "pipeline")),
+                 "eval": bool(git("status", "--porcelain", "--", "eval", ":(exclude)eval/results"))}
         return {"pipeline_tree": tree[:12], "pipeline_dirty": dirty["pipeline"], "eval_dirty": dirty["eval"],
                 "freeze_tag": FREEZE_TAG, "pipeline_equals_freeze": bool(tree) and tree == frozen
                 and not dirty["pipeline"]}
