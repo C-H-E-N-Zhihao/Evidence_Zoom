@@ -98,3 +98,12 @@ Rates are computed over items the base pipeline got right. The value-swap test u
 python -m eval.run_eval --items eval/data/accident_statement/items.jsonl --degrade phone_photo \
     --pipelines pipeline.router:factory full_image_cached --max-cost 1.00
 ```
+
+## Model-free stages
+
+`checkbox_pixels` wraps andrew-ocr's classical checkbox reader (`experiments/checkbox_pixels.py`; needs numpy and scipy). It costs $0, its local latency is recorded, and it hands off with `fallback` when it cannot answer. A three-stage chain of OCR, then pixel ticks, then the model:
+
+```bash
+python -m eval.run_eval --items eval/data/accident_statement/items.jsonl --max-cost 0.01 --pipelines \
+    "cascade:fn:pipeline.ocr:answer|cascade:checkbox_pixels|pipeline.visual:factory" pipeline.router:factory
+```

@@ -231,7 +231,14 @@ def as_app_answer(pipe: Pipeline) -> Callable[[Image.Image, str], dict]:
     return answer
 
 
+def _checkbox_pixels():
+    from .external import checkbox_pixels
+
+    return checkbox_pixels()
+
+
 REGISTRY: dict[str, Callable[[], Pipeline]] = {
+    "checkbox_pixels": _checkbox_pixels,
     "mock": lambda: mock,
     "full_image": lambda: full_image(cache=False),
     "full_image_cached": lambda: full_image(cache=True),
