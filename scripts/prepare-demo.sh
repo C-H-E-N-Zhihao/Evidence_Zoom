@@ -12,3 +12,6 @@ if [[ ! -f "$stamp" || "$(<"$stamp")" != "$requirements" ]]; then
 fi
 [ -f eval/data/accident_statement/items.jsonl ] || .venv/bin/python -m eval.data.accident_statement.generate
 [ -f app/static/sample.png ] || .venv/bin/python -m app.make_sample
+# layout 3 fresh forms (images are not committed; regenerated from the committed seed, checked against images.sha256)
+[ -f eval/data/accident_statement_v3b/images/eas3b-001a.png ] || EAS3_SEED=7777 EAS3_OUT=eval/data/accident_statement_v3b \
+  EAS3_PREFIX=eas3b .venv/bin/python -m eval.data.accident_statement_v3.generate

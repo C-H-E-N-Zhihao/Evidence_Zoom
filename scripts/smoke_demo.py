@@ -92,6 +92,24 @@ def main() -> int:
     d = ask(c, b, TICKS)
     check("answer changes to 7", d["result"]["answer"] == "7", repr(d["result"]["answer"]))
 
+    print("3b. layout 3 (template from one example)")
+    if sys.platform != "darwin":
+        print("  [SKIP] OCR/template needs macOS")
+    elif "eas3b-002a" in FIXTURES:
+        r3 = c.post("/api/images/fixture/eas3b-002a").json()["image_id"]
+        d = ask(c, r3, POLICY)
+        gold3 = FIXTURES["eas3b-002a"]["items"][_qkey(POLICY)].answer
+        check("layout 3 policy is LIVE OCR via the template", d["source"] == "ocr" and d["result"]["answer"] == gold3,
+              f"{d['source']} {d['result']['answer']!r} vs {gold3!r}")
+        check("evidence names its printed label", any(e.get("label") for e in d["result"]["evidence_boxes"]),
+              str([e.get("label") for e in d["result"]["evidence_boxes"]]))
+        d = ask(c, r3, TICKS)
+        zoom = next((s for s in d["result"]["route"] if s["step"] == "zoom"), {})
+        check("layout 3 ticks use the template crop", (zoom.get("target") or "").startswith("anchor:ticks"),
+              str(zoom.get("target")))
+    else:
+        print("  [SKIP] v3b fixtures missing (run scripts/prepare-demo.sh)")
+
     print("4. question without a fixture label")
     d = ask(c, b, "Is there a dog in the picture?")
     check("NO ANSWER, nothing invented", d["source"] == "unavailable" and d["result"]["answer"] is None,
