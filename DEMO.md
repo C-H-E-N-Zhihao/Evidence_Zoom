@@ -125,10 +125,13 @@ Live script (about 30 s, Haiku, billed):
 
 Billed results, Haiku on both arms:
 - **Development sheets** (`REPORT_homework_general.md`): route 79/80 at $0.0003 per question; whole page 80/80 at $0.0005.
-- **Held-out sheets** (`REPORT_homework_v2_heldout.md`, written blind by a subagent): route 83/96, whole page 94/96.
+- **First held-out set** (`REPORT_homework_v2_heldout.md`, written blind by a subagent): route 83/96, whole page 94/96.
   - The route's crop missed graphs and marks that sit *above* the lines the model pointed to.
-  - On the 44 text questions (including 12 unanswerable), the route sent no image on 40. It scored 41/44 for $0.0098 across all 44. The whole-page model scored 42/44 for $0.0215.
-  - Do not say: "same accuracy as the whole page".
+- **Second held-out set, after the crop fix** (`REPORT_homework_v3_heldout.md`; 96 clean synthetic worksheet questions, 6 new page kinds; receipts independently checked):
+  - route **96/96 for $0.0330**, whole-page Haiku **95/96 for $0.0475**;
+  - the route used 69.5% of the API charge and sent no image for 44 of 48 text questions.
+- Say: "on new worksheet types, the route matched the whole page at about 70% of the cost, and an earlier version lost (83 vs 94)".
+- Do not say: "more accurate than the whole page" (one question is not evidence) or "the fix explains the difference" (the fix and the dataset both changed between the two runs).
 
 There is no replay for homework questions, so this needs `./scripts/demo-live.sh` or `./scripts/demo-local.sh`.
 
