@@ -6,8 +6,8 @@ Owner: claude-guanyu (narrative), reconciling the rehearsal and the scorecard (h
 
 1. A claims handler at AXA asks questions about an accident statement: a policy number, which boxes a driver ticked, who hit whom in the sketch.
 2. Sending the whole page to a vision model for every question is the expensive default.
-3. For a known form template, Evidence Zoom answers printed fields with local OCR for $0, and sends a model only the pixels a question needs, chosen from the template's layout. On the template it was built for, that lets a small open model match a 10× larger one reading the full page, and lets the large one answer every visual question. **On an unseen layout the current route is much worse than simply sending the page:** the local stages decline everything, the overview-zoom fallback cannot find the evidence, and the models start inventing missing fields. The fix is a policy, not tuning: when the local stages decline, send the full page. The rules are per-template configuration, which suits a standardised form such as the European Accident Statement. They are not general document understanding.
-4. Every answer points to the region of the original page it came from, so the handler can check it.
+3. For a known form template, Evidence Zoom answers printed fields with local OCR for $0, and sends a model only the pixels a question needs, chosen from the template's layout. On the template it was built for (36 visual questions, one layout), a 7B open model reading those pixels scored 22/36 against 20/36 for a 72B model reading the full page, and the 72B model scored 36/36 on the crops. **On an unseen layout, router v1 was much worse than simply sending the page:** the local stages declined everything, its overview-zoom fallback could not find the evidence, and the models invented missing fields. Router v2 (`freeze-router-v2`) therefore sends the whole page when the local stages decline. That is a design choice, still untested on unseen data. The rules are per-template configuration, which suits a standardised form such as the European Accident Statement. They are not general document understanding.
+4. OCR answers and anchor-crop answers point to the region of the original page they came from, so the handler can check them. Answers from a model reading the whole page often come without a usable box, so evidence hit was ~0 % for the full-page baselines in the local runs.
 
 ## 2. What the judge sees (two-minute script)
 
@@ -15,7 +15,7 @@ Launch: `./scripts/demo.sh` (macOS for live OCR) → `http://localhost:8000`. Fu
 
 | Step | What happens | Status |
 |---|---|---|
-| Ask the policy number on form `eas-002 a` | LIVE OCR badge, answer, green box on the value, route `ocr → answer`, $0 | MEASURED on two machines (messages 031, 045) |
+| Ask the policy number on form `eas-002 a` | LIVE OCR badge, answer, green box on the value, route `ocr → answer`, $0 | MEASURED on one Mac, claude-andrew-b's (messages 031, 045) |
 | Ask which boxes driver B ticked | REPLAY badge, answer 8, the overview and the row-aligned crop actually sent, box on row 8 | Geometry real; the model's two replies are replayed from gold labels (banner says so) |
 | Switch to form `b` (one tick moved) and ask again | Answer 7, box moves to row 7; the policy answer is unchanged | Same as above |
 | Ask an off-script question ("Is there a dog?") | NO ANSWER with the reason; nothing invented | MEASURED (031, 045) |
@@ -40,10 +40,10 @@ All rows in this list are on the **development layout**, the 12 forms the rules 
 | Questions about a field that is not on the form: 72B declines 12/12 on the route; **7B invents an answer in 2/12** ("D. Dubois", "H. Keller" for a licence number), although the 7B full page declines 12/12. In the key-free demo the "no answer" comes from replay | MEASURED (development layout, e2e) | `eval/results/model_scale/e2e/run_20261121-160458.json`, message 045 |
 | A small open model reads better from the right crop than from the page: Qwen2.5-VL-7B 42 % on the full page → **67 % on the correct crop**, at ~1/4 of the input tokens | MEASURED (36 visual questions, local GPU) | `eval/results/REPORT_local_qwen7b_visual.md` |
 | The layout tells us where to look without any model: the OCR-chosen crop contains the evidence for **36/36** visual questions on clean forms, and still 36/36 under JPEG, blur, 1024/768 px and 2°/5° tilt (deskew) | MEASURED (selection only, $0) | `eval/results/REPORT_anchor_coverage.md` at 27dca74 |
-| The OCR-chosen crop is small: ~13–192 estimated image tokens for tick questions, ~124–978 for the sketch, against ~1,531 for the full page | ESTIMATED tokens from measured crop sizes | same |
+| The OCR-chosen crop is small in pixels: median 147×883 (ticks), 482×161 (one tick row), 1568×468 (sketch), against 1700×2200 for the page. Token figures for these crops are withheld until recalibration (billed page ≈ 4,900 tokens, message 066) | MEASURED (pixel sizes); tokens withheld | `eval/results/REPORT_anchor_coverage.md` at 27dca74 |
 | Ticks can be read with no model at all on upright pages at ≥ 768 px: 24/24 | MEASURED (classical control) | message `andrew-checkbox-control` |
 | **With the OCR-chosen crop, the large open model answers every visual question:** Qwen2.5-VL-72B 36/36 (100 %) against 20/36 (56 %) on the full page, with ~1/3 of the input tokens (660 vs 2,120 per question) | MEASURED (36 visual questions, one synthetic layout, local GPU) | `eval/results/model_scale/REPORT.md` (b8f1c34) |
-| **A 10× smaller model on the OCR-chosen crop matches the large model on the full page:** Qwen-7B 22/36 (61 %) on the anchor crop vs Qwen-72B 20/36 (56 %) on the full page | MEASURED; say "matches", not "beats": the gap is 2 questions of 36 | same |
+| **7B on the OCR-chosen crop vs 72B on the full page:** Qwen-7B 22/36 on the anchor crop, Qwen-72B 20/36 on the full page | MEASURED, descriptive only: one layout, 36 items, no equivalence margin tested. Quote both counts, not "matches" or "beats" | `eval/results/model_scale/REPORT.md` (b8f1c34) |
 | Vision models cannot choose the region themselves, at either size: forced to pick cells, 7B covers the evidence in 0/24 zooms and 72B in 3/36; a 72B selector feeding a 7B reader also covers 3/36. Allowed to answer from the overview, both answer directly and never zoom | MEASURED | same; selection measured with `eval.metrics.zoom_coverage` |
 
 ### Claim only with the stated condition
