@@ -188,6 +188,17 @@ def ask(req: Ask):
                                    meta["questions"])
     meta["questions"] += 1
     providers = {u.get("provider") for u in result.get("usage", [])}
+    if result.get("abstained") and result.get("error") and not (providers - {"local", None}):
+        # The visual stage failed before any model call (no key / no fixture). A real run would still pay
+        # the overview call, so charge its estimate; otherwise a failure would make the savings look better.
+        from .costs import MODEL, image_tokens, price
+        from eval.schema import Usage
+        ov_w, ov_h = (512 * meta["w"] // max(meta["w"], meta["h"]), 512 * meta["h"] // max(meta["w"], meta["h"]))
+        u = Usage(len(result.get("route", [])), "estimate", MODEL, input_text_tokens=450,
+                  input_image_tokens=image_tokens(ov_w + 40, ov_h + 24), output_tokens=40, estimated=True,
+                  note="overview call a live run would pay; not served (no answer)")
+        price(u)
+        result.setdefault("usage", []).append(u.__dict__)
     source = ("unavailable" if result.get("error") and result.get("abstained") else
               "replay" if "replay" in providers else
               "ocr" if providers <= {"local"} and result.get("route") and not result.get("abstained") else

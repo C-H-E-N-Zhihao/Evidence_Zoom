@@ -55,6 +55,16 @@ SYSTEM_OVERVIEW = (
     "away, list both the mark cells and the label cells; they are stitched together row-aligned. " + _FORMAT
 )
 
+SYSTEM_OVERVIEW_FORCE = (
+    "You see a DOWNSCALED overview of a document or photo with a faint grid. Row labels R1, R2, ... "
+    "are in the left margin and column labels C1, C2, ... in the top margin; cell R<row>C<col> is "
+    "where they cross. The overview is too small to read details reliably, so do NOT answer yet: choose "
+    "the few cells that contain all of the evidence needed for the question. Cells need not be adjacent: "
+    "to read a small mark AND its label on the same row far away, list both. "
+    'Reply with ONE JSON object and nothing else: {"action": "zoom", "cells": ["R1C2", ...], '
+    '"look_for": "what to inspect, in a few words"}'
+)
+
 SYSTEM_ZOOM = (
     "You see a FULL-RESOLUTION crop of part of a document or photo, chosen because it should contain "
     "the evidence for the question. {grid_note}" + _FORMAT
@@ -106,6 +116,15 @@ def draw_grid(img: Image.Image, rows: int, cols: int) -> Image.Image:
         d.text((2, cy - f.size / 2), label, fill=(200, 0, 110), font=f)
     out.info["pad"] = (ml, mt, w, h)
     return out
+
+
+def normalize_box(box: list[float], shown: Image.Image) -> list[float]:
+    """Some models (e.g. Qwen2.5-VL) answer in absolute pixels of the image they saw, not 0-1.
+    Treat a box with any coordinate > 1.5 as pixels of `shown` and normalize it."""
+    if max(box) <= 1.5:
+        return box
+    W, H = shown.size
+    return [box[0] / W, box[1] / H, box[2] / W, box[3] / H]
 
 
 def unpad_box(box: list[float], shown: Image.Image) -> list[float]:
@@ -250,6 +269,7 @@ def answer(
     overview_model: str = DEFAULT_MODEL,
     zoom_model: str = DEFAULT_MODEL,
     max_crop_side: int = 1568,
+    force_zoom: bool = False,
     call: Optional[Callable] = None,
     name: Optional[str] = None,
 ) -> PipelineResult:
@@ -294,7 +314,7 @@ def answer(
         res.answer, res.abstained = (None if abstain else str(ans)), abstain
         boxes = []
         if _valid_box(d.get("box")) and not abstain:
-            boxes = view.boxes_to_orig(unpad_box(d["box"], shown))
+            boxes = view.boxes_to_orig(unpad_box(normalize_box(d["box"], shown), shown))
         res.route.append(RouteStep(step="abstain" if abstain else "answer", box=boxes[0] if boxes else None))
         res.evidence_boxes += [EvidenceBox(box=b, source=source) for b in boxes]
         return res
@@ -308,7 +328,8 @@ def answer(
     rows, cols = grid
     ov_view = View(img, [(0.0, 1.0)], [(0.0, 1.0)], max_side=overview_side)
     shown = draw_grid(ov_view.image, rows, cols)
-    d = ask(shown, SYSTEM_OVERVIEW, question, overview_model, "overview", None, ov_view.bounds)
+    d = ask(shown, SYSTEM_OVERVIEW_FORCE if force_zoom else SYSTEM_OVERVIEW, question, overview_model,
+            "overview", None, ov_view.bounds)
     if d is None:
         return give_up("overview call failed")
     view, look_for = ov_view, ""
@@ -353,6 +374,10 @@ def factory():                      # opus overview + opus zoom, 1 zoom
 
 def factory_cheap_overview():       # haiku overview, opus zoom (message 010 hypothesis)
     return eval_pipeline(overview_model="claude-haiku-5-5", name="visual_haikuov_opuszoom")
+
+
+def factory_force_zoom():          # overview may only choose cells (for models that never zoom)
+    return eval_pipeline(force_zoom=True, name="visual_force_zoom")
 
 
 def factory_two_zooms():
