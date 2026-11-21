@@ -1,0 +1,2613 @@
+{
+  "meta": {
+    "commit": "d197be0",
+    "items": "eval/results/model_scale/visual_items.jsonl",
+    "n_items": 36,
+    "pipelines": [
+      "pipeline.visual:factory_split"
+    ],
+    "spent_usd": 0.0,
+    "budget_hit": false,
+    "max_error_rate": 0.2,
+    "degrade": "clean",
+    "geometric_degrade": false,
+    "time": "2026-11-21T16:01:08+0100"
+  },
+  "report": {
+    "pipeline.visual:factory_split": {
+      "summary": {
+        "all": {
+          "n": 36,
+          "accuracy": 0.4722222222222222,
+          "evidence_hit@0.3": 0,
+          "evidence_iou_mean": 0.06309555817900778,
+          "joint_answer_evidence": 0,
+          "zoom_rate": 0.0,
+          "zoom_covers_gold@0.9": null,
+          "zoom_coverage_mean": null,
+          "acc_given_zoom_covers": null,
+          "abstain_rate": 0,
+          "correct_abstain_rate": null,
+          "errors": 0,
+          "cost_usd_total": 0.0,
+          "cost_usd_mean": 0.0,
+          "latency_ms_median": 1459.37379199313,
+          "calls": 36,
+          "input_image_tokens": 0,
+          "input_text_tokens": 21936,
+          "cache_read_tokens": 0,
+          "output_tokens": 1784,
+          "gpu_seconds": 54.78617441863753,
+          "any_estimated": false
+        },
+        "visual": {
+          "n": 36,
+          "accuracy": 0.4722222222222222,
+          "evidence_hit@0.3": 0,
+          "evidence_iou_mean": 0.06309555817900778,
+          "joint_answer_evidence": 0,
+          "zoom_rate": 0.0,
+          "zoom_covers_gold@0.9": null,
+          "zoom_coverage_mean": null,
+          "acc_given_zoom_covers": null,
+          "abstain_rate": 0,
+          "correct_abstain_rate": null,
+          "errors": 0,
+          "cost_usd_total": 0.0,
+          "cost_usd_mean": 0.0,
+          "latency_ms_median": 1459.37379199313,
+          "calls": 36,
+          "input_image_tokens": 0,
+          "input_text_tokens": 21936,
+          "cache_read_tokens": 0,
+          "output_tokens": 1784,
+          "gpu_seconds": 54.78617441863753,
+          "any_estimated": false
+        }
+      },
+      "cost_curve": [
+        {
+          "questions": 1,
+          "mean_cum_cost_usd": 0.0,
+          "n_images": 12
+        },
+        {
+          "questions": 2,
+          "mean_cum_cost_usd": 0.0,
+          "n_images": 12
+        },
+        {
+          "questions": 3,
+          "mean_cum_cost_usd": 0.0,
+          "n_images": 12
+        }
+      ],
+      "pair_follow_rate": 0.0,
+      "degraded": 0,
+      "aborted": null,
+      "complete": true,
+      "results": [
+        {
+          "answer": "17",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.8356,
+                0.6231,
+                0.9233,
+                0.665
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.8356,
+                0.6231,
+                0.9233,
+                0.665
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 606,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1527.38604194019,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-001a-q4",
+          "image_id": "eas-001a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Yes",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.4975
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.4975
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 614,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1488.531291950494,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-001a-q5",
+          "image_id": "eas-001a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "A",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.2876,
+                0.8325,
+                0.9562,
+                0.9163
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.2876,
+                0.8325,
+                0.9562,
+                0.9163
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 608,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1487.647374975495,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-001a-q6",
+          "image_id": "eas-001a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "17",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.8356,
+                0.6231,
+                0.9233,
+                0.665
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.8356,
+                0.6231,
+                0.9233,
+                0.665
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 606,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1469.8734999401495,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-001b-q4",
+          "image_id": "eas-001b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Yes",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.0,
+                0.4452,
+                0.0465,
+                0.487
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.0,
+                0.4452,
+                0.0465,
+                0.487
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 614,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1426.685250014998,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-001b-q5",
+          "image_id": "eas-001b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "A",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.2876,
+                0.8325,
+                0.9562,
+                0.9163
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.2876,
+                0.8325,
+                0.9562,
+                0.9163
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 608,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1430.9994579525664,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-001b-q6",
+          "image_id": "eas-001b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "8, 15",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.7151,
+                0.6127,
+                0.989,
+                0.8116
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.7151,
+                0.6127,
+                0.989,
+                0.8116
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 606,
+              "input_image_tokens": 0,
+              "output_tokens": 51,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1548.0280419578776,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-002a-q4",
+          "image_id": "eas-002a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "No",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.4975
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.4975
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 614,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1428.5475000506267,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-002a-q5",
+          "image_id": "eas-002a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "B",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.2853,
+                0.8473,
+                0.9543,
+                0.9564
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.2853,
+                0.8473,
+                0.9543,
+                0.9564
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 608,
+              "input_image_tokens": 0,
+              "output_tokens": 104,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 3123.316749930382,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-002a-q6",
+          "image_id": "eas-002a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "8, 15",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.7151,
+                0.6127,
+                0.989,
+                0.8116
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.7151,
+                0.6127,
+                0.989,
+                0.8116
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 606,
+              "input_image_tokens": 0,
+              "output_tokens": 51,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1547.6198339601979,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-002b-q4",
+          "image_id": "eas-002b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "No",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.4975
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.4975
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 614,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1426.986709004268,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-002b-q5",
+          "image_id": "eas-002b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "B",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.2767,
+                0.843,
+                0.9562,
+                0.9163
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.2767,
+                0.843,
+                0.9562,
+                0.9163
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 608,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1430.3366669919342,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-002b-q6",
+          "image_id": "eas-002b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "8, 15",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.737,
+                0.4033,
+                0.989,
+                0.7383
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.737,
+                0.4033,
+                0.989,
+                0.7383
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 606,
+              "input_image_tokens": 0,
+              "output_tokens": 51,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1549.5771669084206,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-003a-q4",
+          "image_id": "eas-003a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Yes",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.5394
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.5394
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 614,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1429.6252919593826,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-003a-q5",
+          "image_id": "eas-003a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "A",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.2876,
+                0.8325,
+                0.9562,
+                0.9163
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.2876,
+                0.8325,
+                0.9562,
+                0.9163
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 608,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1433.944541029632,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-003a-q6",
+          "image_id": "eas-003a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "8, 15",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.737,
+                0.4033,
+                0.989,
+                0.7383
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.737,
+                0.4033,
+                0.989,
+                0.7383
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 606,
+              "input_image_tokens": 0,
+              "output_tokens": 51,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1547.6762090111151,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-003b-q4",
+          "image_id": "eas-003b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Yes",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.5394
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.5394
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 614,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1424.2034999188036,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-003b-q5",
+          "image_id": "eas-003b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "B",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.2876,
+                0.8325,
+                0.9562,
+                0.9163
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.2876,
+                0.8325,
+                0.9562,
+                0.9163
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 608,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1513.3260000729933,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-003b-q6",
+          "image_id": "eas-003b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "8,9",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.5287,
+                0.4347,
+                0.5945,
+                0.5289
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.5287,
+                0.4347,
+                0.5945,
+                0.5289
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 606,
+              "input_image_tokens": 0,
+              "output_tokens": 49,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1500.5019159289077,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-004a-q4",
+          "image_id": "eas-004a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Yes",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.0,
+                0.6127,
+                0.0575,
+                0.6545
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.0,
+                0.6127,
+                0.0575,
+                0.6545
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 614,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1424.2248330265284,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-004a-q5",
+          "image_id": "eas-004a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "A",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.4959,
+                0.8534,
+                0.9671,
+                0.9267
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.4959,
+                0.8534,
+                0.9671,
+                0.9267
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 608,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1431.820834055543,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-004a-q6",
+          "image_id": "eas-004a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "8,9",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.0,
+                0.4347,
+                0.0136,
+                0.5498
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.0,
+                0.4347,
+                0.0136,
+                0.5498
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 606,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1459.8509169882163,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-004b-q4",
+          "image_id": "eas-004b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Yes",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.0,
+                0.6127,
+                0.0575,
+                0.6545
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.0,
+                0.6127,
+                0.0575,
+                0.6545
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 614,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1438.0105000454932,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-004b-q5",
+          "image_id": "eas-004b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "B",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.2767,
+                0.843,
+                0.9562,
+                0.9163
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.2767,
+                0.843,
+                0.9562,
+                0.9163
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 608,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1431.1166669940576,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-004b-q6",
+          "image_id": "eas-004b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "15,16",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.8575,
+                0.4661,
+                0.989,
+                0.7173
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.8575,
+                0.4661,
+                0.989,
+                0.7173
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 606,
+              "input_image_tokens": 0,
+              "output_tokens": 51,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1547.3851659335196,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-005a-q4",
+          "image_id": "eas-005a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Yes",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.5394
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.5394
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 614,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1446.7535830335692,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-005a-q5",
+          "image_id": "eas-005a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "A",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.2876,
+                0.8639,
+                0.9562,
+                0.9372
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.2876,
+                0.8639,
+                0.9562,
+                0.9372
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 608,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1430.6455419864506,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-005a-q6",
+          "image_id": "eas-005a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "8, 15, 16",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.7698,
+                0.4033,
+                0.989,
+                0.7383
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.7698,
+                0.4033,
+                0.989,
+                0.7383
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 606,
+              "input_image_tokens": 0,
+              "output_tokens": 55,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1666.6844170540571,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-005b-q4",
+          "image_id": "eas-005b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Yes",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.5394
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.5394
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 614,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1520.5292499158531,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-005b-q5",
+          "image_id": "eas-005b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "A",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.2876,
+                0.8639,
+                0.9562,
+                0.9372
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.2876,
+                0.8639,
+                0.9562,
+                0.9372
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 608,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1432.19758302439,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-005b-q6",
+          "image_id": "eas-005b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "8",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.9233,
+                0.6231,
+                0.9671,
+                0.6545
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.9233,
+                0.6231,
+                0.9671,
+                0.6545
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 606,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1535.8343749539927,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-006a-q4",
+          "image_id": "eas-006a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "No",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.5394
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.0,
+                0.4661,
+                0.0465,
+                0.5394
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 614,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1428.275416023098,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-006a-q5",
+          "image_id": "eas-006a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "B",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.2767,
+                0.843,
+                0.9562,
+                0.9163
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.2767,
+                0.843,
+                0.9562,
+                0.9163
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 608,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1458.8966669980437,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-006a-q6",
+          "image_id": "eas-006a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "2,3",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.8356,
+                0.4347,
+                0.9671,
+                0.665
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.8356,
+                0.4347,
+                0.9671,
+                0.665
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 606,
+              "input_image_tokens": 0,
+              "output_tokens": 49,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1488.8177081011236,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-006b-q4",
+          "image_id": "eas-006b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "No",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.0,
+                0.4347,
+                0.0465,
+                0.487
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.0,
+                0.4347,
+                0.0465,
+                0.487
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 614,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1430.5278749670833,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-006b-q5",
+          "image_id": "eas-006b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "B",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.2876,
+                0.8639,
+                0.4082,
+                0.9058
+              ],
+              "page": 0,
+              "source": "overview",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "434x536px to local:Qwen/Qwen2.5-VL-72B-Instruct-AWQ"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": [
+                0.2876,
+                0.8639,
+                0.4082,
+                0.9058
+              ],
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "local",
+              "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+              "input_text_tokens": 608,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1479.7900420380756,
+              "cost_usd": 0.0,
+              "estimated": false,
+              "image_px": [
+                [
+                  434,
+                  536
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": "gpu"
+            }
+          ],
+          "pipeline": "visual_ov[Qwen2.5-VL-72B-Instruct-AWQ]_zoom[Qwen2.5-VL-7B-Instruct]",
+          "question_id": "eas-006b-q6",
+          "image_id": "eas-006b",
+          "error": null,
+          "schema_version": "0.1"
+        }
+      ]
+    }
+  }
+}
