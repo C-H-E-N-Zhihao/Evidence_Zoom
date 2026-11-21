@@ -15,5 +15,5 @@ if [[ ! -f "$stamp" || "$(<"$stamp")" != "$requirements" ]]; then
 fi
 [ -f eval/data/accident_statement/items.jsonl ] || .venv/bin/python -m eval.data.accident_statement.generate
 [ -f app/static/sample.png ] || .venv/bin/python -m app.make_sample
-echo "Evidence Zoom rehearsal on http://localhost:${PORT}  (OCR live, visual = fixture REPLAY)"
+echo "Evidence Zoom rehearsal on http://localhost:${PORT}  (local OCR when available, visual = fixture REPLAY)"
 PIPELINE=pipeline.router DEMO_REPLAY=1 exec .venv/bin/uvicorn app.server:app --port "$PORT"
