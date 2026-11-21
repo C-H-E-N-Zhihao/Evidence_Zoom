@@ -47,8 +47,8 @@ Say "one layout, 36 questions", and quote both counts. No "beats", no "matches".
 ## Slide 5: is it frugal? (30 s)
 
 > Half of the questions never reach a model: OCR answers them for $0 [dev].
-> For the rest, the model sees a crop of **[PENDING: billed crop tokens]** tokens instead of a page that bills **~4,900 input tokens** on Claude 5.5 (billed, OpenRouter).
-> Billed cost per question: **[PENDING: route $ vs full page $ vs cached page $, from the paid sweep]**.
+> For the rest, the model sees only the crop. **Billed** on Claude 5.5 (OpenRouter), the whole route uses **636 input tokens per question**, against **4,920** for one full page [dev].
+> Billed, 96 questions [dev]: router + Haiku **96/96 at $0.00010 per question**; Sonnet on the cached page **96/96 at $0.00253**; Haiku on the page 91/96 at $0.00054. **Same accuracy at about 1/25 of the cost.** [PENDING release review: codex-guanyu]
 > On our own GPUs: 7B on the crop needs ~1/27 of the compute of 72B on the page (estimated, FLOPs proxy).
 
 If the sweep numbers are not in, keep only the OCR line and the 4,900-token line.

@@ -94,3 +94,12 @@ All rows in this list are on the **development layout**, the 12 forms the rules 
 ## 7. Awaiting release review (codex-guanyu), not yet in the claims lists
 
 - **Blind document families** (944e679, message 071): 4 new types (breaker panel, repair invoice, travel claim, vehicle damage), 320 items, generated without reading `pipeline/`. At `freeze-router-v2` (`pipeline_equals_freeze True`): OCR 0/320 exits, 0 wrong; router v2 sends **all 320 to the full page**. This matches the prediction stated before opening them (064). The frugal path contributes nothing outside the configured template. No model answered in this test, so accuracy on these sets, and whether the route equals the standalone page baseline, are not measured. Status: operator-reported (071) until a stage report with run provenance and image checksums is published.
+- **Paid sweep, billed** (85fc305, `eval/results/paid_20261121-162336/`; $0.5291 billed in total incl. smoke tests). Development layout, 96 questions, Claude 5.5 via OpenRouter:
+  - **Router v2 with Haiku 5.5** (step 2, `pipeline/` tree 25220c27ceff = `freeze-router-v2`): **96/96, $0.00010 per question**, 636 input tokens per question.
+  - **Sonnet 5.5, cached full page:** 96/96, $0.00253 per question, 4,920 input tokens per question. Cache reads were billed, so this is a real cached baseline.
+  - **Haiku 5.5, full page:** 91/96, $0.00054 per question.
+  - **Reading:** same accuracy as the cached Sonnet page at about **1/25 of the billed cost**, and more accurate than Haiku on the page at about 1/5. Development layout only; 055's prompt note was in effect.
+  - **Tokens:** a 1700×2200 page bills ≈ 4,920 tokens ≈ w·h/760, i.e. Claude 5.5 does **not** downscale this page. The ESTIMATED rows assumed a 1568 px / 1.15 MP downscale, hence the 3× gap.
+  - **Provenance caveats for review:**
+    - Step 1 printed "≠ freeze-anchor-ocr-v1", but its tree 25220c27ceff is `freeze-router-v2`. That was most likely a missing local tag, and the controls do not depend on `pipeline/`.
+    - **Step 3 (phone photo) ran with `pipeline/` tree 4cfcded0a0ba, which includes d9371fc** (router and replay edits made mid-sweep; the checkout moved between steps). Its router rows (95/96 at $0.00010 against the cached Sonnet page at 95/96 and $0.00175) are **not** the frozen configuration. Quote them only once codex-guanyu has confirmed from the diff that real-backend behaviour is unchanged.
