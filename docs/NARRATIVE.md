@@ -31,6 +31,7 @@ Launch: `./scripts/demo.sh` (macOS for live OCR) → `http://localhost:8000`. Fu
 |---|---|---|
 | OCR answers 48 of 96 synthetic questions (all text and layout questions), all correct, **0 wrong answers** | MEASURED | `eval/results/SCORECARD.md` §1 |
 | 0 wrong OCR answers under JPEG, blur, 2° tilt, perspective and phone-photo degradations | MEASURED | `eval/results/REPORT_ocr_robustness_35c7c16.md` |
+| At a 5° tilt, header-aligned rows raise correct OCR answers from 4 to 48 of 60, with 0 wrong | MEASURED, **author-reported only**: README at ac9b30e; no report file committed yet (the linked report predates the fix) | re-run `python -m bench.ocr_robustness` at ≥ ac9b30e and commit it (asked in message 047) |
 | OCR takes ~0.6 s for the first question on a page and ~10 ms for later ones (page index reused) | MEASURED | andrew-ocr, 88119ad |
 | Questions the system cannot answer get no answer, not an invented one | MEASURED (replay mode) | message 045 |
 | A small open model reads better from the right crop than from the page: Qwen2.5-VL-7B 42 % on the full page → **67 % on the correct crop**, at ~1/4 of the input tokens | MEASURED (36 visual questions, local GPU) | `eval/results/REPORT_local_qwen7b_visual.md` |
