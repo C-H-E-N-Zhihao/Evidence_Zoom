@@ -210,7 +210,10 @@ def ask(req: Ask):
         result.setdefault("usage", []).append(u.__dict__)
     source = ("unavailable" if result.get("error") and result.get("abstained") else
               "replay" if "replay" in providers else
-              "ocr" if providers <= {"local"} and result.get("route") and not result.get("abstained") else
+              # OCR only if no visual step ran: local vLLM calls also report provider "local"
+              "ocr" if (providers <= {"local"} and result.get("route") and not result.get("abstained")
+                        and not any(st.get("step") in ("overview", "zoom") for st in result["route"])
+                        and not any(u.get("device") == "gpu" for u in result.get("usage", []))) else
               "mock" if pipeline.__name__ == "app.mock_pipeline" else "model")
     return {"result": result, "baseline": baseline, "source": source, "views": views,
             "question_index": meta["questions"] - 1,
