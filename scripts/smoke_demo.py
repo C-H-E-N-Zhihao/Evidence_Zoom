@@ -96,7 +96,7 @@ def main() -> int:
     if sys.platform != "darwin":
         print("  [SKIP] OCR/template needs macOS")
     elif "eas3b-003a" in FIXTURES:
-        r3 = c.post("/api/images/fixture/eas3b-002a").json()["image_id"]
+        r3 = c.post("/api/images/fixture/eas3b-003a").json()["image_id"]
         d = ask(c, r3, POLICY)
         gold3 = FIXTURES["eas3b-003a"]["items"][_qkey(POLICY)].answer
         check("layout 3 policy is LIVE OCR via the template", d["source"] == "ocr" and d["result"]["answer"] == gold3,
