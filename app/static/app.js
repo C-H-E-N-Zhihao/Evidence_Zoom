@@ -1,6 +1,6 @@
 const $ = (id) => document.getElementById(id);
 const img = $("img"), canvas = $("overlay"), ctx = canvas.getContext("2d");
-const GRID = 4;
+const ROWS = 8, COLS = 6;  // must match pipeline.visual default grid
 let image = null;           // {image_id, width, height, url}
 let answers = [];           // [{result, baseline}]
 let active = -1;
@@ -115,18 +115,14 @@ function draw() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const W = r.width, H = r.height;
   const res = active >= 0 ? answers[active].result : null;
-  const zoomed = res ? res.route.filter((s) => s.step === "zoom").map((s) => s.target) : [];
 
   if ($("showGrid").checked) {
     ctx.strokeStyle = "rgba(100,116,139,.35)"; ctx.lineWidth = 1;
-    ctx.font = "600 12px ui-monospace, monospace";
-    for (let c = 0; c < GRID; c++) for (let rr = 0; rr < GRID; rr++) {
-      const x = c * W / GRID, y = rr * H / GRID;
-      ctx.strokeRect(x, y, W / GRID, H / GRID);
-      const name = "ABCDEFGH"[c] + (rr + 1);
-      ctx.fillStyle = zoomed.includes(name) ? css("--cell") : "rgba(100,116,139,.7)";
-      ctx.fillText(name, x + 5, y + 15);
-    }
+    ctx.font = "600 11px ui-monospace, monospace"; ctx.fillStyle = "rgba(100,116,139,.8)";
+    for (let c = 0; c < COLS; c++) for (let rr = 0; rr < ROWS; rr++)
+      ctx.strokeRect(c * W / COLS, rr * H / ROWS, W / COLS, H / ROWS);
+    for (let c = 0; c < COLS; c++) ctx.fillText(`C${c + 1}`, c * W / COLS + 4, 12);
+    for (let rr = 1; rr < ROWS; rr++) ctx.fillText(`R${rr + 1}`, 3, rr * H / ROWS + 12);
   }
   if (!res) return;
   // dim everything except the zoomed cells

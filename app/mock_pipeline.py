@@ -24,17 +24,17 @@ def _u(step_index, provider="anthropic", model=MODEL, **kw) -> dict:
         price(u)
     return asdict(u)
 
-GRID = 4  # overview grid is GRID x GRID, cells A1..D4
+ROWS, COLS = 8, 6  # same grid as pipeline.visual; cells R1C1..R8C6
 TEXTUAL = re.compile(r"\b(number|id|date|name|policy|registration|address|plate|"
                      r"phone|written|insurer)\b", re.I)
 
 
-def cell_box(col: int, row: int, n: int = GRID) -> list[float]:
-    return [col / n, row / n, (col + 1) / n, (row + 1) / n]
+def cell_box(col: int, row: int) -> list[float]:
+    return [col / COLS, row / ROWS, (col + 1) / COLS, (row + 1) / ROWS]
 
 
 def cell_name(col: int, row: int) -> str:
-    return f"{'ABCDEFGH'[col]}{row + 1}"
+    return f"R{row + 1}C{col + 1}"
 
 
 def answer(image: Image.Image, question: str) -> dict:
@@ -70,15 +70,15 @@ def answer(image: Image.Image, question: str) -> dict:
         ov_side = 384
         ov_tokens = image_tokens(ov_side, round(ov_side * h / w))
         route.append({"step": "overview", "target": None, "box": [0, 0, 1, 1],
-                      "note": f"{ov_side}px overview with {GRID}x{GRID} labelled grid"})
+                      "note": f"{ov_side}px overview with {ROWS}x{COLS} labelled grid"})
         usage.append(_u(1, input_text_tokens=300 + q_tokens,
                         input_image_tokens=ov_tokens, output_tokens=20,
                         latency_ms=900.0, image_px=[[ov_side, round(ov_side * h / w)]],
                         note="mock overview call"))
-        col, row = rng.randrange(GRID), rng.randrange(GRID)
+        col, row = rng.randrange(COLS), rng.randrange(ROWS)
         cbox = cell_box(col, row)
         name = cell_name(col, row)
-        crop_w, crop_h = round(w / GRID), round(h / GRID)
+        crop_w, crop_h = round(w / COLS), round(h / ROWS)
         crop_tokens = image_tokens(crop_w, crop_h)
         route.append({"step": "zoom", "target": name, "box": cbox,
                       "note": f"native-resolution crop {crop_w}x{crop_h}px"})

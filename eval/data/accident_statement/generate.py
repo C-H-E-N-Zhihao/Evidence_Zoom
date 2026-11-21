@@ -114,6 +114,7 @@ def render(form: Form) -> Image.Image:
                 d.line([x0 + 6, y + 18, x0 + 15, y + 30], fill=colour, width=5)
                 d.line([x0 + 15, y + 30, x0 + 33, y + 4], fill=colour, width=5)
         d.text((180, y + 4), f"{n:>2}.  {text}", fill="black", font=f_small)
+        bx[f"label{n}"] = _n(176, y, 176 + d.textlength(f"{n:>2}.", font=f_small) + 8, y + 36)
     bx["A.tickcol"] = _n(90, top + 90, 146, last_y + 10)
     bx["B.tickcol"] = _n(1530, top + 90, 1586, last_y + 10)
 
@@ -211,7 +212,8 @@ def items_for(form: Form, pair_id: str, note: str | None) -> list[dict]:
         q("q3", f"Which vehicle is insured by {form.b.insurer}?", "B", "layout", [b["B.insurer"]],
           ["vehicle B"]),
         q("q4", "Which circumstance boxes did driver B tick? Answer with the box numbers.", tb_gold,
-          "visual", [b[f"B.tick{n}"] for n in form.b.ticks] or [b["B.tickcol"]], tb_acc),
+          "visual", [bb for n in form.b.ticks for bb in (b[f"B.tick{n}"], b[f"label{n}"])] or [b["B.tickcol"]],
+          tb_acc),
         q("q5", "Did driver A tick circumstance 8 (striking the rear of the other vehicle)? Answer yes or no.",
           "yes" if a8 else "no", "visual", [b["A.tick8"]]),
         q("q6", "In the sketch, which vehicle was hit from behind? Answer A or B.", hit, "visual",
