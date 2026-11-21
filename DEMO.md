@@ -113,6 +113,23 @@ with and without prompt caching. **All costs are estimates** from token arithmet
    Optional: on **`layout 2 · eas2-001`** the policy number is *not* answered by OCR. Vision reads `J1-…` for
    `JI-…`, and the look-alike guard sends it to the page instead of risking a wrong ID.
 
+## Beyond claim forms: the general assistant (live only)
+
+The mode picker (top left) has three settings: **Auto**, **Claim form router** and **General assistant (any image)**. Auto sends the homework fixtures and the claim forms to the right route.
+The general route runs OCR on the page first and sends the model only the numbered text lines, with no image. The model answers from the text and cites the lines, which show as green boxes. If the answer depends on something OCR cannot capture (a circle, a chart, a drawing), the model asks for pixels, and only a band around the lines it named is sent.
+
+Live script (about 30 s, Haiku, billed):
+1. Pick **homework · hw-001** and click "Solve problem 1. What is x?". The answer comes from OCR text only, about $0.0001.
+2. Type "Is the circled answer in problem 4 correct? Explain why." The model says OCR is not enough and gets a band crop; the answer includes the arithmetic, about $0.0005.
+3. Switch to form b and ask the same question. The circle has moved, so the answer changes.
+
+Billed result (`eval/results/REPORT_homework_general.md`, synthetic sheets, self-built, not yet reviewed):
+- **General route:** 79/80 at $0.0003 per question. 30/30 text questions were answered with no image.
+- **Whole page:** 80/80 at $0.0005 per question.
+- **The one miss:** "June" where the answer key says "Jun".
+
+There is no replay for homework questions, so this needs `./scripts/demo-live.sh` or `./scripts/demo-local.sh`.
+
 ## Measured, billed (OpenRouter receipts; synthetic forms)
 
 - Accident statement, 96 questions: Haiku 5.5 on our route **96/96 for $0.0098**; Sonnet 5.5 on the cached whole
