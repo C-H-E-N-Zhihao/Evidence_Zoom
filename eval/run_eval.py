@@ -143,7 +143,10 @@ def code_provenance() -> dict:
 
 # Matched against fallback notes. Normal OCR fallbacks ("Visual inspection required") and the intended
 # ROUTER_SKIP_OCR ablation ("OCR skipped") do not match.
-_DEGRADED_MARKERS = ("unavailable", "raised", "not found", "credentials", "no such file")
+# Missing-component phrases only. A bare "not found" also matched the general route's intended escalation note
+# ("not found in the band; whole page"), which wrongly flagged correct results (codex-guanyu, homework_v3 check).
+_DEGRADED_MARKERS = ("unavailable", "raised", "command not found", "helper not found", "no module named",
+                     "credentials", "no such file")
 
 
 def degraded(r: PipelineResult) -> str | None:

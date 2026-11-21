@@ -121,6 +121,11 @@ def t_compose_and_guard() -> None:
           is not None)
     check("missing helper is degraded",
           degraded(res(route=[RouteStep("fallback", note="OCR helper unavailable (see stderr)")])) is not None)
+    check("intended band-to-page escalation is not degraded",
+          degraded(res(route=[RouteStep("fallback", target="image", note="not found in the band; whole page")]))
+          is None)
+    check("missing shell command is degraded",
+          degraded(res(route=[RouteStep("fallback", note="swiftc: command not found")])) is not None)
     check("error is degraded, refusal is not",
           degraded(res(err="RuntimeError: x")) is not None and degraded(res(err="refusal")) is None)
     check("registry name", callable(get_pipeline("mock")))
