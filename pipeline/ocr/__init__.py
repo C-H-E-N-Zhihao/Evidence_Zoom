@@ -53,7 +53,8 @@ def locate(spans, field, side):
 def answer(image, question):
     result = PipelineResult(None, abstained=True, pipeline="ocr_router")
     field = requested_field(question)
-    if field:
+    insurer = re.fullmatch(r"which (?:vehicle|car) is insured by ([^?]+)\??", question.strip(), re.I)
+    if field or insurer:
         start = time.perf_counter()
         result.route.append(RouteStep("ocr"))
         try:
@@ -61,13 +62,28 @@ def answer(image, question):
             image.save(stream, format="PNG")
             process = subprocess.run([os.environ.get("EVIDENCE_OCR_BIN", "evidence-ocr")],
                                      input=stream.getvalue(), capture_output=True, check=True, timeout=30)
-            span = locate(json.loads(process.stdout), *field)
+            spans = json.loads(process.stdout)
+            span = None
+            response = None
+            if field:
+                span = locate(spans, *field)
+                if span:
+                    response = span["text"]
+            else:
+                # Require readable values in both columns to establish uniqueness.
+                insurers = [locate(spans, "insurer", side) for side in "ab"]
+                if all(insurers):
+                    target = insurer.group(1).strip().casefold()
+                    matches = [(side, value) for side, value in zip("AB", insurers)
+                               if value["text"].strip().casefold() == target]
+                    if len(matches) == 1:
+                        response, span = matches[0]
         except (OSError, subprocess.SubprocessError, ValueError) as exc:
             result.error = str(exc)
             span = None
         result.usage.append(Usage(0, "local", "Apple Vision OCR", latency_ms=(time.perf_counter()-start)*1000))
         if span:
-            result.answer = span["text"]
+            result.answer = response
             result.abstained = False
             result.evidence_boxes.append(EvidenceBox(span["box"], source="ocr", label=result.answer))
             result.route.append(RouteStep("answer", box=span["box"]))
