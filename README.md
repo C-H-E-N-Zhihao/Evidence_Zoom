@@ -2,7 +2,7 @@
 
 Current working direction: **Evidence Zoom**, a token-efficient multimodal app using spatially grounded image representations and selective access to image details.
 
-The idea is being refined; no final architecture or demo domain has been selected.
+Our preferred design first checks whether OCR and layout answer the question. If they leave visual evidence missing, the model sees a coarse overview and can request finer detail at a selected location. The demo domain and model remain open. [Router design note](agent-messages/2026-11-21-006-coordinator-to-all.md)
 
 ## Agent coordination
 
