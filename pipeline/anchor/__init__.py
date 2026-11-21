@@ -262,6 +262,9 @@ def select(image: Image.Image, question: str, deskew: bool = True) -> Optional[S
             spans, ms2 = ocr_spans(page)
             ms += ms2
     lay = layout(spans, page)
+    if lay is None:  # built-in rules do not read this layout: try a declarative template (pipeline/templates)
+        from pipeline import templates
+        lay = templates.layout(spans, page)
     sel = regions(question, lay) if lay else None
     if sel:
         sel.ocr_ms, sel.spans, sel.image, sel.angle = ms, spans, page, angle

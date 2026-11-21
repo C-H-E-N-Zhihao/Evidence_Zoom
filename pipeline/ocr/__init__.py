@@ -121,12 +121,17 @@ def _locate_with(spans, field, side, left, right):
 
 def locate(spans, field, side):
     """Value span for `field` of vehicle `side`, or None. Tries every header pair; answers only if exactly
-    one distinct value is found (two pairs disagreeing = ambiguous = None)."""
+    one distinct value is found (two pairs disagreeing = ambiguous = None). If the built-in rules find no
+    header pair at all, a declarative template (pipeline/templates) may read the layout instead."""
     found = {}
-    for left, right in header_pairs(spans):
+    pairs = header_pairs(spans)
+    for left, right in pairs:
         v = _locate_with(spans, field, side, left, right)
         if v is not None:
             found[v["text"]] = v
+    if not pairs:
+        from pipeline import templates
+        return templates.field(spans, field, side)
     return next(iter(found.values())) if len(found) == 1 else None
 
 
