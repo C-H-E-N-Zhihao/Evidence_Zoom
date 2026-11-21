@@ -16,7 +16,7 @@
       "text": "Haiku on our route: 96/96 at $0.00010 per question. Haiku on the uncached whole page: 91/96 at $0.00054. Sonnet on both sides: our route 96/96 for $0.162, the cached whole page 96/96 for $0.243. That saving comes from the 48 questions OCR answers locally; on the visual questions alone the cached page is cheaper.",
       "kind": "measured, billed",
       "limits": "Configured layout, one question order (8 per page).",
-      "source": "eval/results/REPORT_same_model_sonnet.md"
+      "source": "eval/results/paid_20261121-162336/, eval/results/REPORT_same_model_sonnet.md"
     },
     {
       "id": "second-layout",
@@ -53,7 +53,7 @@
     {
       "id": "ocr-safety",
       "title": "OCR answers locally, without wrong answers on our tests",
-      "text": "On the clean run, local OCR answered 48 of 96 questions, all correctly. Under 10 synthetic degradations it made 0 wrong answers; fewer questions were answered locally (24 at 768 px) and the rest went on to the model.",
+      "text": "On the clean run, local OCR answered 48 of 96 questions, all correctly. Across nine synthetic degradations it returned zero incorrect local answers on the 60 OCR-eligible questions tested per condition. At 768 px it answered 24 locally and deferred 36.",
       "kind": "measured",
       "limits": "Synthetic degradations. On layout 2 a look-alike misread (J1 for JI) was stopped by a guard; not a general safety guarantee.",
       "source": "eval/results/REPORT_ocr_robustness_82f3112.md"
@@ -61,7 +61,7 @@
     {
       "id": "boundary",
       "title": "Where it stops",
-      "text": "On a layout the rules were not written for, and on four new document types (320 questions), local OCR answered nothing and every question went to the whole page.",
+      "text": "In an earlier test, the frozen OCR rules deferred all 96 questions on accident layout 2. On four additional synthetic document types, all 320 questions went to the whole page.",
       "kind": "measured",
       "limits": "Frugal only where a template is configured.",
       "source": "eval/results/REPORT_heldout_v2_ocr.md, eval/results/REPORT_blind_families_stages.md"
@@ -69,7 +69,7 @@
     {
       "id": "spend",
       "title": "What all this cost",
-      "text": "All paid experiments together used $1.50 of the $10 API credit (OpenRouter key usage $1.4979, matching the receipts).",
+      "text": "All paid experiments together used $1.50 of the $10 API credit (OpenRouter key usage $1.4979 at the spending check in message 131).",
       "kind": "measured",
       "limits": "",
       "source": "agent-messages/2026-11-21-131-claude-andrew-b-to-all.md"
