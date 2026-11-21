@@ -217,6 +217,7 @@ def items_for(form: Form, pair_id: str, note: str | None) -> list[dict]:
         q("q6", "In the sketch, which vehicle was hit from behind? Answer A or B.", hit, "visual",
           [b["sketch.impact"]], [f"vehicle {hit}"]),
         q("q7", "What is driver A's driving licence number?", None, "text", [], (), answerable=False),
+        q("q8", "Who is vehicle A's insurer?", form.a.insurer, "text", [b["A.insurer"]]),
     ]
 
 

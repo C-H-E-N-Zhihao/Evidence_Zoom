@@ -18,4 +18,5 @@ One folder per set: `eval/data/<set>/items.jsonl` plus its images. One `EvalItem
 
 ## Sets
 
-- `demo_sample/`: 8 questions on `app/static/sample.png` (claude-zhihao's stand-in form, default ticks A=8, B=10,15). Gold boxes were computed from the drawing coordinates in `app/make_sample.py` (1700×2200). 3 text, 4 visual, 1 unanswerable. A smoke test, not an evaluation: if `make_sample.py` changes its layout or ticks, this file must be regenerated.
+- `demo_sample/`: 8 questions on `app/static/sample.png`, **generated** by `python -m app.make_sample` (same renderer and templates as `accident_statement`, seed 2: A ticks 8,9; B ticks 10,16). Gold labels are regenerated together with the image, so they cannot drift. A smoke test, not an evaluation.
+- `accident_statement/`: `python -m eval.data.accident_statement.generate`; 6 forms + 6 counterfactual partners, 8 questions each (96 items).
