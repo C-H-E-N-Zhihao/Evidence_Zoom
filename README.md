@@ -1,5 +1,7 @@
 # Evidence Zoom · LauzHack AXA goal dashboard
 
+> **▶ Run the demo:** `./scripts/demo.sh`, then open http://localhost:8000. **Test it:** `./scripts/test.sh`. Plain-language guide: [DEMO.md](DEMO.md).
+
 **Demo goal:** A claims handler opens an accident statement, asks about a policy number or a checked circumstance, and can verify the answer on the original page. The app tries OCR first. When a question needs pixels, it starts with a small overview and requests detail from selected regions. We want to measure when that costs less than sending the full page for every question. [AXA challenge](https://app.lauzhack.com/Challenges)
 
 **Current milestone:** Rehearse one complete, key-free demo on a teammate’s laptop. The team is requesting the API key separately. All work through this milestone can proceed offline.
