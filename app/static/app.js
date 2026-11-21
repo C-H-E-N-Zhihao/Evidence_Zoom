@@ -195,12 +195,12 @@ function explain(data) {
     const what = t.includes("tick_row") ? "the circumstance row in question" : t.includes("ticks")
       ? "the driver's tick column next to the row numbers" : t.includes("sketch") ? "the sketch panel" : "the relevant region";
     return `The form's own layout (read by OCR, no model) located ${what}. The model was sent only that ${size} crop: ` +
-      `~${inTok} input tokens instead of ~${pageTok} for the whole page, ${pct}% fewer${est}` +
+      `~${inTok} input tokens${est} instead of ~${pageTok} (estimated) for the whole page, ${pct}% fewer` +
       (t.includes("deskew") ? "; the tilted page was straightened first." : ".");
   }
   if (t === "full page")
     return `No configured layout covers this question, so the whole page was sent (${size}, ~${inTok} input tokens${est}).` +
-      (r.abstained && !r.error ? " The answer is not on the form, and the system says so instead of inventing one." : "");
+      (r.abstained && !r.error ? " The model reported that the answer is not on the form, instead of inventing one." : "");
   return `A model chose the region to inspect (${t}).`;
 }
 
