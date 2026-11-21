@@ -47,20 +47,34 @@ def locate(spans, field, side):
             return None
         headers[key] = hits[0]["box"]
     left, right = headers["a"], headers["b"]
-    if left[2] >= right[0] or abs(left[1] - right[1]) > .03:
+    if left[2] >= right[0]:
         return None
+    delta_x = (right[0] + right[2] - left[0] - left[2]) / 2
+    slope = (right[1] + right[3] - left[1] - left[3]) / (2 * delta_x)
+    if abs(slope) > .15:
+        return None
+    def row_bounds(box):
+        # Compare heights along the header baseline; evidence stays in original coordinates.
+        shift = slope * (box[0] + box[2]) / 2
+        return box[1] - shift, box[3] - shift
+
     # Labels align with the vehicle headers. The right header starts column B.
     cut = right[0] - .015
     column = [s for s in spans if (s["box"][0] < cut) == (side == "a")
-              and s["box"][1] >= headers[side][3]]
+              and row_bounds(s["box"])[0] >= row_bounds(headers[side])[1]]
     labels = {"policy": ("policy no.", "policy number"), "registration": ("registration",),
               "insurer": ("insurer",), "driver": ("driver",)}
     matches = [s for s in column if s["text"].lower().strip().rstrip(":") in labels[field]]
     if len(matches) != 1 or matches[0]["confidence"] < .8:
         return None
     label = matches[0]["box"]
-    values = [s for s in column if s["box"][0] > label[2]
-              and min(label[3], s["box"][3]) - max(label[1], s["box"][1]) > .4 * (label[3]-label[1])]
+    top, bottom = row_bounds(label)
+    values = []
+    for span in column:
+        candidate_top, candidate_bottom = row_bounds(span["box"])
+        overlap = min(bottom, candidate_bottom) - max(top, candidate_top)
+        if span["box"][0] > label[2] and overlap > .4 * (bottom - top):
+            values.append(span)
     return values[0] if len(values) == 1 and values[0]["confidence"] >= .8 else None
 
 
