@@ -120,7 +120,7 @@ def code_provenance() -> dict:
 
 # Matched against fallback notes. Normal OCR fallbacks ("Visual inspection required") and the intended
 # ROUTER_SKIP_OCR ablation ("OCR skipped") do not match.
-_DEGRADED_MARKERS = ("unavailable", "raised", "not found", "credentials")
+_DEGRADED_MARKERS = ("unavailable", "raised", "not found", "credentials", "no such file")
 
 
 def degraded(r: PipelineResult) -> str | None:

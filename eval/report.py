@@ -42,6 +42,12 @@ def table(run: dict) -> str:
             lines.insert(2, f"> **`{name}` is labelled cached, but no cache reads were billed:** treat it as the "
                             "UNCACHED full page. Its row must not be quoted as the cached baseline (the OpenRouter "
                             "backend does not send cache_control).\n")
+        if rep.get("degraded") and not rep.get("aborted"):
+            bad = [r["question_id"] for r in rep.get("results", [])
+                   if r.get("error") and r.get("error") != "refusal"][:5]
+            lines.insert(2, f"> `{name}`: {rep['degraded']} degraded result(s) (setup or component failure, not "
+                            f"the method){': ' + ', '.join(bad) if bad else ''}. Fix and re-run those before quoting "
+                            "the row as clean.\n")
         if rep.get("aborted") or not rep.get("complete", True):
             lines.insert(2, f"> **`{name}` is not a clean measurement:** "
                             f"{rep.get('aborted') or 'incomplete (budget cap)'}; degraded results: {rep.get('degraded', '?')}.\n")
