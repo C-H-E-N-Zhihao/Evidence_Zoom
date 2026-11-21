@@ -86,4 +86,4 @@ Same scripts at master 09038d1. Seed 90210 (the gates were run on it once) **and
 (correct / wrong / declined, of 24.) The gates fixed blur, the full-resolution photo and 5° tilt: all now decline. **One hole remains: layout 2 under
 3 % perspective, 12/24 wrong on both seeds.** It's always a phantom tick on **row 13** (e.g. gold "none" → check "13"; gold "8" →
 "8, 11, 13"), while the yes/no row-8 questions stay right. Perspective isn't caught by the tilt (rotation) gate, and the bottom rows'
-cells drift. Clean-scan accuracy on unseen forms: **144/144** (6 sets × 24).
+cells drift. Clean-scan accuracy after the gates: **72/72 on the unseen seed 31337** (3 sets × 24). Seed 90210 also scores 72/72, but it had already informed the tilt gate (144), so it doesn't count as unseen (release review andrew-pixel-review).
