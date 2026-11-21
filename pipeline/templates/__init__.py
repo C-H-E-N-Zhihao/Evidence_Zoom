@@ -92,8 +92,50 @@ def _box_columns(image, band, xrange, dark=180) -> list[float]:
     return cols
 
 
-def layout(spans: list[dict], image):
-    """anchor.Layout for a matching template, or None."""
+MIN_ROWS = 6  # low resolution: OCR misses many single-digit row numbers; the rest is interpolated
+
+
+def _consistent_rows(rows: dict) -> bool:
+    """>= MIN_ROWS recognised rows whose spacing per row number is uniform (within 15%), so interpolating the
+    missing ones is safe. Fewer or irregular rows: decline."""
+    if len(rows) < MIN_ROWS:
+        return False
+    ks = sorted(rows)
+    pitches = [(rows[b][0] - rows[a][0]) / (b - a) for a, b in zip(ks, ks[1:])]
+    med = sorted(pitches)[len(pitches) // 2]
+    return med > 0 and all(abs(p - med) <= 0.15 * med for p in pitches)
+
+
+def tilt_deg(spans: list[dict], size) -> Optional[float]:
+    """Page tilt from the bare row-number column of a matching template (a vertical column on an upright
+    page). Returned in PIL rotate() convention (rotating by it makes the column vertical)."""
+    import math
+
+    t = match(spans)
+    if t is None or t.get("circumstances", {}).get("row_number") != "bare":
+        return None
+    nums = sorted((s for s in spans if re.fullmatch(r"\d{1,2}", s["text"].strip()) and s["confidence"] >= 0.5),
+                  key=lambda s: s["box"][1])
+    if len(nums) < MIN_ROWS:
+        return None
+    w, h = size
+    xs = [s["box"][0] * w for s in nums]
+    ys = [(s["box"][1] + s["box"][3]) / 2 * h for s in nums]
+    n = len(xs)
+    mx, my = sum(xs) / n, sum(ys) / n
+    vy = sum((y - my) ** 2 for y in ys)
+    if vy == 0:
+        return None
+    slope = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / vy  # dx/dy in pixels
+    resid = [abs(x - (mx + slope * (y - my))) for x, y in zip(xs, ys)]
+    if sorted(resid)[n // 2] > 0.01 * w:  # not one straight column: no estimate
+        return None
+    return -math.degrees(math.atan(slope))
+
+
+def layout(spans: list[dict], image, col_half: float = 0.02):
+    """anchor.Layout for a matching template, or None. `col_half`: half-width of a tick-column band (wider on
+    a deskewed page, where some residual distortion remains)."""
     from pipeline.anchor import Layout, _fill_rows
 
     t = match(spans)
@@ -118,7 +160,7 @@ def layout(spans: list[dict], image):
         n = int(s["text"])
         if abs(s["box"][0] - x_med) < 0.012 and n not in rows:
             rows[n] = (s["box"][1], s["box"][3])
-    if len(rows) < 12:
+    if not _consistent_rows(rows):
         return None
     rows = _fill_rows(rows)
     num_right = max(s["box"][2] for s in nums if abs(s["box"][0] - x_med) < 0.012)
@@ -130,7 +172,7 @@ def layout(spans: list[dict], image):
     centers = _box_columns(image, (rows[1][0], rows[17][1]), (0.0, x_med - 0.003))
     if len(centers) != len(c["column_order"]):
         return None
-    cols = {side: (float(x) - 0.02, float(x) + 0.02) for side, x in zip(c["column_order"], sorted(centers))}
+    cols = {side: (float(x) - col_half, float(x) + col_half) for side, x in zip(c["column_order"], sorted(centers))}
     sketch = None
     if len(sk) == 1:
         s0 = sk[0]["box"][3] + 0.003

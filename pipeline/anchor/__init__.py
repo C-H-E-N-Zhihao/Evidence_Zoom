@@ -265,6 +265,14 @@ def select(image: Image.Image, question: str, deskew: bool = True) -> Optional[S
     if lay is None:  # built-in rules do not read this layout: try a declarative template (pipeline/templates)
         from pipeline import templates
         lay = templates.layout(spans, page)
+        if lay is None and deskew and not angle and os.environ.get("ANCHOR_TEMPLATE_DESKEW") == "1":  # off by default (partial crops, msg 102)
+            t = templates.tilt_deg(spans, image.size)
+            if t is not None and MIN_DESKEW_DEG <= abs(t) <= MAX_DESKEW_DEG:
+                page2 = image.rotate(t, resample=Image.BICUBIC, expand=False, fillcolor=(255, 255, 255))
+                spans2, ms2 = ocr_spans(page2)
+                lay = templates.layout(spans2, page2, col_half=0.03)
+                if lay is not None:
+                    page, angle, spans, ms = page2, t, spans2, ms + ms2
     sel = regions(question, lay) if lay else None
     if sel:
         sel.ocr_ms, sel.spans, sel.image, sel.angle = ms, spans, page, angle
