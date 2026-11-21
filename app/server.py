@@ -73,8 +73,11 @@ def _qkey(q: str) -> str:
 def _load_fixtures() -> dict[str, dict]:
     from eval.schema import EvalItem
     out: dict[str, dict] = {}
-    for items_file in (ROOT.parent / "eval" / "data" / "demo_sample" / "items.jsonl",
-                       ROOT.parent / "eval" / "data" / "accident_statement" / "items.jsonl"):
+    data = ROOT.parent / "eval" / "data"
+    # layout 1 (development), layout 2 (held-out, later development), layout 3 fresh forms (v3b: configured from one
+    # example of layout 3, frozen before these forms were generated). A judge can switch layouts in the menu.
+    for items_file in (data / "demo_sample" / "items.jsonl", data / "accident_statement" / "items.jsonl",
+                       data / "accident_statement_v2" / "items.jsonl", data / "accident_statement_v3b" / "items.jsonl"):
         if not items_file.exists():
             continue
         for line in items_file.read_text().splitlines():
