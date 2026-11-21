@@ -144,7 +144,7 @@ There is no replay for homework questions, so this needs `./scripts/demo-live.sh
   original page 93/96 for $0.052 (Haiku on both sides).
 - Five unconfigured layouts, 416 questions: all went to a full-page call; Haiku 401 through the router, 397 from
   the original page. The cost difference there comes from the page resolution, not routing.
-- Total API spend for all experiments: about $1.50 of the $10 credit.
+- Total API spend for all experiments: $1.4979 of the $10 credit at the key check (message 131); about $1.79 after the worksheet runs.
 
 Sources and limits: `docs/NARRATIVE.md` §3. The app's session meter is a per-question **estimate**; the figures
 above are receipts.
