@@ -47,3 +47,21 @@ Rehearsal check: on `eas-002`, the suggested question "Which circumstance boxes 
 the box numbers." answers 8 on form a and 7 on form b via `zoom anchor:ticks` (macOS), with the box on the
 right row of the original page; the policy-number question is LIVE OCR on both; "What is driver A's driving
 licence number?" takes `fallback page → zoom full page → abstain` (not on the form).
+
+## Live demo (release check C1)
+
+Visual questions go to a real model on the crop (or the full page when no template anchor applies):
+
+```bash
+export OPENROUTER_API_KEY=...   # from the key holder, in your shell only; never commit it or paste it in a message
+DEMO_LIVE=1 DEMO_REPLAY=1 EVAL_MODEL=or:anthropic/claude-haiku-5.5 PIPELINE=pipeline.router \
+  .venv/bin/uvicorn app.server:app --port 8000
+```
+
+- Badges: **LIVE OCR** (local, $0), **MODEL** (a real, billed call to `EVAL_MODEL`), **REPLAY** only if a live
+  call fails and `DEMO_REPLAY=1` is set (the failure reason is shown under the answer), **NO ANSWER** otherwise.
+- The cost meter prices the full-page baseline with `APP_MODEL` (default Sonnet 5.5); model answers carry the
+  provider's billed cost.
+- Tested offline with a fake OpenAI-compatible server (`EVAL_MODEL=local:… OPENAI_BASE_URL=…`): live answer →
+  MODEL; endpoint down + `DEMO_REPLAY=1` → REPLAY with the error; endpoint down alone → NO ANSWER.
+
