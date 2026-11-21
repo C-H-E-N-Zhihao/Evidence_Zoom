@@ -25,10 +25,24 @@ def requested_field(question):
     return None
 
 
+# Cyrillic/Greek capitals that render like Latin ones. Vision occasionally returns them inside IDs,
+# which look right but break any lookup. IDs are folded to Latin and must then be plain ASCII.
+CONFUSABLES = str.maketrans("АВЕКМНОРСТХУІЈЅΑΒΕΖΗΙΚΜΝΟΡΤΥΧ", "ABEKMHOPCTXYIJSABEZHIKMNOPTYX")
+
+
+def clean_id(text):
+    folded = text.translate(CONFUSABLES)
+    return folded if folded.isascii() else None
+
+
+def _squash(text):
+    return re.sub(r"\s+", "", text.lower())
+
+
 def locate(spans, field, side):
     headers = {}
     for key in "ab":
-        hits = [s for s in spans if s["text"].lower().strip() == "vehicle " + key and s["confidence"] >= .8]
+        hits = [s for s in spans if _squash(s["text"]) == "vehicle" + key and s["confidence"] >= .8]
         if len(hits) != 1:
             return None
         headers[key] = hits[0]["box"]
@@ -69,6 +83,9 @@ def answer(image, question):
                 span = locate(spans, *field)
                 if span:
                     response = span["text"]
+                    if field[0] in ("policy", "registration"):
+                        response = clean_id(response)
+                        span = span if response else None
             else:
                 # Require readable values in both columns to establish uniqueness.
                 insurers = [locate(spans, "insurer", side) for side in "ab"]

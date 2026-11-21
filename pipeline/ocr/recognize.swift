@@ -12,6 +12,8 @@ do {
     let request = VNRecognizeTextRequest()
     request.recognitionLevel = .accurate
     request.usesLanguageCorrection = false
+    // Latin-script form: keeps Vision from returning Cyrillic/Greek look-alikes (e.g. U+041C for M).
+    request.recognitionLanguages = ["en-US", "fr-FR", "de-DE", "it-IT"]
     let data = FileHandle.standardInput.readDataToEndOfFile()
     try VNImageRequestHandler(data: data).perform([request])
     let spans = (request.results ?? []).compactMap { observation -> Span? in
