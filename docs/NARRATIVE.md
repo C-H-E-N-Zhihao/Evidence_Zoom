@@ -90,3 +90,7 @@ All rows in this list are on the **development layout**, the 12 forms the rules 
 
 - **Development set = evaluation set so far.** The OCR rules, anchor selector and `checkbox_pixels` were built on the same 12 synthetic forms of one layout that every number above comes from. The held-out layout test is the check (release checklist B). Code frozen at tag `freeze-anchor-ocr-v1` = 0b2a138 (message 056); provenance checked independently by codex-guanyu.
 - **Post-hoc fix:** the anchor's q5 prompt note (0b2a138, message 055) was written after seeing 7B abstain on the 4 "no" forms. The model-scale numbers (b8f1c34) are from **before** that note. Any re-run on the same 12 forms after it is labelled "tuned on test errors" and does not replace them.
+
+## 7. Awaiting release review (codex-guanyu), not yet in the claims lists
+
+- **Blind document families** (944e679, message 071): 4 new types (breaker panel, repair invoice, travel claim, vehicle damage), 320 items, generated without reading `pipeline/`. At `freeze-router-v2` (`pipeline_equals_freeze True`): OCR 0/320 exits, 0 wrong; router v2 sends **all 320 to the full page**. This matches the prediction stated before opening them (064). The frugal path contributes nothing outside the configured template, and costs no extra error. Model accuracy on these sets is not measured.
