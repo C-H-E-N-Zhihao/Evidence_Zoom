@@ -1,23 +1,19 @@
-# LauzHack — AXA frugal multimodal AI
+# Evidence Zoom · LauzHack AXA goal dashboard
 
-Current working direction: **Evidence Zoom**, a token-efficient multimodal app using spatially grounded image representations and selective access to image details.
+**Demo goal:** A claims handler opens an accident statement, asks about a policy number or a checked circumstance, and can verify the answer on the original page. The app tries OCR first. When a question needs pixels, it starts with a small overview and requests detail from selected regions. We want to measure when that costs less than sending the full page for every question. [AXA challenge](https://app.lauzhack.com/Challenges)
 
-Our preferred design first checks whether OCR and layout answer the question. If they leave visual evidence missing, the model sees a coarse overview and can request finer detail at a selected location. The demo domain and model remain open. [Router design note](agent-messages/2026-11-21-006-coordinator-to-all.md)
+**Current milestone:** Rehearse one complete, key-free demo on a teammate’s laptop. The team is requesting the API key separately. All work through this milestone can proceed offline.
 
-## Team collaboration
+| Goal | Current evidence | Next deliverable and completion check | Point of contact |
+|---|---|---|---|
+| Let a judge follow one claim from question to source | The app supports uploads, route traces, overlays and a session cost meter. Its default pipeline uses mock answers. [App](app/) | One documented startup command for an offline rehearsal. Show a real OCR answer and a visibly labeled fixture replay for visual inspection. A teammate can reproduce both and distinguish their sources. | Zhihao · app and visual path |
+| Stop early when OCR has sufficient evidence | In the integrated fixture run, OCR answered 48 of 96 questions locally. Andrew B’s robustness fix is merged; the author reports zero wrong exits on the tested degradations. [Robustness results](eval/results/REPORT_ocr_robustness_fix.md) | On the demo machine, check the returned ID and highlight against the sample, then confirm a missing field has no invented value. Keep the Latin-script ID assumption explicit. | Andrew · OCR; Andrew B · robustness and integration |
+| Inspect the right pixels when text is insufficient | The overview, selected row/column crop and mapping back to the original page work with an oracle supplying the selection. [Visual path](pipeline/visual/) | Rehearse two otherwise identical fixture pages with different ticks. Show the crop, the tick and the matching row label; confirm the displayed answer changes and the box lands on the original page. | Zhihao with Andrew B |
+| Substantiate the frugality claim | Guanyu’s harness records route, evidence, usage and errors. We have synthetic fixtures and offline geometry checks. [Evaluation](eval/) | Produce one reproducible offline scorecard separating observed OCR exits and latency from oracle results and estimated tokens. Reserve a column for future measured full-image and cached-baseline comparisons. | Guanyu · evaluation |
+| Deliver one reproducible team demo | The pieces run independently. Browser rehearsal from a fresh checkout is open. | A teammate follows the startup instructions and records the commit, environment, two successful routes, and any failure in the team channel. Andrew reconciles the results here. | Andrew · cross-team dashboard; volunteers welcome |
 
-Zhihao, Guanyu and Andrew collaborate as peers through their respective sessions. Anyone can propose an alternative, challenge a design or offer to own a component. We agree on scope and ownership together through repo messages. The coordinator keeps the shared notes current.
+**Evidence so far.** The integrated offline run completed all 96 synthetic questions with zero pipeline errors. It used real Apple Vision OCR and supplied gold regions and answers on the visual path. Actual model selection accuracy, billed savings and performance on real claims remain open. [Offline run notes](agent-messages/2026-11-21-018-claude-zhihao-to-all.md)
 
-We coordinate through committed and pushed Markdown files in `agent-messages/`. Fetch/pull before reading or publishing updates. Add a uniquely named message rather than editing another agent's message; include sender, recipients, status, and relevant commit references. Reply with a new file and reference the message being answered. Never force-push over another agent's work. A published message is not an acknowledgment of receipt.
+**After the key arrives.** Compare the router with the full-page model on the same questions. Include cached repeated questions, overview and crop calls, fallbacks, answer accuracy, evidence overlap, latency and total cost. The next demo rehearsal has no credential dependency.
 
-The coordinator uses **Sol only** when launching agents on the shared Codex budget. Zhihao and Guanyu collaborate through their own Claude sessions. Each teammate chooses their own models, tools, and workflow.
-
-## Ideas shaping the prototype
-
-Zhihao proposed indexing regions once, exposing them through a zoom operation, and using the crop trace to highlight the pixels inspected. His cost curve asks how many questions on one image it takes to recover the indexing cost. Dense documents or screenshots are his suggested demo. [Zhihao’s proposal](agent-messages/2026-11-21-002-claude-to-coordinator.md)
-
-Guanyu proposed scoring every route through the same answer, evidence, route and usage interface. His suggested first check is to measure how the chosen backend bills the actual overview and crop sizes. He would include questions that OCR can answer, report results by evidence type and charge for retries and fallbacks. He is open to an inspection-report demo and has offered to develop the evaluation harness. [Guanyu’s evaluation proposal](agent-messages/2026-11-21-005-claude-guanyu-to-coordinator.md)
-
-The choice of demo is open. A small sample from each candidate would let us compare how often OCR suffices, which questions need pixels, and whether a crop preserves enough context to answer.
-
-Zhihao’s follow-up proposes a labeled grid for zoom requests, a cached full-image baseline for repeated questions, and paired inspection forms with known evidence boxes. He offered to build the app against Guanyu’s shared interface. [Grid, evaluation and demo proposals](agent-messages/2026-11-21-007-claude-zhihao-to-all.md)
+**Working together.** Point-of-contact names reflect existing contributions. Each collaborator can suggest a change, flag a gap or pick up an open check by posting a uniquely named file in [agent-messages/](agent-messages/). Link the dashboard goal, change or result, and relevant commit. Andrew maintains this shared view as evidence lands. Coordinator-launched agents use Sol within the shared two-day quota; teammates choose their own tools.
