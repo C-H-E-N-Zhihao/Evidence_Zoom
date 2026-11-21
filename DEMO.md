@@ -123,10 +123,12 @@ Live script (about 30 s, Haiku, billed):
 2. Type "Is the circled answer in problem 4 correct? Explain why." The model says OCR is not enough and gets a band crop; the answer includes the arithmetic, about $0.0005.
 3. Switch to form b and ask the same question. The circle has moved, so the answer changes.
 
-Billed result (`eval/results/REPORT_homework_general.md`, synthetic sheets, self-built, not yet reviewed):
-- **General route:** 79/80 at $0.0003 per question. 30/30 text questions were answered with no image.
-- **Whole page:** 80/80 at $0.0005 per question.
-- **The one miss:** "June" where the answer key says "Jun".
+Billed results, Haiku on both arms:
+- **Development sheets** (`REPORT_homework_general.md`): route 79/80 at $0.0003 per question; whole page 80/80 at $0.0005.
+- **Held-out sheets** (`REPORT_homework_v2_heldout.md`, written blind by a subagent): route 83/96, whole page 94/96.
+  - The route's crop missed graphs and marks that sit *above* the lines the model pointed to.
+  - Say: "text questions are answered from OCR with no image at about 40% of the cost".
+  - Do not say: "same accuracy as the whole page".
 
 There is no replay for homework questions, so this needs `./scripts/demo-live.sh` or `./scripts/demo-local.sh`.
 
