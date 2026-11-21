@@ -2,13 +2,8 @@
 # All offline checks, $0, no API key. Usage: ./scripts/test.sh
 set -uo pipefail
 cd "$(dirname "$0")/.."
-if [ ! -x .venv/bin/python ]; then
-  echo "== setting up .venv (first run only)"
-  python3 -m venv .venv && .venv/bin/pip install -q -r app/requirements.txt -r eval/requirements.txt || exit 1
-fi
+bash scripts/prepare-demo.sh || exit 1
 PY=.venv/bin/python
-[ -f eval/data/accident_statement/items.jsonl ] || $PY -m eval.data.accident_statement.generate
-[ -f app/static/sample.png ] || $PY -m app.make_sample
 
 fail=0
 run() {  # run <title> <command...>
