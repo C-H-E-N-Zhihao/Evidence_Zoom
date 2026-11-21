@@ -178,7 +178,8 @@ function addA(data, i, ours) {
   head.append(src, txt);
   if (data.live_error) {
     const le = document.createElement("div"); le.className = "route";
-    le.textContent = "live call failed (" + data.live_error.slice(0, 120) + "); replayed from fixture labels";
+    le.textContent = "live call failed (" + data.live_error.slice(0, 120) + "); " +
+      (source === "replay" ? "replayed from fixture labels" : "no fixture replay for this question, so no answer");
     head.append(le);
   }
   const route = document.createElement("div"); route.className = "route";
