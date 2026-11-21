@@ -109,8 +109,10 @@ def config():
     for fid, f in FIXTURES.items():
         pairs.setdefault(f["pair_id"] or fid, []).append(
             {"fixture": fid, "note": f["note"], "questions": f["questions"]})
+    from .costs import MODEL as page_model
     return {"pipeline": pipeline.__name__, "replay": REPLAY, "live": LIVE,
-            "model": os.getenv("EVAL_MODEL") if LIVE else None,
+            "model": os.getenv("EVAL_MODEL") if LIVE else None, "page_model": page_model,
+            "route_model": os.getenv("EVAL_MODEL") if LIVE else os.getenv("APP_ROUTE_MODEL", page_model),
             "pairs": [{"pair_id": k, "forms": sorted(v, key=lambda x: x["fixture"])}
                       for k, v in sorted(pairs.items())]}
 
@@ -257,7 +259,8 @@ def ask(req: Ask):
 
 @app.get("/")
 def index():
-    return FileResponse(STATIC / "index.html")
+    # no-store: a judge's browser must not show a stale page against a newer app.js (seen in the live check)
+    return FileResponse(STATIC / "index.html", headers={"Cache-Control": "no-store"})
 
 
 app.mount("/static", StaticFiles(directory=STATIC), name="static")

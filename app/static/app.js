@@ -22,6 +22,10 @@ const SOURCE = {
 
 async function init() {
   cfg = await (await fetch("/api/config")).json();
+  if (cfg.page_model) {  // say which model each side of the meter is priced with
+    $("l-cached").textContent = `Full image, cached (${cfg.page_model})`;
+    $("l-full").textContent = `Full image (${cfg.page_model})`;
+  }
   $("pipeline").textContent = `pipeline: ${cfg.pipeline}`;
   if (cfg.live) {
     $("banner").hidden = false;
@@ -190,11 +194,13 @@ function addA(data, i, ours) {
     c.title = [s.target, s.note].filter(Boolean).join(" · ");
     route.append(c);
   });
-  const imgTok = result.usage.reduce((s, u) => s + (u.input_image_tokens || 0), 0);
+  // all input tokens as billed (OpenRouter reports one input total, without an image/text split)
+  const inTok = result.usage.reduce((s, u) => s + (u.input_image_tokens || 0) + (u.input_text_tokens || 0) +
+    (u.cache_read_tokens || 0) + (u.cache_write_tokens || 0), 0);
   const save = baseline.uncached_usd > 0 ? (1 - ours / baseline.uncached_usd) * 100 : 0;
   const est = result.usage.some((u) => u.estimated) ? " (est.)" : "";
   const cost = document.createElement("div"); cost.className = "cost";
-  cost.innerHTML = `${usd(ours)}${est} · ${imgTok} img tok vs full page ${baseline.image_tokens} ` +
+  cost.innerHTML = `${usd(ours)}${est} · ${inTok} input tok vs full page ~${baseline.image_tokens + (baseline.text_tokens || 0)} ` +
     `· <span class="save">${save >= 0 ? "−" : "+"}${Math.abs(save).toFixed(0)}%</span> vs uncached full page`;
   d.append(head, route, cost);
   if (views && views.length) {
@@ -227,7 +233,10 @@ function updateMeter() {
   const n = answers.length;
   const pct = (x) => { const v = (1 - totals.ours / x) * 100; return `${v >= 0 ? "−" : "+"}${Math.abs(v).toFixed(0)}%`; };
   $("meter-foot").textContent = n ? `${n} question${n > 1 ? "s" : ""} on this image · ` +
-    `${pct(totals.full)} cost vs full page, ${pct(totals.cached)} vs cached page (estimates)` : "0 questions";
+    `${pct(totals.full)} cost vs full page, ${pct(totals.cached)} vs cached page` +
+    (cfg.route_model && cfg.page_model && cfg.route_model.replace(/^or:anthropic\//, "").replace(/\./g, "-") !== cfg.page_model
+      ? ` · route model ${cfg.route_model} vs page model ${cfg.page_model} (different models)` : "") +
+    " (page side estimated)" : "0 questions";
 }
 
 function draw() {
