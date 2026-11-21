@@ -1,0 +1,78 @@
+{
+  "about": "Approved claims for the app's 'What we measured' drawer. Source of truth: docs/NARRATIVE.md section 3. Author: claude-guanyu. Wording must be approved by the release reviewer (Andrew's agent) before the app shows it. All forms are synthetic unless a row says otherwise.",
+  "status": "draft, awaiting release review (message 136)",
+  "claims": [
+    {
+      "id": "billed-cross-model",
+      "title": "Same accuracy, about 1/25 of the API cost",
+      "text": "On 96 questions about 12 accident-statement forms, Claude Haiku 5.5 on our route scored 96/96 for $0.0098 in total. Claude Sonnet 5.5 on the cached whole page scored 96/96 for $0.2425. 48 questions were answered by local OCR, 36 from a crop and 12 from the whole page.",
+      "kind": "measured, billed",
+      "limits": "Configured layout, synthetic forms, two different models: compare with the same-model row.",
+      "source": "eval/results/paid_20261121-162336/"
+    },
+    {
+      "id": "billed-same-model",
+      "title": "Same model on both sides",
+      "text": "Haiku on our route: 96/96 at $0.00010 per question. Haiku on the uncached whole page: 91/96 at $0.00054. Sonnet on both sides: our route 96/96 for $0.162, the cached whole page 96/96 for $0.243. That saving comes from the 48 questions OCR answers locally; on the visual questions alone the cached page is cheaper.",
+      "kind": "measured, billed",
+      "limits": "Configured layout, one question order (8 per page).",
+      "source": "eval/results/REPORT_same_model_sonnet.md"
+    },
+    {
+      "id": "second-layout",
+      "title": "A second configured layout",
+      "text": "On 12 new synthetic forms of a second configured layout, the frozen router scored 96/96 for $0.010. The original-page Haiku baseline scored 93/96 for $0.052. The template is 10 lines plus a one-time engine.",
+      "kind": "measured, billed",
+      "limits": "The engine was tuned on this layout before the freeze. Clean synthetic scans, one run.",
+      "source": "eval/results/v3b_haiku/"
+    },
+    {
+      "id": "unconfigured",
+      "title": "Layouts we did not configure",
+      "text": "On five unconfigured synthetic layouts, all 416 questions went to a full-page call. Haiku answered 401 correctly through the router and 397 from the original page. A plain downscaled page scored 398 for less money, so the cost difference there is resolution, not routing.",
+      "kind": "measured, billed",
+      "limits": "Do not read 401 vs 397 as 'more accurate'.",
+      "source": "eval/results/unconfigured_haiku/, eval/results/unconfigured_haiku_lowres/"
+    },
+    {
+      "id": "crop-vs-page-open-models",
+      "title": "The right crop helps open models",
+      "text": "On 36 visual questions, Qwen2.5-VL-72B scored 20/36 on the whole page and 36/36 on the crop chosen from the layout. The 7B model scored 22/36 on that crop and 15/36 on the page.",
+      "kind": "measured, local GPU",
+      "limits": "One layout, 36 questions. Quote both counts; no 'beats' or 'matches'.",
+      "source": "eval/results/model_scale/REPORT.md"
+    },
+    {
+      "id": "models-cannot-select",
+      "title": "Why the layout picks the crop",
+      "text": "Asked to choose the region themselves, the two models we tested struggled: the 7B model covered the evidence in 0/24 zooms and the 72B model in 3/36.",
+      "kind": "measured, local GPU",
+      "limits": "Two open models tested.",
+      "source": "eval/results/model_scale/REPORT.md"
+    },
+    {
+      "id": "ocr-safety",
+      "title": "OCR answers locally, without wrong answers on our tests",
+      "text": "On the clean run, local OCR answered 48 of 96 questions, all correctly. Under 10 synthetic degradations it made 0 wrong answers; fewer questions were answered locally (24 at 768 px) and the rest went on to the model.",
+      "kind": "measured",
+      "limits": "Synthetic degradations. On layout 2 a look-alike misread (J1 for JI) was stopped by a guard; not a general safety guarantee.",
+      "source": "eval/results/REPORT_ocr_robustness_82f3112.md"
+    },
+    {
+      "id": "boundary",
+      "title": "Where it stops",
+      "text": "On a layout the rules were not written for, and on four new document types (320 questions), local OCR answered nothing and every question went to the whole page.",
+      "kind": "measured",
+      "limits": "Frugal only where a template is configured.",
+      "source": "eval/results/REPORT_heldout_v2_ocr.md, eval/results/REPORT_blind_families_stages.md"
+    },
+    {
+      "id": "spend",
+      "title": "What all this cost",
+      "text": "All paid experiments together used $1.50 of the $10 API credit (OpenRouter key usage $1.4979, matching the receipts).",
+      "kind": "measured",
+      "limits": "",
+      "source": "agent-messages/2026-11-21-131-claude-andrew-b-to-all.md"
+    }
+  ]
+}
