@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evidence Zoom</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <div class="brand">Evidence Zoom <span class="tag">frugal multimodal QA</span></div>
+  <div class="pipeline" id="pipeline">pipeline: –</div>
+</header>
+
+<main>
+  <section class="viewer">
+    <div class="toolbar">
+      <label class="btn">Upload image<input type="file" id="file" accept="image/*" hidden></label>
+      <button class="btn ghost" id="sample">Load demo form</button>
+      <label class="toggle"><input type="checkbox" id="showGrid" checked> grid</label>
+    </div>
+    <div class="stage" id="stage">
+      <div class="empty" id="empty">Upload an image or load the demo form</div>
+      <img id="img" alt="">
+      <canvas id="overlay"></canvas>
+    </div>
+    <div class="legend">
+      <span><i class="sw ocr"></i>OCR evidence</span>
+      <span><i class="sw zoomcell"></i>zoomed cell</span>
+      <span><i class="sw zoom"></i>visual evidence</span>
+    </div>
+  </section>
+
+  <section class="side">
+    <div class="meter" id="meter">
+      <div class="meter-title">Session cost <span class="est">estimated</span></div>
+      <div class="bars">
+        <div class="bar-row"><span>Evidence Zoom</span><div class="bar"><div id="b-ours"></div></div><b id="v-ours">$0</b></div>
+        <div class="bar-row"><span>Full image, cached</span><div class="bar"><div id="b-cached"></div></div><b id="v-cached">$0</b></div>
+        <div class="bar-row"><span>Full image</span><div class="bar"><div id="b-full"></div></div><b id="v-full">$0</b></div>
+      </div>
+      <div class="meter-foot" id="meter-foot">0 questions</div>
+    </div>
+
+    <div class="chat" id="chat"></div>
+
+    <div class="suggest" id="suggest">
+      <button>What is vehicle B's policy number?</button>
+      <button>Which circumstance boxes did driver B tick?</button>
+      <button>In the sketch, which vehicle was hit from behind?</button>
+    </div>
+    <form id="ask">
+      <input id="q" placeholder="Ask about the image…" autocomplete="off" disabled>
+      <button class="btn" id="send" disabled>Ask</button>
+    </form>
+  </section>
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
