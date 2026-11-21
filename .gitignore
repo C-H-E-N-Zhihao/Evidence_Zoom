@@ -3,3 +3,4 @@ __pycache__/
 app/uploads/
 .claude/
 .DS_Store
+.env
