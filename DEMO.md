@@ -59,7 +59,7 @@ It runs six offline checks and ends with `ALL CHECKS PASSED`:
 |---|---|---|---|
 | `./scripts/demo.sh` | stored answers, **replayed** and labelled REPLAY | nothing | $0 |
 | `./scripts/demo-live.sh` | **Claude Haiku 5.5** via OpenRouter, labelled MODEL | `OPENROUTER_API_KEY` (env or git-ignored `.env`) | ≈ $0.0002 per visual question, new calls stop once `APP_LIVE_MAX_USD` (default $1) is reached (a stop threshold, not a billing maximum) |
-| `./scripts/demo-local.sh` | **Qwen2.5-VL-7B on this Mac** via Ollama, labelled MODEL | `brew install ollama`, `ollama serve`, `ollama pull qwen2.5vl:7b` (6 GB) | $0, and the document never leaves the machine |
+| `./scripts/demo-local.sh` | **Qwen2.5-VL-7B on this Mac** via Ollama, labelled MODEL | `brew install ollama`, `OLLAMA_CONTEXT_LENGTH=8192 ollama serve` (whole-page Compare needs more than the default 4096 tokens), `ollama pull qwen2.5vl:7b` (6 GB) | $0, and the document never leaves the machine |
 
 All three use local OCR for printed fields and fall back to the labelled replay if a model call fails.
 **On-device measurement** (Andrew's M3 Pro, 18 GB; layout 1, 96 questions; `eval/results/ondevice_qwen7b/`):

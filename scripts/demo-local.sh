@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # ON-DEVICE demo: local OCR + a small vision model running on this Mac through Ollama. No API key, $0 per call,
 # the document never leaves the machine. Falls back to the labelled fixture replay if a model call fails.
-# Setup once: brew install ollama && ollama serve (separate terminal) && ollama pull qwen2.5vl:7b
+# Setup once: brew install ollama && ollama pull qwen2.5vl:7b. Before the demo, in a separate terminal:
+#   OLLAMA_CONTEXT_LENGTH=8192 ollama serve
+# (the default 4096-token context is too small for a whole page; crops and OCR text fit either way)
 # Usage: ./scripts/demo-local.sh [port]     env: LOCAL_VLM (default qwen2.5vl:7b), OLLAMA_URL (default http://localhost:11434)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -10,7 +12,7 @@ MODEL="${LOCAL_VLM:-qwen2.5vl:7b}"
 OLLAMA_URL="${OLLAMA_URL:-http://localhost:11434}"
 bash scripts/prepare-demo.sh
 if ! curl -s -m 3 "$OLLAMA_URL/api/tags" >/dev/null; then
-  echo "Ollama is not running at $OLLAMA_URL. Start it with: ollama serve"
+  echo "Ollama is not running at $OLLAMA_URL. Start it with: OLLAMA_CONTEXT_LENGTH=8192 ollama serve"
   exit 1
 fi
 if ! curl -s -m 3 "$OLLAMA_URL/api/tags" | grep -q "\"$MODEL\""; then

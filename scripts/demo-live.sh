@@ -22,6 +22,7 @@ if [ -z "${SSL_CERT_FILE:-}" ]; then
 fi
 export EVAL_MODEL="${EVAL_MODEL:-or:anthropic/claude-haiku-5.5}"
 # If Ollama runs on this Mac with the local model, offer it too: the presenter switches cloud <-> on-device in the app.
+# Start Ollama with OLLAMA_CONTEXT_LENGTH=8192 so whole-page "Compare" calls fit (default 4096 only fits crops and text).
 LOCAL_VLM="${LOCAL_VLM:-qwen2.5vl:7b}"
 if [ -z "${APP_MODELS:-}" ] && curl -s -m 2 http://localhost:11434/api/tags 2>/dev/null | grep -q "\"$LOCAL_VLM\""; then
   export APP_MODELS="$EVAL_MODEL,local:$LOCAL_VLM" OPENAI_BASE_URL="${OPENAI_BASE_URL:-http://localhost:11434/v1}"

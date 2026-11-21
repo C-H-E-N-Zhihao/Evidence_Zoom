@@ -272,7 +272,11 @@ function addA(data, i, ours) {
   if (!result.abstained) {
     const lab = (result.evidence_boxes || []).map((e) => e.label).find(Boolean);
     const from = document.createElement("div"); from.className = "note";
-    from.textContent = lab ? `from the line labelled "${lab}"` : (source === "ocr" ? "" : "field label not verified");
+    const general = data.pipeline === "pipeline.general";
+    const lines = (result.evidence_boxes || []).filter((e) => e.source === "ocr" && e.label).length;
+    from.textContent = general
+      ? (lines ? `cites ${lines} OCR line${lines > 1 ? "s" : ""} (green boxes)` : "read from the image; box not verified")
+      : (lab ? `from the line labelled "${lab}"` : (source === "ocr" ? "" : "field label not verified"));
     if (from.textContent) head.append(from);
   }
   if (source === "model" && data.model) {
