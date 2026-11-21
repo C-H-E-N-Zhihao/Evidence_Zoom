@@ -15,15 +15,54 @@ are always charged. A stage that is missing or raises is recorded in `route`/`er
 Eval harness:  python -m eval.run_eval --items ... --pipelines pipeline.router:factory
 App:           PIPELINE=pipeline.router uvicorn app.server:app
 Env: ROUTER_SKIP_OCR=1 disables the OCR stage (ablation: visual path alone).
+     ROUTER_REQUIRE_OCR=1 raises if the OCR helper is unavailable (use for paid runs: without it the
+     OCR-answerable questions silently go to the paid visual path).
+
+OCR helper: if EVIDENCE_OCR_BIN is unset and `evidence-ocr` is not on PATH, the router compiles
+pipeline/ocr/recognize.swift once (macOS + swiftc) into ~/.cache/evidence-zoom/ and sets EVIDENCE_OCR_BIN.
 """
 from __future__ import annotations
 
 import importlib
 import os
+import shutil
+import subprocess
+import sys
+from functools import lru_cache
+from pathlib import Path
 
 from eval.schema import PipelineResult, RouteStep
 
 NAME = "router@v1"
+
+
+@lru_cache(maxsize=1)
+def ensure_ocr_bin() -> str | None:
+    """Return a path to the OCR helper, building it if needed; None (with a reason on stderr) if impossible."""
+    env = os.environ.get("EVIDENCE_OCR_BIN")
+    if env:
+        if Path(env).is_file():
+            return env
+        print(f"[router] EVIDENCE_OCR_BIN={env} does not exist", file=sys.stderr)
+        return None
+    if found := shutil.which("evidence-ocr"):
+        return found
+    src = Path(__file__).parent / "ocr" / "recognize.swift"
+    out = Path.home() / ".cache" / "evidence-zoom" / "evidence-ocr"
+    if out.is_file() and out.stat().st_mtime >= src.stat().st_mtime:
+        os.environ["EVIDENCE_OCR_BIN"] = str(out)
+        return str(out)
+    if sys.platform != "darwin" or not shutil.which("swiftc") or not src.is_file():
+        print("[router] OCR helper unavailable (needs macOS + swiftc); OCR stage skipped", file=sys.stderr)
+        return None
+    out.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        subprocess.run(["swiftc", "-O", str(src), "-o", str(out)], check=True, capture_output=True, timeout=300)
+    except (OSError, subprocess.SubprocessError) as e:
+        print(f"[router] building OCR helper failed: {e}", file=sys.stderr)
+        return None
+    os.environ["EVIDENCE_OCR_BIN"] = str(out)
+    return str(out)
 
 
 def _stage(module: str):
@@ -45,6 +84,10 @@ def answer(image, question: str) -> PipelineResult:
 
     if os.environ.get("ROUTER_SKIP_OCR") != "1":
         ocr, err = _stage("pipeline.ocr")
+        if ocr is not None and ensure_ocr_bin() is None:
+            if os.environ.get("ROUTER_REQUIRE_OCR") == "1":
+                raise RuntimeError("ROUTER_REQUIRE_OCR=1 but the OCR helper is unavailable")
+            ocr, err = None, "OCR helper unavailable (see stderr)"
         if ocr is None:
             notes.append(err)
         else:

@@ -46,6 +46,8 @@ def _clear():
 
 
 def run():
+    real_ensure = router.ensure_ocr_bin
+    router.ensure_ocr_bin = lambda: "stub"
     _install("pipeline.ocr", _ocr_exit); _install("pipeline.visual", _boom)
     r = router.answer(None, "q")
     assert r.answer == "AS-1" and [s.step for s in r.route] == ["ocr", "answer"] and r.pipeline == router.NAME
@@ -72,8 +74,21 @@ def run():
     os.environ["ROUTER_SKIP_OCR"] = "1"; _install("pipeline.ocr", _boom); _install("pipeline.visual", _visual)
     r = router.answer(None, "q")
     assert r.route[0].note == "OCR skipped" and r.answer == "10, 16"
-    del os.environ["ROUTER_SKIP_OCR"]; _clear()
-    print("router: 6 checks passed")
+    del os.environ["ROUTER_SKIP_OCR"]
+
+    # helper missing: OCR skipped with a note, visual still answers; ROUTER_REQUIRE_OCR=1 raises
+    router.ensure_ocr_bin = lambda: None
+    _install("pipeline.ocr", _ocr_exit); _install("pipeline.visual", _visual)
+    r = router.answer(None, "q")
+    assert "OCR helper unavailable" in r.route[0].note and r.answer == "10, 16"
+    os.environ["ROUTER_REQUIRE_OCR"] = "1"
+    try:
+        router.answer(None, "q"); raise AssertionError("expected RuntimeError")
+    except RuntimeError:
+        pass
+    del os.environ["ROUTER_REQUIRE_OCR"]
+    router.ensure_ocr_bin = real_ensure; _clear()
+    print("router: 8 checks passed")
 
 
 if __name__ == "__main__":
