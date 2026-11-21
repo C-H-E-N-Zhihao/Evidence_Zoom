@@ -34,7 +34,18 @@ def run():
 
     r = anchor.answer(img, "What colour is vehicle A?", call=fake({"answer": "x"}))
     assert [s.step for s in r.route] == ["fallback"] and r.answer is None
-    print("anchor: 3 checks passed")
+    # deskew: on a page tilted by 4°, the answer box must land on B's row-8 tick of the TILTED page
+    import math
+    tilted = img.rotate(4, resample=Image.BICUBIC, expand=False, fillcolor=(255, 255, 255))
+    r = anchor.answer(tilted, q, call=fake({"answer": "8", "box": [0.55, 0.475, 1.0, 0.505]}), model="m")
+    assert "deskew" in r.route[0].target and r.answer == "8", r.route[0].target
+    w, h = img.size
+    gx, gy = 0.9165 * w - w / 2, 0.4964 * h - h / 2  # gold B tick (row 8) centre, clean page, from the centre
+    a = math.radians(4)
+    ex, ey = (w / 2 + gx * math.cos(a) + gy * math.sin(a)) / w, (h / 2 - gx * math.sin(a) + gy * math.cos(a)) / h
+    b = max(r.evidence_boxes, key=lambda e: e.box[0]).box
+    assert abs((b[0] + b[2]) / 2 - ex) < 0.02 and abs((b[1] + b[3]) / 2 - ey) < 0.02, (b, ex, ey)
+    print("anchor: 4 checks passed")
 
 
 if __name__ == "__main__":

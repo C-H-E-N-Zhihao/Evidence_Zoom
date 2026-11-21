@@ -48,6 +48,8 @@ class Selection:
     note: str  # one line told to the model about what the crop shows
     ocr_ms: float = 0.0
     spans: list = field(default_factory=list, repr=False)
+    image: Optional[Image.Image] = field(default=None, repr=False)  # page the regions refer to (deskewed if angle)
+    angle: float = 0.0  # degrees the page was rotated (PIL convention, counter-clockwise) before selection
 
 
 # ---- OCR ----------------------------------------------------------------------------------------
@@ -68,7 +70,7 @@ def _find(spans, pred):
     return [s for s in spans if s["confidence"] >= 0.5 and pred(s["text"].strip(), s["box"])]
 
 
-def layout(spans: list[dict]) -> Optional[Layout]:
+def layout(spans: list[dict], image: Optional[Image.Image] = None) -> Optional[Layout]:
     head = _find(spans, lambda t, b: re.match(r"^12\s*[.,]?\s*circumstances", t, re.I) is not None)
     if len(head) != 1:
         return None
@@ -116,8 +118,38 @@ def layout(spans: list[dict]) -> Optional[Layout]:
         if centers and centers[-1] - centers[0] < 0.02:
             c = centers[len(centers) // 2]
             cols["b"] = (c - 0.02, c + 0.02)
+    if image is not None:  # last resort: find the column of box outlines in the pixels
+        for side, (xa, xb) in (("a", (0.0, label_x0 - 0.005)), ("b", (0.6, 1.0))):
+            if side not in cols and (c := _box_column(image, (y_first, y_last), (xa, xb))) is not None:
+                cols[side] = (c - 0.02, c + 0.02)
     sketch = (sk[0]["box"][3] + 0.003, min(1.0, sk[0]["box"][3] + 0.22)) if len(sk) == 1 else None
     return Layout(rows, label_x0, x1s, cols, sketch)
+
+
+def _box_column(image: Image.Image, band: Span, xrange: Span) -> Optional[float]:
+    """Centre x of a column of square box outlines: the two vertical edges show up as a pair of pixel columns
+    that are dark over most of the table band (0.4-0.95 of its height), 1.2-3.5% of the page width apart."""
+    import numpy as np
+
+    g = np.asarray(image.convert("L"))
+    h, w = g.shape
+    y0, y1 = int(band[0] * h), int(band[1] * h)
+    x0, x1 = int(xrange[0] * w), int(xrange[1] * w)
+    if y1 - y0 < 20 or x1 - x0 < 10:
+        return None
+    prof = (g[y0:y1, x0:x1] < 128).mean(0)
+    xs = [x0 + i for i in np.where((prof > 0.4) & (prof < 0.95))[0]]
+    edges = []  # merge adjacent pixel columns into edges
+    for x in xs:
+        if edges and x - edges[-1][1] <= 2:
+            edges[-1][1] = x
+        else:
+            edges.append([x, x])
+    centers = [(a + b) / 2 for a, b in edges]
+    pairs = [(c1, c2) for i, c1 in enumerate(centers) for c2 in centers[i + 1:] if 0.012 * w <= c2 - c1 <= 0.035 * w]
+    if len(pairs) != 1:
+        return None
+    return (pairs[0][0] + pairs[0][1]) / 2 / w
 
 
 def _fill_rows(rows: dict[int, Span]) -> dict[int, Span]:
@@ -166,12 +198,59 @@ def regions(question: str, lay: Layout) -> Optional[Selection]:
                      f"driver {side.upper()}'s tick boxes next to the circumstance numbers 1-17 (same rows)")
 
 
-def select(image: Image.Image, question: str) -> Optional[Selection]:
+MIN_DESKEW_DEG, MAX_DESKEW_DEG = 0.7, 10.0
+
+
+def tilt_deg(spans: list[dict], size: tuple[int, int]) -> Optional[float]:
+    """Page tilt from the two 'VEHICLE A' / 'VEHICLE B' headers (same signal as pipeline.ocr's alignment).
+    Returned in PIL's rotate() convention: rotating the page by this angle makes the headers level."""
+    import math
+
+    hdr = {}
+    for key in "ab":
+        hits = [s for s in spans if re.sub(r"\s+", "", s["text"].lower()) == "vehicle" + key and s["confidence"] >= 0.5]
+        if len(hits) != 1:
+            return None
+        b = hits[0]["box"]
+        hdr[key] = ((b[0] + b[2]) / 2 * size[0], (b[1] + b[3]) / 2 * size[1])
+    (xa, ya), (xb, yb) = hdr["a"], hdr["b"]
+    if xb <= xa:
+        return None
+    return math.degrees(math.atan2(yb - ya, xb - xa))  # y grows downwards: positive = right side lower
+
+
+def unrotate_box(box: list[float], angle: float, size: tuple[int, int]) -> list[float]:
+    """Box on the deskewed page (rotated by `angle` about the centre, same size) -> box on the original page."""
+    import math
+
+    w, h = size
+    cx, cy = w / 2, h / 2
+    a = math.radians(-angle)  # the page was rotated counter-clockwise by `angle`; rotate back by -angle
+    pts = []
+    for x, y in ((box[0], box[1]), (box[2], box[1]), (box[0], box[3]), (box[2], box[3])):
+        dx, dy = x * w - cx, y * h - cy
+        ox = cx + dx * math.cos(a) + dy * math.sin(a)
+        oy = cy - dx * math.sin(a) + dy * math.cos(a)
+        pts.append((ox / w, oy / h))
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    return [round(max(0.0, min(xs)), 4), round(max(0.0, min(ys)), 4),
+            round(min(1.0, max(xs)), 4), round(min(1.0, max(ys)), 4)]
+
+
+def select(image: Image.Image, question: str, deskew: bool = True) -> Optional[Selection]:
     spans, ms = ocr_spans(image)
-    lay = layout(spans)
+    page, angle = image, 0.0
+    if deskew:
+        t = tilt_deg(spans, image.size)
+        if t is not None and MIN_DESKEW_DEG <= abs(t) <= MAX_DESKEW_DEG:
+            angle = t
+            page = image.rotate(angle, resample=Image.BICUBIC, expand=False, fillcolor=(255, 255, 255))
+            spans, ms2 = ocr_spans(page)
+            ms += ms2
+    lay = layout(spans, page)
     sel = regions(question, lay) if lay else None
     if sel:
-        sel.ocr_ms, sel.spans = ms, spans
+        sel.ocr_ms, sel.spans, sel.image, sel.angle = ms, spans, page, angle
     return sel
 
 
@@ -193,8 +272,17 @@ def answer(image: Image.Image, question: str, prior: Optional[PipelineResult] = 
         res.route.append(RouteStep("fallback", target="overview", note="no OCR anchor for this question"))
         return res
     res.usage.append(Usage(len(res.route), "local", "Apple Vision OCR (anchor)", latency_ms=sel.ocr_ms))
-    return zoom_answer(image, question, sel.rows, sel.cols, prior=res, model=model, look_for=sel.note,
-                       target=f"anchor:{sel.kind}", call=call, name="anchor_crop")
+    n0 = len(res.route)
+    out = zoom_answer(sel.image, question, sel.rows, sel.cols, prior=res, model=model, look_for=sel.note,
+                      target=f"anchor:{sel.kind}" + (f" deskew {sel.angle:+.1f}deg" if sel.angle else ""),
+                      call=call, name="anchor_crop")
+    if sel.angle:  # boxes refer to the deskewed page: map them back to the original image
+        for e in out.evidence_boxes:
+            e.box = unrotate_box(e.box, sel.angle, image.size)
+        for st in out.route[n0:]:
+            if st.box:
+                st.box = unrotate_box(st.box, sel.angle, image.size)
+    return out
 
 
 def factory():
