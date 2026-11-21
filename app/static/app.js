@@ -276,8 +276,10 @@ function draw() {
     ctx.lineWidth = 3; ctx.strokeStyle = e.source === "ocr" ? css("--ocr") : css("--zoom");
     ctx.strokeRect(x0 * W - 2, y0 * H - 2, (x1 - x0) * W + 4, (y1 - y0) * H + 4);
     if (e.label) {  // caption: the printed label that located this value
-      ctx.font = "600 11px ui-sans-serif, system-ui"; ctx.fillStyle = ctx.strokeStyle;
-      ctx.fillText(e.label, x0 * W, Math.max(11, y0 * H - 5));
+      ctx.font = "600 11px ui-sans-serif, system-ui";
+      const tx = x0 * W, ty = Math.max(13, y0 * H - 6), tw = ctx.measureText(e.label).width;
+      ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.fillRect(tx - 3, ty - 11, tw + 6, 14);
+      ctx.fillStyle = ctx.strokeStyle; ctx.fillText(e.label, tx, ty);
     }
   });
 }
