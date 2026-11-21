@@ -113,6 +113,16 @@ def degraded(r: PipelineResult) -> str | None:
     return None
 
 
+def _degradation(name: str):
+    if name == "clean":
+        return lambda im: im
+    from bench.ocr_robustness import DEGRADATIONS  # claude-andrew-b's bench, reused so both measure the same inputs
+
+    if name not in DEGRADATIONS:
+        raise SystemExit(f"unknown --degrade {name!r}; choose from {sorted(DEGRADATIONS)}")
+    return DEGRADATIONS[name]
+
+
 def main() -> None:
     from .reliance import pair_follow_rate  # local import: reliance imports this module
     ap = argparse.ArgumentParser()
@@ -124,7 +134,12 @@ def main() -> None:
     ap.add_argument("--max-error-rate", type=float, default=0.2,
                     help="abort a pipeline when more than this fraction of its results errored or degraded")
     ap.add_argument("--warmup", type=int, default=8, help="results before the error-rate check applies")
+    ap.add_argument("--degrade", default="clean",
+                    help="input degradation from bench/ocr_robustness.py DEGRADATIONS (e.g. phone_photo, scale_1024, "
+                         "jpeg_q40). Geometric ones (rotate_*, perspective_*, phone_photo) move the content, so gold "
+                         "boxes, evidence metrics and gold_crop controls are approximate under them.")
     a = ap.parse_args()
+    degrade_fn = _degradation(a.degrade)
 
     items = load_items(Path(a.items))[: a.limit]
     by_img: dict[str, list[EvalItem]] = defaultdict(list)
@@ -139,7 +154,7 @@ def main() -> None:
         pairs: list[tuple[EvalItem, PipelineResult]] = []
         n_bad, aborted = 0, None
         for img_id, its in by_img.items():
-            img = Image.open(its[0].image_path).convert("RGB")
+            img = degrade_fn(Image.open(its[0].image_path).convert("RGB"))
             for it in its:
                 if spent >= a.max_cost:
                     print(f"[stop] max cost ${a.max_cost:.2f} reached")
@@ -171,6 +186,7 @@ def main() -> None:
 
     meta = {"commit": git_commit(), "items": a.items, "n_items": len(items), "pipelines": a.pipelines,
             "spent_usd": spent, "budget_hit": budget_hit, "max_error_rate": a.max_error_rate,
+            "degrade": a.degrade, "geometric_degrade": a.degrade.startswith(("rotate", "perspective", "phone")),
             "time": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
     out = Path(a.out) / f"run_{time.strftime('%Y%m%d-%H%M%S')}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
