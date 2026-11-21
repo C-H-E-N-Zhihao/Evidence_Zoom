@@ -1,0 +1,5264 @@
+{
+  "meta": {
+    "commit": "8ebd708",
+    "items": "eval/data/travel_claim/items.jsonl",
+    "n_items": 80,
+    "pipelines": [
+      "lowres:1568@or:anthropic/claude-haiku-5.5"
+    ],
+    "spent_usd": 0.02230670000000001,
+    "budget_hit": false,
+    "max_error_rate": 0.2,
+    "degrade": "clean",
+    "geometric_degrade": false,
+    "pipeline_tree": "4b0d8c71c985",
+    "pipeline_dirty": false,
+    "eval_dirty": false,
+    "freeze_tag": "freeze-router-v3",
+    "pipeline_equals_freeze": false,
+    "images_digest": "644a485514797747",
+    "images_sha256": {
+      "clm-001a.png": "7a346e6b68115fb45c2cc82170910a3563d2937c851196a1d55d036a3230c382",
+      "clm-001b.png": "7e09c43381f056c5396f8a05c868654da6364f9eb9b12a7bc31ccfe5e8de6e3a",
+      "clm-002a.png": "588d4de4b25de7f64d1058d884e688083d0901bf0763baf307ef5f74d4081ea6",
+      "clm-002b.png": "11b31b08193171ce8624c77c06586a7a791ee635cbd9f68e2fd01d035e7556e7",
+      "clm-003a.png": "a85d98459a3d59c5855b8b0d90f96557f65c7e8b6999a61fda8bab5e6a97fed8",
+      "clm-003b.png": "f969ad9a2e233eee0956e06f9d3e7e10a623d940b23b90cfced9f51b8fa1d30d",
+      "clm-004a.png": "4969cf4e5fcb2dfe36447fe0c87e281128bab0672dbee382f4872190d9214366",
+      "clm-004b.png": "27c5b76c9ca9bc09c83ab12d21b9516f0392ab43d25bb7b7bc192c934b380eef",
+      "clm-005a.png": "51845aa7e8f20725d89cbf982893c32731d146088b6dc218b6ac3bf7223b2dab",
+      "clm-005b.png": "7aac23cea1764f9cfce30b347bc0e5ee98aee5e387e7facab7e58ec32a6be5e8"
+    },
+    "time": "2026-11-21T19:17:49+0100"
+  },
+  "report": {
+    "lowres:1568@or:anthropic/claude-haiku-5.5": {
+      "summary": {
+        "all": {
+          "n": 80,
+          "accuracy": 1,
+          "evidence_hit@0.3": 0.6714285714285714,
+          "evidence_iou_mean": 0.46841241885117624,
+          "joint_answer_evidence": 0.6714285714285714,
+          "zoom_rate": 0.0,
+          "zoom_covers_gold@0.9": null,
+          "zoom_coverage_mean": null,
+          "acc_given_zoom_covers": null,
+          "abstain_rate": 0.125,
+          "correct_abstain_rate": 1,
+          "errors": 0,
+          "cost_usd_total": 0.0223067,
+          "cost_usd_mean": 0.00027883375,
+          "latency_ms_median": 1453.5631258040667,
+          "calls": 80,
+          "input_image_tokens": 0,
+          "input_text_tokens": 192062,
+          "cache_read_tokens": 0,
+          "output_tokens": 6201,
+          "gpu_seconds": 0.0,
+          "any_estimated": false
+        },
+        "text": {
+          "n": 40,
+          "accuracy": 1,
+          "evidence_hit@0.3": 0.6666666666666666,
+          "evidence_iou_mean": 0.34661579425459105,
+          "joint_answer_evidence": 0.6666666666666666,
+          "zoom_rate": 0.0,
+          "zoom_covers_gold@0.9": null,
+          "zoom_coverage_mean": null,
+          "acc_given_zoom_covers": null,
+          "abstain_rate": 0.25,
+          "correct_abstain_rate": 1,
+          "errors": 0,
+          "cost_usd_total": 0.0104582,
+          "cost_usd_mean": 0.000261455,
+          "latency_ms_median": 1423.449270427227,
+          "calls": 40,
+          "input_image_tokens": 0,
+          "input_text_tokens": 95802,
+          "cache_read_tokens": 0,
+          "output_tokens": 1756,
+          "gpu_seconds": 0.0,
+          "any_estimated": false
+        },
+        "layout": {
+          "n": 10,
+          "accuracy": 1,
+          "evidence_hit@0.3": 0.9,
+          "evidence_iou_mean": 0.6586428736846236,
+          "joint_answer_evidence": 0.9,
+          "zoom_rate": 0.0,
+          "zoom_covers_gold@0.9": null,
+          "zoom_coverage_mean": null,
+          "acc_given_zoom_covers": null,
+          "abstain_rate": 0,
+          "correct_abstain_rate": null,
+          "errors": 0,
+          "cost_usd_total": 0.002624,
+          "cost_usd_mean": 0.00026240000000000004,
+          "latency_ms_median": 1378.2806873787194,
+          "calls": 10,
+          "input_image_tokens": 0,
+          "input_text_tokens": 24000,
+          "cache_read_tokens": 0,
+          "output_tokens": 448,
+          "gpu_seconds": 0.0,
+          "any_estimated": false
+        },
+        "visual": {
+          "n": 30,
+          "accuracy": 1,
+          "evidence_hit@0.3": 0.6,
+          "evidence_iou_mean": 0.5267988918366123,
+          "joint_answer_evidence": 0.6,
+          "zoom_rate": 0.0,
+          "zoom_covers_gold@0.9": null,
+          "zoom_coverage_mean": null,
+          "acc_given_zoom_covers": null,
+          "abstain_rate": 0,
+          "correct_abstain_rate": null,
+          "errors": 0,
+          "cost_usd_total": 0.0092245,
+          "cost_usd_mean": 0.0003074833333333333,
+          "latency_ms_median": 1780.517958337441,
+          "calls": 30,
+          "input_image_tokens": 0,
+          "input_text_tokens": 72260,
+          "cache_read_tokens": 0,
+          "output_tokens": 3997,
+          "gpu_seconds": 0.0,
+          "any_estimated": false
+        }
+      },
+      "cost_curve": [
+        {
+          "questions": 1,
+          "mean_cum_cost_usd": 0.0002634,
+          "n_images": 10
+        },
+        {
+          "questions": 2,
+          "mean_cum_cost_usd": 0.0005262,
+          "n_images": 10
+        },
+        {
+          "questions": 3,
+          "mean_cum_cost_usd": 0.0007886,
+          "n_images": 10
+        },
+        {
+          "questions": 4,
+          "mean_cum_cost_usd": 0.0010513,
+          "n_images": 10
+        },
+        {
+          "questions": 5,
+          "mean_cum_cost_usd": 0.0013279,
+          "n_images": 10
+        },
+        {
+          "questions": 6,
+          "mean_cum_cost_usd": 0.00167975,
+          "n_images": 10
+        },
+        {
+          "questions": 7,
+          "mean_cum_cost_usd": 0.00197375,
+          "n_images": 10
+        },
+        {
+          "questions": 8,
+          "mean_cum_cost_usd": 0.00223067,
+          "n_images": 10
+        }
+      ],
+      "pair_follow_rate": 1.0,
+      "degraded": 0,
+      "aborted": null,
+      "complete": true,
+      "results": [
+        {
+          "answer": "TRV-39-325756",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.513,
+                0.143,
+                0.675,
+                0.172
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2394,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1621.2292918935418,
+              "cost_usd": 0.0002634,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001a-q1",
+          "image_id": "clm-001a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Clara Wenger",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.06,
+                0.143,
+                0.195,
+                0.165
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2392,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1402.8893331997097,
+              "cost_usd": 0.0002627,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001a-q2",
+          "image_id": "clm-001a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "993.00",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.06,
+                0.58,
+                0.94,
+                0.605
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2400,
+              "input_image_tokens": 0,
+              "output_tokens": 43,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1386.4377909339964,
+              "cost_usd": 0.0002615,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001a-q3",
+          "image_id": "clm-001a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Valencia",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.073,
+                0.68,
+                0.614,
+                0.735
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2401,
+              "input_image_tokens": 0,
+              "output_tokens": 44,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1454.3838342651725,
+              "cost_usd": 0.0002621,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001a-q4",
+          "image_id": "clm-001a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "yes",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.779,
+                0.459,
+                0.95,
+                0.492
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2418,
+              "input_image_tokens": 0,
+              "output_tokens": 163,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 2079.6284577809274,
+              "cost_usd": 0.0003233,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001a-q5",
+          "image_id": "clm-001a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "2, 3, 4, 6",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.05,
+                0.276,
+                0.951,
+                0.492
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2405,
+              "input_image_tokens": 0,
+              "output_tokens": 186,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 2071.885915938765,
+              "cost_usd": 0.0003335,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001a-q6",
+          "image_id": "clm-001a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "no",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.06,
+                0.837,
+                0.5,
+                0.902
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2403,
+              "input_image_tokens": 0,
+              "output_tokens": 141,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1716.6591249406338,
+              "cost_usd": 0.0003108,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001a-q7",
+          "image_id": "clm-001a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": null,
+          "abstained": true,
+          "evidence_boxes": [],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "abstain",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2394,
+              "input_image_tokens": 0,
+              "output_tokens": 21,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1393.6024168506265,
+              "cost_usd": 0.0002499,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001a-q8",
+          "image_id": "clm-001a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "TRV-39-325756",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.513,
+                0.143,
+                0.675,
+                0.172
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2394,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1236.5973331034184,
+              "cost_usd": 0.0002634,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001b-q1",
+          "image_id": "clm-001b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Clara Wenger",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.059,
+                0.142,
+                0.196,
+                0.164
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2392,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1414.8224578239024,
+              "cost_usd": 0.0002627,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001b-q2",
+          "image_id": "clm-001b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "993.00",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.055,
+                0.565,
+                0.945,
+                0.596
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2400,
+              "input_image_tokens": 0,
+              "output_tokens": 43,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1659.2940003611147,
+              "cost_usd": 0.0002615,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001b-q3",
+          "image_id": "clm-001b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Valencia",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.073,
+                0.095,
+                0.612,
+                0.149
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2401,
+              "input_image_tokens": 0,
+              "output_tokens": 44,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1542.8205840289593,
+              "cost_usd": 0.0002621,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001b-q4",
+          "image_id": "clm-001b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "no",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.81,
+                0.46,
+                0.95,
+                0.49
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2418,
+              "input_image_tokens": 0,
+              "output_tokens": 41,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1358.6403750814497,
+              "cost_usd": 0.0002623,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001b-q5",
+          "image_id": "clm-001b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "2, 3, 4",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.05,
+                0.33,
+                0.95,
+                0.43
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2405,
+              "input_image_tokens": 0,
+              "output_tokens": 254,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 2354.910250287503,
+              "cost_usd": 0.0003675,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001b-q6",
+          "image_id": "clm-001b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "no",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.06,
+                0.837,
+                0.5,
+                0.902
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2403,
+              "input_image_tokens": 0,
+              "output_tokens": 163,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1848.7654998898506,
+              "cost_usd": 0.0003218,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001b-q7",
+          "image_id": "clm-001b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": null,
+          "abstained": true,
+          "evidence_boxes": [],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "abstain",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2394,
+              "input_image_tokens": 0,
+              "output_tokens": 21,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1345.8320000208914,
+              "cost_usd": 0.0002499,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-001b-q8",
+          "image_id": "clm-001b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "TRV-65-102221",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.514,
+                0.143,
+                0.669,
+                0.164
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2394,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1555.6751247495413,
+              "cost_usd": 0.0002634,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002a-q1",
+          "image_id": "clm-002a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Jonas Morel",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.058,
+                0.143,
+                0.181,
+                0.164
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2392,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1317.1737086959183,
+              "cost_usd": 0.0002627,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002a-q2",
+          "image_id": "clm-002a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "370.80",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.06,
+                0.55,
+                0.94,
+                0.58
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2401,
+              "input_image_tokens": 0,
+              "output_tokens": 43,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1762.863665819168,
+              "cost_usd": 0.0002616,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002a-q3",
+          "image_id": "clm-002a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Bordeaux",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.073,
+                0.683,
+                0.662,
+                0.741
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2401,
+              "input_image_tokens": 0,
+              "output_tokens": 46,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1402.973750140518,
+              "cost_usd": 0.0002631,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002a-q4",
+          "image_id": "clm-002a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "no",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.89,
+                0.337,
+                0.918,
+                0.357
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2418,
+              "input_image_tokens": 0,
+              "output_tokens": 202,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 2484.938375186175,
+              "cost_usd": 0.0003428,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002a-q5",
+          "image_id": "clm-002a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "1, 3, 6",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.78,
+                0.3,
+                0.865,
+                0.492
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2405,
+              "input_image_tokens": 0,
+              "output_tokens": 207,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 2334.36991693452,
+              "cost_usd": 0.000344,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002a-q6",
+          "image_id": "clm-002a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "yes",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.06,
+                0.84,
+                0.5,
+                0.9
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2403,
+              "input_image_tokens": 0,
+              "output_tokens": 42,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1634.4778332859278,
+              "cost_usd": 0.0002613,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002a-q7",
+          "image_id": "clm-002a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": null,
+          "abstained": true,
+          "evidence_boxes": [],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "abstain",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2391,
+              "input_image_tokens": 0,
+              "output_tokens": 84,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1654.3401665985584,
+              "cost_usd": 0.0002811,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002a-q8",
+          "image_id": "clm-002a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "TRV-65-102221",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.514,
+                0.143,
+                0.669,
+                0.164
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2394,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1440.3575831092894,
+              "cost_usd": 0.0002634,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002b-q1",
+          "image_id": "clm-002b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Jonas Morel",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.058,
+                0.143,
+                0.182,
+                0.164
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2392,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1609.6344999969006,
+              "cost_usd": 0.0002627,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002b-q2",
+          "image_id": "clm-002b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "370.80",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.058,
+                0.555,
+                0.94,
+                0.58
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2401,
+              "input_image_tokens": 0,
+              "output_tokens": 43,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1310.603375080973,
+              "cost_usd": 0.0002616,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002b-q3",
+          "image_id": "clm-002b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Bordeaux",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.073,
+                0.683,
+                0.665,
+                0.744
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2401,
+              "input_image_tokens": 0,
+              "output_tokens": 46,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1598.5484579578042,
+              "cost_usd": 0.0002631,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002b-q4",
+          "image_id": "clm-002b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "no",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.05,
+                0.33,
+                0.95,
+                0.37
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2418,
+              "input_image_tokens": 0,
+              "output_tokens": 41,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1371.231249999255,
+              "cost_usd": 0.0002623,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002b-q5",
+          "image_id": "clm-002b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "1, 3, 6",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.05,
+                0.28,
+                0.95,
+                0.49
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2405,
+              "input_image_tokens": 0,
+              "output_tokens": 216,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 2326.147499959916,
+              "cost_usd": 0.0003485,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002b-q6",
+          "image_id": "clm-002b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "no",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.06,
+                0.836,
+                0.501,
+                0.903
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2403,
+              "input_image_tokens": 0,
+              "output_tokens": 142,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1844.3767917342484,
+              "cost_usd": 0.0003113,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002b-q7",
+          "image_id": "clm-002b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": null,
+          "abstained": true,
+          "evidence_boxes": [],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "abstain",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2391,
+              "input_image_tokens": 0,
+              "output_tokens": 66,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1447.7870408445597,
+              "cost_usd": 0.0002721,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-002b-q8",
+          "image_id": "clm-002b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "TRV-60-553965",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.513,
+                0.143,
+                0.676,
+                0.164
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2394,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1365.845249965787,
+              "cost_usd": 0.0002634,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003a-q1",
+          "image_id": "clm-003a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Giulia Ferri",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.06,
+                0.143,
+                0.22,
+                0.163
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2392,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1664.8425413295627,
+              "cost_usd": 0.0002632,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003a-q2",
+          "image_id": "clm-003a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "169.20",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.06,
+                0.575,
+                0.93,
+                0.605
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2398,
+              "input_image_tokens": 0,
+              "output_tokens": 43,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1417.9170411080122,
+              "cost_usd": 0.0002613,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003a-q3",
+          "image_id": "clm-003a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Thessaloniki",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.074,
+                0.685,
+                0.646,
+                0.718
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2401,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1679.3987923301756,
+              "cost_usd": 0.0002636,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003a-q4",
+          "image_id": "clm-003a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "no",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.07,
+                0.52,
+                0.95,
+                0.56
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2419,
+              "input_image_tokens": 0,
+              "output_tokens": 41,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1331.0238746926188,
+              "cost_usd": 0.0002624,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003a-q5",
+          "image_id": "clm-003a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "4",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.779,
+                0.395,
+                0.865,
+                0.427
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2405,
+              "input_image_tokens": 0,
+              "output_tokens": 133,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1859.345625154674,
+              "cost_usd": 0.000307,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003a-q6",
+          "image_id": "clm-003a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "yes",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.06,
+                0.835,
+                0.5,
+                0.9
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2403,
+              "input_image_tokens": 0,
+              "output_tokens": 42,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1405.0567499361932,
+              "cost_usd": 0.0002613,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003a-q7",
+          "image_id": "clm-003a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": null,
+          "abstained": true,
+          "evidence_boxes": [],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "abstain",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2395,
+              "input_image_tokens": 0,
+              "output_tokens": 21,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1318.0703329853714,
+              "cost_usd": 0.00025,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003a-q8",
+          "image_id": "clm-003a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "TRV-60-553965",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.513,
+                0.143,
+                0.676,
+                0.163
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2394,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1301.7432503402233,
+              "cost_usd": 0.0002634,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003b-q1",
+          "image_id": "clm-003b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Giulia Ferri",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.06,
+                0.143,
+                0.168,
+                0.164
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2392,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1643.5496658086777,
+              "cost_usd": 0.0002632,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003b-q2",
+          "image_id": "clm-003b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "169.20",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.055,
+                0.575,
+                0.93,
+                0.603
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2398,
+              "input_image_tokens": 0,
+              "output_tokens": 43,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1366.3575830869377,
+              "cost_usd": 0.0002613,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003b-q3",
+          "image_id": "clm-003b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Thessaloniki",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.074,
+                0.685,
+                0.646,
+                0.724
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2401,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1416.1105826497078,
+              "cost_usd": 0.0002636,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003b-q4",
+          "image_id": "clm-003b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Yes",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.52,
+                0.52,
+                0.95,
+                0.56
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2419,
+              "input_image_tokens": 0,
+              "output_tokens": 43,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1264.2871248535812,
+              "cost_usd": 0.0002634,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003b-q5",
+          "image_id": "clm-003b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "3, 4",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.05,
+                0.363,
+                0.95,
+                0.427
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2405,
+              "input_image_tokens": 0,
+              "output_tokens": 391,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 3166.6799588128924,
+              "cost_usd": 0.000436,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003b-q6",
+          "image_id": "clm-003b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "yes",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.06,
+                0.84,
+                0.5,
+                0.9
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2403,
+              "input_image_tokens": 0,
+              "output_tokens": 42,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1286.8421250022948,
+              "cost_usd": 0.0002613,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003b-q7",
+          "image_id": "clm-003b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": null,
+          "abstained": true,
+          "evidence_boxes": [],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1109x1568px"
+            },
+            {
+              "step": "abstain",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2395,
+              "input_image_tokens": 0,
+              "output_tokens": 21,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1452.7424173429608,
+              "cost_usd": 0.00025,
+              "estimated": false,
+              "image_px": [
+                [
+                  1109,
+                  1568
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-003b-q8",
+          "image_id": "clm-003b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "TRV-34-996035",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.182,
+                0.118,
+                0.303,
+                0.142
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2394,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1479.453958105296,
+              "cost_usd": 0.0002634,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004a-q1",
+          "image_id": "clm-004a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Amelie Junod",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.18,
+                0.16,
+                0.46,
+                0.2
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2392,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1430.7879582047462,
+              "cost_usd": 0.0002627,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004a-q2",
+          "image_id": "clm-004a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "EUR 1154.80",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.37,
+                0.455,
+                0.47,
+                0.49
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2400,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1313.010667450726,
+              "cost_usd": 0.000264,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004a-q3",
+          "image_id": "clm-004a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Bordeaux",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.04,
+                0.6,
+                0.35,
+                0.72
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2401,
+              "input_image_tokens": 0,
+              "output_tokens": 46,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1414.0772498212755,
+              "cost_usd": 0.0002631,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004a-q4",
+          "image_id": "clm-004a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "no",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.775,
+                0.565,
+                0.935,
+                0.617
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2418,
+              "input_image_tokens": 0,
+              "output_tokens": 41,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1645.0647502206266,
+              "cost_usd": 0.0002623,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004a-q5",
+          "image_id": "clm-004a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "1",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.5,
+                0.15,
+                0.82,
+                0.2
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2405,
+              "input_image_tokens": 0,
+              "output_tokens": 182,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 2160.978625062853,
+              "cost_usd": 0.0003315,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004a-q6",
+          "image_id": "clm-004a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "no",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.515,
+                0.747,
+                0.807,
+                0.927
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2403,
+              "input_image_tokens": 0,
+              "output_tokens": 182,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 2029.7288750298321,
+              "cost_usd": 0.0003313,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004a-q7",
+          "image_id": "clm-004a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": null,
+          "abstained": true,
+          "evidence_boxes": [],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "abstain",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2392,
+              "input_image_tokens": 0,
+              "output_tokens": 55,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1509.4769173301756,
+              "cost_usd": 0.0002667,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004a-q8",
+          "image_id": "clm-004a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "TRV-34-996035",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.18,
+                0.12,
+                0.47,
+                0.17
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2394,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1290.6628753989935,
+              "cost_usd": 0.0002634,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004b-q1",
+          "image_id": "clm-004b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Amelie Junod",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.183,
+                0.161,
+                0.3,
+                0.185
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2392,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1277.256750036031,
+              "cost_usd": 0.0002627,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004b-q2",
+          "image_id": "clm-004b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "EUR 1154.80",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.13,
+                0.455,
+                0.47,
+                0.505
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2400,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1488.7811671942472,
+              "cost_usd": 0.000264,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004b-q3",
+          "image_id": "clm-004b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Bordeaux",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.04,
+                0.6,
+                0.35,
+                0.72
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2401,
+              "input_image_tokens": 0,
+              "output_tokens": 46,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1567.7388748154044,
+              "cost_usd": 0.0002631,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004b-q4",
+          "image_id": "clm-004b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "yes",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.78,
+                0.53,
+                0.93,
+                0.56
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2418,
+              "input_image_tokens": 0,
+              "output_tokens": 42,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1459.9280408583581,
+              "cost_usd": 0.0002628,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004b-q5",
+          "image_id": "clm-004b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "1, 6",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.78,
+                0.1,
+                0.96,
+                0.56
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2405,
+              "input_image_tokens": 0,
+              "output_tokens": 123,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1684.9466660059988,
+              "cost_usd": 0.000302,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004b-q6",
+          "image_id": "clm-004b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "no",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.515,
+                0.745,
+                0.808,
+                0.93
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2403,
+              "input_image_tokens": 0,
+              "output_tokens": 107,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1635.414291638881,
+              "cost_usd": 0.0002938,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004b-q7",
+          "image_id": "clm-004b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": null,
+          "abstained": true,
+          "evidence_boxes": [],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "abstain",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2392,
+              "input_image_tokens": 0,
+              "output_tokens": 21,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1458.136874716729,
+              "cost_usd": 0.0002497,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-004b-q8",
+          "image_id": "clm-004b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "TRV-98-900920",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.19,
+                0.105,
+                0.32,
+                0.13
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2394,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1253.3957906998694,
+              "cost_usd": 0.0002634,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005a-q1",
+          "image_id": "clm-005a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Elif Aydin",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.193,
+                0.143,
+                0.287,
+                0.169
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2392,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1455.008499789983,
+              "cost_usd": 0.0002627,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005a-q2",
+          "image_id": "clm-005a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "EUR 170.00",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.03,
+                0.365,
+                0.47,
+                0.44
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2401,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1370.1235838234425,
+              "cost_usd": 0.0002636,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005a-q3",
+          "image_id": "clm-005a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Porto",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.037,
+                0.585,
+                0.335,
+                0.695
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2401,
+              "input_image_tokens": 0,
+              "output_tokens": 43,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1325.8817922323942,
+              "cost_usd": 0.0002616,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005a-q4",
+          "image_id": "clm-005a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "no",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.51,
+                0.31,
+                0.92,
+                0.37
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2417,
+              "input_image_tokens": 0,
+              "output_tokens": 41,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1402.3200408555567,
+              "cost_usd": 0.0002622,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005a-q5",
+          "image_id": "clm-005a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "2, 6",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.5,
+                0.22,
+                0.93,
+                0.59
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2405,
+              "input_image_tokens": 0,
+              "output_tokens": 322,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 2778.6590419709682,
+              "cost_usd": 0.0004015,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005a-q6",
+          "image_id": "clm-005a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "yes",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.505,
+                0.83,
+                0.8,
+                0.94
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2403,
+              "input_image_tokens": 0,
+              "output_tokens": 42,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1321.4971669949591,
+              "cost_usd": 0.0002613,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005a-q7",
+          "image_id": "clm-005a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": null,
+          "abstained": true,
+          "evidence_boxes": [],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "abstain",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2394,
+              "input_image_tokens": 0,
+              "output_tokens": 21,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1828.58920795843,
+              "cost_usd": 0.0002499,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005a-q8",
+          "image_id": "clm-005a",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "TRV-98-900920",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.19,
+                0.105,
+                0.47,
+                0.13
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2394,
+              "input_image_tokens": 0,
+              "output_tokens": 48,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1392.0287089422345,
+              "cost_usd": 0.0002634,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005b-q1",
+          "image_id": "clm-005b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Elif Aydin",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.193,
+                0.143,
+                0.287,
+                0.169
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2392,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1349.9994999729097,
+              "cost_usd": 0.0002627,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005b-q2",
+          "image_id": "clm-005b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "EUR 170.00",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.03,
+                0.37,
+                0.47,
+                0.44
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2401,
+              "input_image_tokens": 0,
+              "output_tokens": 47,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1322.729665786028,
+              "cost_usd": 0.0002636,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005b-q3",
+          "image_id": "clm-005b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "Porto",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.037,
+                0.585,
+                0.337,
+                0.695
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2401,
+              "input_image_tokens": 0,
+              "output_tokens": 43,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1258.2842502743006,
+              "cost_usd": 0.0002616,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005b-q4",
+          "image_id": "clm-005b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "No",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.78,
+                0.335,
+                0.93,
+                0.375
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2417,
+              "input_image_tokens": 0,
+              "output_tokens": 41,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1323.772709351033,
+              "cost_usd": 0.0002622,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005b-q5",
+          "image_id": "clm-005b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "2, 6",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.51,
+                0.11,
+                0.93,
+                0.59
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2405,
+              "input_image_tokens": 0,
+              "output_tokens": 213,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 2240.6394169665873,
+              "cost_usd": 0.000347,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005b-q6",
+          "image_id": "clm-005b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": "no",
+          "abstained": false,
+          "evidence_boxes": [
+            {
+              "box": [
+                0.505,
+                0.758,
+                0.796,
+                0.936
+              ],
+              "page": 0,
+              "source": "model_box",
+              "label": null
+            }
+          ],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "answer",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2403,
+              "input_image_tokens": 0,
+              "output_tokens": 171,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1893.6631251126528,
+              "cost_usd": 0.0003258,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005b-q7",
+          "image_id": "clm-005b",
+          "error": null,
+          "schema_version": "0.1"
+        },
+        {
+          "answer": null,
+          "abstained": true,
+          "evidence_boxes": [],
+          "route": [
+            {
+              "step": "overview",
+              "target": null,
+              "box": [
+                0.0,
+                0.0,
+                1.0,
+                1.0
+              ],
+              "note": "1568x1098px"
+            },
+            {
+              "step": "abstain",
+              "target": null,
+              "box": null,
+              "note": null
+            }
+          ],
+          "usage": [
+            {
+              "step_index": 0,
+              "provider": "openrouter",
+              "model": "anthropic/claude-haiku-5.5",
+              "input_text_tokens": 2394,
+              "input_image_tokens": 0,
+              "output_tokens": 21,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "latency_ms": 1288.9213329181075,
+              "cost_usd": 0.0002499,
+              "estimated": false,
+              "image_px": [
+                [
+                  1568,
+                  1098
+                ]
+              ],
+              "retry": false,
+              "note": null,
+              "device": null
+            }
+          ],
+          "pipeline": "lowres:1568@or:anthropic/claude-haiku-5.5",
+          "question_id": "clm-005b-q8",
+          "image_id": "clm-005b",
+          "error": null,
+          "schema_version": "0.1"
+        }
+      ]
+    }
+  }
+}

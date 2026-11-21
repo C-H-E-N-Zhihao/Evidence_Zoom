@@ -49,5 +49,5 @@ def full_image_baseline(w: int, h: int, question_tokens: int, output_tokens: int
     cac = Usage(0, "anthropic", MODEL, input_text_tokens=q, output_tokens=output_tokens, estimated=True,
                 cache_write_tokens=cached if question_index == 0 else 0,
                 cache_read_tokens=cached if question_index > 0 else 0)
-    return {"image_tokens": img, "uncached_usd": price(unc), "cached_usd": price(cac),
+    return {"image_tokens": img, "text_tokens": prompt, "uncached_usd": price(unc), "cached_usd": price(cac),
             "model": MODEL, "estimated": True}

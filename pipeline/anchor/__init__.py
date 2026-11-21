@@ -28,6 +28,7 @@ from pipeline.visual import View
 
 Span = tuple[float, float]
 ROW_RE = re.compile(r"^\s*(\d{1,2})\s*[.,]\s*\S")
+SECTION_RE = re.compile(r"^\s*1[3-9]\s*[.,]\s*[A-Z]{3,}")  # later section headings ("13. SKETCH …"), uppercase
 MIN_ROWS = 12  # of 17: fewer recognised rows -> do not trust the layout
 
 
@@ -76,7 +77,12 @@ def layout(spans: list[dict], image: Optional[Image.Image] = None) -> Optional[L
         return None
     top = head[0]["box"][3]
     sk = _find(spans, lambda t, b: re.match(r"^13\s*[.,]?\s*sketch", t, re.I) is not None)
-    bottom = sk[0]["box"][1] if len(sk) == 1 else 1.0
+    # Rows run from the circumstances heading down to the next section heading BELOW it (the sketch may come
+    # before or after the circumstances), else to the page bottom.
+    below = [s["box"][1] for s in _find(spans, lambda t, b: b[1] > top + 0.01 and SECTION_RE.match(t) is not None
+                                         and not ROW_RE.match(t[:4] + " x"))]
+    below += [sk[0]["box"][1]] if len(sk) == 1 and sk[0]["box"][1] > top else []
+    bottom = min(below) if below else 1.0
 
     rows, x0s, x1s = {}, [], {}
     for s in _find(spans, lambda t, b: top < b[1] < bottom and b[0] < 0.5):
@@ -93,7 +99,9 @@ def layout(spans: list[dict], image: Optional[Image.Image] = None) -> Optional[L
 
     cols = {}
     hdr_band = (top, y_first)
-    a = _find(spans, lambda t, b: t.upper() == "A" and hdr_band[0] <= b[1] <= hdr_band[1] + 0.01 and b[0] < 0.5)
+    def _hdr(key):
+        return lambda t, b: re.sub(r"\s+", "", t.upper()) in (key, "VEHICLE" + key) and hdr_band[0] <= b[1] <= hdr_band[1] + 0.01
+    a = [s for s in _find(spans, _hdr("A")) if s["box"][0] < 0.5]
     if len(a) == 1:
         c = (a[0]["box"][0] + a[0]["box"][2]) / 2
         cols["a"] = (c - 0.02, c + 0.02)
@@ -104,7 +112,7 @@ def layout(spans: list[dict], image: Optional[Image.Image] = None) -> Optional[L
         if centers and centers[-1] - centers[0] < 0.02:
             c = centers[len(centers) // 2]
             cols["a"] = (c - 0.02, c + 0.02)
-    b_ = _find(spans, lambda t, b: t.upper() == "B" and hdr_band[0] <= b[1] <= hdr_band[1] + 0.01 and b[0] > 0.5)
+    b_ = [s for s in _find(spans, _hdr("B")) if s["box"][0] > 0.5]
     if len(b_) == 1:
         c = (b_[0]["box"][0] + b_[0]["box"][2]) / 2
         cols["b"] = (c - 0.02, c + 0.02)
@@ -122,7 +130,11 @@ def layout(spans: list[dict], image: Optional[Image.Image] = None) -> Optional[L
         for side, (xa, xb) in (("a", (0.0, label_x0 - 0.005)), ("b", (0.6, 1.0))):
             if side not in cols and (c := _box_column(image, (y_first, y_last), (xa, xb))) is not None:
                 cols[side] = (c - 0.02, c + 0.02)
-    sketch = (sk[0]["box"][3] + 0.003, min(1.0, sk[0]["box"][3] + 0.22)) if len(sk) == 1 else None
+    sketch = None
+    if len(sk) == 1:
+        s0 = sk[0]["box"][3] + 0.003
+        nxt = [h["box"][1] for h in head if h["box"][1] > s0]  # e.g. the circumstances heading below the sketch
+        sketch = (s0, min(1.0, s0 + 0.22, *(n - 0.005 for n in nxt)))
     return Layout(rows, label_x0, x1s, cols, sketch)
 
 
@@ -209,14 +221,13 @@ def tilt_deg(spans: list[dict], size: tuple[int, int]) -> Optional[float]:
     Returned in PIL's rotate() convention: rotating the page by this angle makes the headers level."""
     import math
 
-    hdr = {}
-    for key in "ab":
-        hits = [s for s in spans if re.sub(r"\s+", "", s["text"].lower()) == "vehicle" + key and s["confidence"] >= 0.5]
-        if len(hits) != 1:
-            return None
-        b = hits[0]["box"]
-        hdr[key] = ((b[0] + b[2]) / 2 * size[0], (b[1] + b[3]) / 2 * size[1])
-    (xa, ya), (xb, yb) = hdr["a"], hdr["b"]
+    from pipeline.ocr import header_pairs
+
+    pairs = header_pairs(spans)  # same-height pairs, top first (layouts may repeat the headers)
+    if not pairs:
+        return None
+    a, b = pairs[0]
+    (xa, ya), (xb, yb) = [((q[0] + q[2]) / 2 * size[0], (q[1] + q[3]) / 2 * size[1]) for q in (a, b)]
     if xb <= xa:
         return None
     return math.degrees(math.atan2(yb - ya, xb - xa))  # y grows downwards: positive = right side lower
@@ -251,6 +262,17 @@ def select(image: Image.Image, question: str, deskew: bool = True) -> Optional[S
             spans, ms2 = ocr_spans(page)
             ms += ms2
     lay = layout(spans, page)
+    if lay is None:  # built-in rules do not read this layout: try a declarative template (pipeline/templates)
+        from pipeline import templates
+        lay = templates.layout(spans, page)
+        if lay is None and deskew and not angle and os.environ.get("ANCHOR_TEMPLATE_DESKEW") == "1":  # off by default (partial crops, msg 102)
+            t = templates.tilt_deg(spans, image.size)
+            if t is not None and MIN_DESKEW_DEG <= abs(t) <= MAX_DESKEW_DEG:
+                page2 = image.rotate(t, resample=Image.BICUBIC, expand=False, fillcolor=(255, 255, 255))
+                spans2, ms2 = ocr_spans(page2)
+                lay = templates.layout(spans2, page2, col_half=0.03)
+                if lay is not None:
+                    page, angle, spans, ms = page2, t, spans2, ms + ms2
     sel = regions(question, lay) if lay else None
     if sel:
         sel.ocr_ms, sel.spans, sel.image, sel.angle = ms, spans, page, angle

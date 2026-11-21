@@ -22,6 +22,10 @@ const SOURCE = {
 
 async function init() {
   cfg = await (await fetch("/api/config")).json();
+  if (cfg.page_model) {  // say which model each side of the meter is priced with
+    $("l-cached").textContent = `Full image, cached (${cfg.page_model})`;
+    $("l-full").textContent = `Full image (${cfg.page_model})`;
+  }
   $("pipeline").textContent = `pipeline: ${cfg.pipeline}`;
   if (cfg.live) {
     $("banner").hidden = false;
@@ -176,6 +180,13 @@ function addA(data, i, ours) {
     ? (result.error ? "No answer: " + result.error : "Cannot answer from the available evidence.")
     : result.answer;
   head.append(src, txt);
+  // which printed line answered (message 124): the OCR'd field label, or an explicit "not verified" for model answers
+  if (!result.abstained) {
+    const lab = (result.evidence_boxes || []).map((e) => e.label).find(Boolean);
+    const from = document.createElement("div"); from.className = "route";
+    from.textContent = lab ? `from the line labelled "${lab}"` : (source === "ocr" ? "" : "field label not verified");
+    if (from.textContent) head.append(from);
+  }
   if (data.live_error) {
     const le = document.createElement("div"); le.className = "route";
     le.textContent = "live call failed (" + data.live_error.slice(0, 120) + "); " +
@@ -191,11 +202,13 @@ function addA(data, i, ours) {
     c.title = [s.target, s.note].filter(Boolean).join(" · ");
     route.append(c);
   });
-  const imgTok = result.usage.reduce((s, u) => s + (u.input_image_tokens || 0), 0);
+  // all input tokens as billed (OpenRouter reports one input total, without an image/text split)
+  const inTok = result.usage.reduce((s, u) => s + (u.input_image_tokens || 0) + (u.input_text_tokens || 0) +
+    (u.cache_read_tokens || 0) + (u.cache_write_tokens || 0), 0);
   const save = baseline.uncached_usd > 0 ? (1 - ours / baseline.uncached_usd) * 100 : 0;
   const est = result.usage.some((u) => u.estimated) ? " (est.)" : "";
   const cost = document.createElement("div"); cost.className = "cost";
-  cost.innerHTML = `${usd(ours)}${est} · ${imgTok} img tok vs full page ${baseline.image_tokens} ` +
+  cost.innerHTML = `${usd(ours)}${est} · ${inTok} input tok vs full page ~${baseline.image_tokens + (baseline.text_tokens || 0)} ` +
     `· <span class="save">${save >= 0 ? "−" : "+"}${Math.abs(save).toFixed(0)}%</span> vs uncached full page`;
   d.append(head, route, cost);
   if (views && views.length) {
@@ -228,7 +241,10 @@ function updateMeter() {
   const n = answers.length;
   const pct = (x) => { const v = (1 - totals.ours / x) * 100; return `${v >= 0 ? "−" : "+"}${Math.abs(v).toFixed(0)}%`; };
   $("meter-foot").textContent = n ? `${n} question${n > 1 ? "s" : ""} on this image · ` +
-    `${pct(totals.full)} cost vs full page, ${pct(totals.cached)} vs cached page (estimates)` : "0 questions";
+    `${pct(totals.full)} cost vs full page, ${pct(totals.cached)} vs cached page` +
+    (cfg.route_model && cfg.page_model && cfg.route_model.replace(/^or:anthropic\//, "").replace(/\./g, "-") !== cfg.page_model
+      ? ` · route model ${cfg.route_model} vs page model ${cfg.page_model} (different models)` : "") +
+    " (page side estimated)" : "0 questions";
 }
 
 function draw() {
@@ -260,6 +276,12 @@ function draw() {
     const [x0, y0, x1, y1] = e.box;
     ctx.lineWidth = 3; ctx.strokeStyle = e.source === "ocr" ? css("--ocr") : css("--zoom");
     ctx.strokeRect(x0 * W - 2, y0 * H - 2, (x1 - x0) * W + 4, (y1 - y0) * H + 4);
+    if (e.label) {  // caption: the printed label that located this value
+      ctx.font = "600 11px ui-sans-serif, system-ui";
+      const tx = x0 * W, ty = Math.max(13, y0 * H - 6), tw = ctx.measureText(e.label).width;
+      ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.fillRect(tx - 3, ty - 11, tw + 6, 14);
+      ctx.fillStyle = ctx.strokeStyle; ctx.fillText(e.label, tx, ty);
+    }
   });
 }
 

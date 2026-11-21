@@ -1,0 +1,19 @@
+{"reader": "source pixels, known box interiors", "digest": "9219e5cf46c77fd57442baa7b0979f92ba006a2c9aae646cc9df3a2e93470167", "correct": 160, "correct_by_style": [20, 20, 20, 20, 20, 20, 20, 20], "questions": 160, "blank_false_positives": 0, "blank_questions": 32, "composite_pages_all_correct": 40, "pages": 40}
+{"reader": "ridge", "target_prefix": 1, "correct": 70, "correct_by_style": [10, 10, 11, 10, 6, 8, 9, 6], "questions": 160, "blank_false_positives": 7, "blank_questions": 32, "composite_pages_all_correct": 2, "pages": 40}
+{"reader": "ridge", "target_prefix": 4, "correct": 88, "correct_by_style": [13, 9, 14, 11, 11, 12, 9, 9], "questions": 160, "blank_false_positives": 7, "blank_questions": 32, "composite_pages_all_correct": 5, "pages": 40}
+{"reader": "ridge", "target_prefix": 8, "correct": 88, "correct_by_style": [10, 13, 10, 11, 12, 11, 10, 11], "questions": 160, "blank_false_positives": 7, "blank_questions": 32, "composite_pages_all_correct": 3, "pages": 40}
+{"reader": "ridge", "target_prefix": 14, "correct": 113, "correct_by_style": [15, 16, 15, 15, 13, 12, 13, 14], "questions": 160, "blank_false_positives": 2, "blank_questions": 32, "composite_pages_all_correct": 7, "pages": 40}
+{"reader": "ridge", "target_prefix": 16, "correct": 119, "correct_by_style": [15, 17, 15, 17, 14, 16, 12, 13], "questions": 160, "blank_false_positives": 1, "blank_questions": 32, "composite_pages_all_correct": 11, "pages": 40}
+{"reader": "ridge", "target_prefix": 32, "correct": 140, "correct_by_style": [16, 16, 18, 19, 17, 20, 16, 18], "questions": 160, "blank_false_positives": 1, "blank_questions": 32, "composite_pages_all_correct": 23, "pages": 40}
+{"reader": "ridge", "target_prefix": 64, "correct": 159, "correct_by_style": [20, 20, 20, 20, 20, 20, 19, 20], "questions": 160, "blank_false_positives": 0, "blank_questions": 32, "composite_pages_all_correct": 39, "pages": 40}
+{"reader": "ridge", "target_prefix": 256, "correct": 156, "correct_by_style": [20, 19, 20, 20, 18, 20, 20, 19], "questions": 160, "blank_false_positives": 1, "blank_questions": 32, "composite_pages_all_correct": 36, "pages": 40}
+{"policy": "query-named window", "ids_exposed": 56, "target_ids_read": 32, "correct": 140, "correct_by_style": [16, 16, 18, 19, 17, 20, 16, 18], "questions": 160, "blank_false_positives": 1, "blank_questions": 32, "composite_pages_all_correct": 23, "pages": 40}
+{"policy": "refine another window", "ids_exposed": 56, "target_ids_read": 8, "correct": 88, "correct_by_style": [10, 13, 10, 11, 12, 11, 10, 11], "questions": 160, "blank_false_positives": 7, "blank_questions": 32, "composite_pages_all_correct": 3, "pages": 40}
+{"policy": "uniform exact budget", "ids_exposed": 56, "target_ids_read": 14, "correct": 113, "correct_by_style": [15, 16, 15, 15, 13, 12, 13, 14], "questions": 160, "blank_false_positives": 2, "blank_questions": 32, "composite_pages_all_correct": 7, "pages": 40}
+{"policy": "uniform power of two", "ids_exposed": 64, "target_ids_read": 16, "correct": 119, "correct_by_style": [15, 17, 15, 17, 14, 16, 12, 13], "questions": 160, "blank_false_positives": 1, "blank_questions": 32, "composite_pages_all_correct": 11, "pages": 40}
+{"task": "find the marked window and row", "codec": "flextok", "policy": "uniform", "ids_exposed": 56, "correct": 88, "queries": 136, "localized": 124, "marked_queries": 128, "blank_false_positives": 2}
+{"task": "find the marked window and row", "codec": "flextok", "policy": "content-selected", "ids_exposed": 56, "correct": 103, "queries": 136, "localized": 111, "marked_queries": 128, "blank_false_positives": 0}
+{"target_prefix": 32, "comparison_prefix": 8, "adaptive_only": 62, "baseline_only": 10, "both_wrong": 10}
+{"target_prefix": 32, "comparison_prefix": 14, "adaptive_only": 39, "baseline_only": 12, "both_wrong": 8}
+{"target_prefix": 32, "comparison_prefix": 16, "adaptive_only": 33, "baseline_only": 12, "both_wrong": 8}
+{"advance_selective_allocation": true}
