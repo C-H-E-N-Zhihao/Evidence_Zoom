@@ -228,6 +228,39 @@ def main() -> None:
           "many of them; the cheap-router / strong-page row is the frugality claim **only if** the cheap model's "
           "accuracy on crops holds, which only a paid run can show.", ""]
 
+    # ---- 4b. mixed strategy: router for the first s questions, then the cached full page (write at s+1) -----
+    kmax = max(len(v) for v in by_img.values())
+    m0 = a.models[0]
+    switch_points = list(range(0, kmax + 1))  # s=0: cached page from the start; s=kmax: router only
+    tot = {(s, k): [0.0, 0] for s in switch_points for k in range(1, kmax + 1)}
+    rng2 = random.Random(1)
+    for xs in by_img.values():
+        page = imgs[xs[0]["it"].image_path]
+        for _ in range(200):
+            order = rng2.sample(xs, len(xs))
+            for s in switch_points:
+                run_cost = 0.0
+                for k, x in enumerate(order, start=1):
+                    if k <= s:
+                        run_cost += x["router_cost"][m0]
+                    else:
+                        run_cost += full_image_usage(page, x["it"], m0, k - 1 - s, True).cost_usd
+                    tot[(s, k)][0] += run_cost
+                    tot[(s, k)][1] += 1
+    L += [f"### 4b. Mixed strategy on `{m0}` (ESTIMATED, order-averaged)", "",
+          "Router for the first *s* questions on a page, then the cached full page (cache write on question s+1). "
+          "Rows: questions actually asked (k). Cells: mean cumulative $ per page; **bold** = cheapest s for that k. "
+          "s=0 is the cached page from the start; s=k or more is router only.", "",
+          "| k \\ s | " + " | ".join(str(s) for s in switch_points) + " |",
+          "|---:|" + "---:|" * len(switch_points)]
+    for k in range(1, kmax + 1):
+        vals = [tot[(s, k)][0] / tot[(s, k)][1] for s in switch_points]
+        best = min(vals)
+        L.append(f"| {k} | " + " | ".join(f"**{v:.4f}**" if v == best else f"{v:.4f}" for v in vals) + " |")
+    L += ["", "A switching rule is only supported if one fixed *s* is cheapest, or close to it, across the k a handler "
+          "is likely to ask; otherwise the choice depends on how many questions will follow, which the app does "
+          "not know in advance.", ""]
+
     L += ["## 5. Assumptions behind ESTIMATED numbers", "",
           "- Image tokens ≈ w·h/750 after downscaling to ≤1568 px long side and ≤1.15 MP (`app/costs.py`). "
           "Not yet checked against a provider: `eval/billing_probe.py` measures it once a key exists.",
