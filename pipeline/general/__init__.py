@@ -83,7 +83,7 @@ def _band(boxes: list[list[float]]) -> tuple[float, float]:
 
 
 def answer(image, question: str, prior: Optional[PipelineResult] = None, model: Optional[str] = None,
-           call=None, text_step: bool = True) -> PipelineResult:
+           call=None, text_step: bool = True, thumb_px: Optional[int] = None) -> PipelineResult:
     """text_step=False skips the OCR-text call and sends the whole page: for small models that do not reliably ask
     for pixels when text is not enough (Qwen2.5-VL-7B: REPORT_homework_v3_qwen7b.md). OCR still runs (boxes, $0)."""
     from pipeline.ocr import recognize_page
@@ -91,6 +91,8 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
     from pipeline.visual import CALL_OVERRIDE, DEFAULT_MODEL, zoom_answer
 
     model = model or os.environ.get("EVAL_MODEL") or DEFAULT_MODEL
+    if thumb_px is None:  # experimental: a small thumbnail with the OCR text, so the text step can see drawings
+        thumb_px = int(os.environ.get("GENERAL_THUMB_PX", "0"))
     res = prior if prior is not None else PipelineResult(answer=None, abstained=True)
     res.pipeline = (res.pipeline + "+" if res.pipeline else "") + "general"
 
@@ -119,17 +121,28 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
         # 2. text-only call
         text = "\n".join(f"[L{i + 1}] {s['text'].strip()}" for i, s in enumerate(lines))
         injected = call or CALL_OVERRIDE
+        image_block = None
         if injected is not None:
             call_fn = injected
         else:
             from eval.backends import get
 
             be, _ = get(model)
-            call_fn = be.call
-        res.route.append(RouteStep("native_text", target="OCR text only", note=f"{len(lines)} lines to {model}"))
+            call_fn, image_block = be.call, getattr(be, "image_block", None)
+        content = [{"type": "text", "text": f"OCR lines:\n{text}\n\nQuestion: {question}"}]
+        px: list = []
+        target = "OCR text only"
+        if thumb_px and image_block is not None:
+            th = image.convert("RGB").copy()
+            th.thumbnail((thumb_px, thumb_px))
+            content = [image_block(th), {"type": "text", "text": "(A small thumbnail of the page is attached so you can "
+                       "see whether drawings or marks matter; it is too small to read. Ask for the image if they do.)\n"
+                       + content[0]["text"]}]
+            px, target = [th.size], f"OCR text + {th.width}x{th.height}px thumbnail"
+        res.route.append(RouteStep("native_text", target=target, note=f"{len(lines)} lines to {model}"))
         try:
-            reply, usage, stop = call_fn([{"type": "text", "text": f"OCR lines:\n{text}\n\nQuestion: {question}"}],
-                                         step_index=len(res.route) - 1, system=SYSTEM_TEXT, model=model, images_px=[])
+            reply, usage, stop = call_fn(content, step_index=len(res.route) - 1, system=SYSTEM_TEXT, model=model,
+                                         images_px=px)
         except Exception as e:
             res.error, res.answer, res.abstained = f"{type(e).__name__}: {e}", None, True
             res.route.append(RouteStep("abstain", note="text call failed"))
