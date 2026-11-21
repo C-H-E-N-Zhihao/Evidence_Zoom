@@ -131,8 +131,10 @@ function setSuggestions() {
   const f = currentForm();
   const qs = f ? f.questions : [];
   for (const q of qs) {
-    const b = document.createElement("button"); b.type = "button"; b.textContent = q;
-    b.onclick = () => { $("q").value = q; $("ask").requestSubmit(); };
+    const b = document.createElement("button"); b.type = "button"; b.title = q;
+    const short = q.replace(/\s*Answer (with|yes|A or B|in)\b.*$/i, "");
+    b.textContent = short.length > 48 ? short.slice(0, 46) + "…" : short;
+    b.onclick = () => askQ(q);
     box.append(b);
   }
 }
@@ -140,6 +142,10 @@ function setSuggestions() {
 $("ask").onsubmit = async (e) => {
   e.preventDefault();
   const q = $("q").value.trim(); if (!q || !image) return;
+  await askQ(q);
+};
+
+async function askQ(q) {
   $("q").value = ""; $("send").disabled = true;
   addQ(q);
   try {
@@ -161,7 +167,7 @@ $("ask").onsubmit = async (e) => {
   } catch (err) {
     addError(String(err));
   } finally { $("send").disabled = false; $("q").focus(); }
-};
+}
 
 function addQ(q) {
   const d = document.createElement("div"); d.className = "msg-q"; d.textContent = q;
@@ -171,6 +177,33 @@ function addError(t) {
   const d = document.createElement("div"); d.className = "msg-a"; d.textContent = "Error: " + t;
   $("chat").append(d);
 }
+// One plain-language sentence: what happened and what it saved (for a judge, not a developer).
+function explain(data) {
+  const { result: r, source, baseline } = data;
+  const zoom = r.route.find((st) => st.step === "zoom");
+  const px = zoom && /(\d+)x(\d+)px/.exec(zoom.note || "");
+  const inTok = r.usage.reduce((a, u) => a + (u.input_image_tokens || 0) + (u.input_text_tokens || 0) +
+    (u.cache_read_tokens || 0) + (u.cache_write_tokens || 0), 0);
+  const pageTok = (baseline.image_tokens || 0) + (baseline.text_tokens || 0);
+  const est = r.usage.some((u) => u.estimated) ? " (estimated)" : "";
+  const lab = (r.evidence_boxes || []).map((e) => e.label).find(Boolean);
+  if (source === "ocr") return `Read on this computer by OCR${lab ? ` from the printed line "${lab}"` : ""}: no model call, $0.`;
+  if (!zoom) return source === "unavailable" ? "No stage could answer this question, so nothing was invented." : "";
+  const t = zoom.target || "", size = px ? `${px[1]}×${px[2]} px` : "";
+  const pct = pageTok ? Math.round((1 - inTok / pageTok) * 100) : 0;
+  if (t.startsWith("anchor:")) {
+    const what = t.includes("tick_row") ? "the circumstance row in question" : t.includes("ticks")
+      ? "the driver's tick column next to the row numbers" : t.includes("sketch") ? "the sketch panel" : "the relevant region";
+    return `The form's own layout (read by OCR, no model) located ${what}. The model was sent only that ${size} crop: ` +
+      `~${inTok} input tokens instead of ~${pageTok} for the whole page, ${pct}% fewer${est}` +
+      (t.includes("deskew") ? "; the tilted page was straightened first." : ".");
+  }
+  if (t === "full page")
+    return `No configured layout covers this question, so the whole page was sent (${size}, ~${inTok} input tokens${est}).` +
+      (r.abstained && !r.error ? " The answer is not on the form, and the system says so instead of inventing one." : "");
+  return `A model chose the region to inspect (${t}).`;
+}
+
 function addA(data, i, ours) {
   const { result, baseline, source, views } = data;
   const d = document.createElement("div"); d.className = "msg-a";
@@ -185,12 +218,12 @@ function addA(data, i, ours) {
   // which printed line answered (message 124): the OCR'd field label, or an explicit "not verified" for model answers
   if (!result.abstained) {
     const lab = (result.evidence_boxes || []).map((e) => e.label).find(Boolean);
-    const from = document.createElement("div"); from.className = "route";
+    const from = document.createElement("div"); from.className = "note";
     from.textContent = lab ? `from the line labelled "${lab}"` : (source === "ocr" ? "" : "field label not verified");
     if (from.textContent) head.append(from);
   }
   if (data.live_error) {
-    const le = document.createElement("div"); le.className = "route";
+    const le = document.createElement("div"); le.className = "note";
     le.textContent = "live call failed (" + data.live_error.slice(0, 120) + "); " +
       (source === "replay" ? "replayed from fixture labels" : "no fixture replay for this question, so no answer");
     head.append(le);
@@ -212,7 +245,8 @@ function addA(data, i, ours) {
   const cost = document.createElement("div"); cost.className = "cost";
   cost.innerHTML = `${usd(ours)}${est} · ${inTok} input tok vs full page ~${baseline.image_tokens + (baseline.text_tokens || 0)} ` +
     `· <span class="save">${save >= 0 ? "−" : "+"}${Math.abs(save).toFixed(0)}%</span> vs uncached full page`;
-  d.append(head, route, cost);
+  const why = document.createElement("div"); why.className = "explain"; why.textContent = explain(data);
+  d.append(head, ...(why.textContent ? [why] : []), route, cost);
   if (views && views.length) {
     const strip = document.createElement("div"); strip.className = "views";
     for (const v of views) {
@@ -286,5 +320,47 @@ function draw() {
     }
   });
 }
+
+// ---- guided tour: the judge script, one click per step (works key-free; badges stay honest) -------------
+const TOUR = [
+  { say: "A standard European accident statement. Printed fields are read on this computer by OCR, for $0.",
+    pair: "eas-002", side: "a", q: "What is vehicle A's insurance policy number?" },
+  { say: "Ticks need pixels. The form's layout locates driver B's tick column, so a model sees a small crop, not the page.",
+    q: "Which circumstance boxes did driver B tick? Answer with the box numbers." },
+  { say: "Form b is identical except one of B's ticks moved. The answer changes and the box moves with it.",
+    side: "b", q: "Which circumstance boxes did driver B tick? Answer with the box numbers." },
+  { say: "A question the form cannot answer: one page call, and the system says so instead of inventing a value.",
+    q: "What is driver A's driving licence number?" },
+  { say: "A differently designed form (layout 3). A short configured template reads it: printed fields locally again.",
+    pair: "eas3b-003", side: "a", q: "What is vehicle A's insurance policy number?" },
+  { say: "…and the template finds B's tick column on this layout too.",
+    q: "Which circumstance boxes did driver B tick? Answer with the box numbers." },
+  { say: "Session cost, top right: this route against sending the whole page each time. That's the tour." },
+];
+let tourStep = -1;
+async function tourGo() {
+  tourStep += 1;
+  const st = TOUR[tourStep];
+  if (!st) { tourEnd(); return; }
+  $("tour-say").textContent = `${tourStep + 1}/${TOUR.length} · ${st.say}`;
+  $("tour-next").disabled = true;
+  try {
+    if (st.pair && (!pair || pair.pair_id !== st.pair)) {
+      $("pair").value = st.pair; $("pair").onchange(); await new Promise((r) => setTimeout(r, 900));
+    }
+    if (st.side && st.side !== side) {
+      document.querySelector(`#ab button[data-k="${st.side}"]`).click(); await new Promise((r) => setTimeout(r, 900));
+    }
+    if (st.q) await askQ(st.q);
+  } finally {
+    $("tour-next").disabled = false;
+    $("tour-next").textContent = tourStep + 1 >= TOUR.length ? "Finish" : "Next ▶";
+  }
+}
+function tourEnd() { tourStep = -1; $("tour").hidden = true; }
+$("tour-btn").onclick = () => { tourStep = -1; $("tour").hidden = false; $("tour-next").textContent = "Start ▶";
+  $("tour-say").textContent = `Guided tour: ${TOUR.length} steps. Click Start, then Next at your own pace.`; };
+$("tour-next").onclick = tourGo;
+$("tour-exit").onclick = tourEnd;
 
 init();

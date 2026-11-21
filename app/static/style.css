@@ -56,7 +56,8 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 16px; pa
 .arrow { color: var(--muted); font-size: 11px; }
 .cost { font: 11px ui-monospace, monospace; color: var(--muted); }
 .cost .save { color: var(--ocr); font-weight: 600; }
-.suggest { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 8px; }
+.suggest { display: flex; flex-wrap: nowrap; gap: 6px; padding: 0 14px 8px; overflow-x: auto; scrollbar-width: thin; }
+.suggest button { white-space: nowrap; flex: 0 0 auto; }
 .suggest button { font: 12px inherit; background: transparent; color: var(--ink); border: 1px solid var(--line);
                   border-radius: 14px; padding: 4px 10px; cursor: pointer; }
 .suggest button:hover { border-color: var(--accent); }
@@ -79,3 +80,11 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 16px; pa
 .views figcaption { font: 10px ui-monospace, monospace; color: var(--muted); }
 .chip.fallback { background: color-mix(in srgb, #d69e2e 22%, transparent); }
 .src.unavailable { background: #a0aec0; color: #1a202c; }
+
+.explain { font-size: 13px; line-height: 1.45; margin: 4px 0 6px; color: var(--ink); }
+.tour-btn { margin-left: auto; margin-right: 14px; }
+.tour { display: flex; align-items: center; gap: 10px; padding: 10px 20px; background: color-mix(in srgb, var(--accent) 18%, var(--panel));
+        border-bottom: 1px solid var(--line); font-size: 15px; }
+.tour[hidden] { display: none; }
+.tour #tour-say { flex: 1; }
+.ans .note, .note { display: block; font-size: 12px; font-weight: 400; color: var(--muted); margin-top: 2px; }

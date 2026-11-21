@@ -271,8 +271,14 @@ def ask(req: Ask):
 
 @app.get("/")
 def index():
-    # no-store: a judge's browser must not show a stale page against a newer app.js (seen in the live check)
-    return FileResponse(STATIC / "index.html", headers={"Cache-Control": "no-store"})
+    # no-store + versioned asset URLs: a judge's browser must never mix a stale app.js/style.css with a newer page
+    # (seen in the live check). Each asset URL carries its file's mtime, so any edit busts the cache.
+    from fastapi.responses import HTMLResponse
+    page = (STATIC / "index.html").read_text()
+    for asset in ("app.js", "style.css"):
+        v = int((STATIC / asset).stat().st_mtime)
+        page = page.replace(f"/static/{asset}\"", f"/static/{asset}?v={v}\"")
+    return HTMLResponse(page, headers={"Cache-Control": "no-store"})
 
 
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
