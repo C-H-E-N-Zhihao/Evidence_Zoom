@@ -45,7 +45,7 @@ async function init() {
     o.value = p.pair_id;
     const what = (p.forms.find((f) => f.note && f.note.includes("counterfactual")) || {}).note || "";
     const diff = what.includes("tick") ? "B's ticks differ" : what.includes("sketch") ? "the sketch differs" : "";
-    const layout = p.pair_id.startsWith("eas3b") ? "layout 3 (template from 1 example) · " :
+    const layout = p.pair_id.startsWith("eas3b") ? "layout 3 (configured template) · " :
       p.pair_id.startsWith("eas2") ? "layout 2 · " : p.pair_id.startsWith("eas-") ? "layout 1 · " : "";
     o.textContent = p.pair_id === "demo" ? "demo form" : `${layout}${p.pair_id}${diff ? " · pair: " + diff : ""}`;
     $("pair").append(o);
