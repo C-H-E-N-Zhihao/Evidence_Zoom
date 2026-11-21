@@ -30,8 +30,7 @@ Launch: `./scripts/demo.sh` (macOS for live OCR) → `http://localhost:8000`. Fu
 | Claim | Status | Source |
 |---|---|---|
 | OCR answers 48 of 96 synthetic questions (all text and layout questions), all correct, **0 wrong answers** | MEASURED | `eval/results/SCORECARD.md` §1 |
-| 0 wrong OCR answers under JPEG, blur, 2° tilt, perspective and phone-photo degradations | MEASURED | `eval/results/REPORT_ocr_robustness_35c7c16.md` |
-| At a 5° tilt, header-aligned rows raise correct OCR answers from 4 to 48 of 60, with 0 wrong | MEASURED, **author-reported only**: README at ac9b30e; no report file committed yet (the linked report predates the fix) | re-run `python -m bench.ocr_robustness` at ≥ ac9b30e and commit it (asked in message 047) |
+| 0 wrong OCR answers under all 10 tested degradations (JPEG, blur, 2° and 5° tilt, perspective, phone photo, downscaling): 48 correct of 60 OCR-eligible questions on each, except 24 at 768 px (the rest fall back, never guess) | MEASURED | `eval/results/REPORT_ocr_robustness_82f3112.md` (5° tilt was 4 of 60 before the alignment fix ac9b30e) |
 | OCR takes ~0.6 s for the first question on a page and ~10 ms for later ones (page index reused) | MEASURED | andrew-ocr, 88119ad |
 | Questions the system cannot answer get no answer, not an invented one | MEASURED (replay mode) | message 045 |
 | A small open model reads better from the right crop than from the page: Qwen2.5-VL-7B 42 % on the full page → **67 % on the correct crop**, at ~1/4 of the input tokens | MEASURED (36 visual questions, local GPU) | `eval/results/REPORT_local_qwen7b_visual.md` |
@@ -54,7 +53,7 @@ Launch: `./scripts/demo.sh` (macOS for live OCR) → `http://localhost:8000`. Fu
 | "The model finds the right region itself" | Qwen-7B never asks to zoom; forced, it picks the wrong cells (25–28 %) | 72B or OCR-anchored selection run (PENDING: `experiments/model_scale`) |
 | "The OCR-chosen crop fixes accuracy" | Coverage is measured; accuracy with a model reading that crop is not | `pipeline.anchor:factory` on local Qwen (PENDING, message 043) |
 | Any billed $ saving | No paid run exists; all $ are estimates | First paid sweep after `billing_probe` (message 017) |
-| Works on real claims | All forms are synthetic renders; tilt ≥ 5° breaks the tick-column crop | Real photographed forms |
+| Works on real claims | All forms are synthetic renders; OCR handles a 5° tilt, but the OCR-chosen tick-column crop does not (0/12 at 5°; deskew in progress, message 048) | Real photographed forms |
 | "Local is free" | GPU time is not free | Report GPU s/q and price it with `EVAL_GPU_USD_PER_HOUR` (stated rate) |
 
 ## 4. Design decisions the numbers justify
