@@ -56,7 +56,7 @@ def full_image_usage(img: Image.Image, it: EvalItem, model: str, q_index: int, c
 
     tok = image_tokens(*img.size)
     u = Usage(0, "anthropic", model, input_text_tokens=len(SYSTEM) // 4 + len(it.question) // 4,
-              output_tokens=40, estimated=True, image_px=[list(img.size)])
+              output_tokens=OUT_TOKENS, estimated=True, image_px=[list(img.size)])
     if not cached:
         u.input_image_tokens = tok
     elif q_index == 0:
@@ -67,13 +67,16 @@ def full_image_usage(img: Image.Image, it: EvalItem, model: str, q_index: int, c
     return u
 
 
+OUT_TOKENS = 100  # set from --out-tokens in main(); billed paid sweep: ~64-103 per call (message 081)
+
+
 def reprice(r: PipelineResult, model: str) -> float:
     """Re-price the oracle's estimated API usage at `model`; local OCR stays $0."""
     total = 0.0
     for u in r.usage:
         if u.provider == "local":
             continue
-        v = Usage(**{**u.__dict__, "model": model, "provider": "anthropic"})
+        v = Usage(**{**u.__dict__, "model": model, "provider": "anthropic", "output_tokens": OUT_TOKENS})
         total += cost_usd(v)
     return total
 
@@ -87,7 +90,11 @@ def main() -> None:
     ap.add_argument("--items", default="eval/data/accident_statement/items.jsonl")
     ap.add_argument("--models", nargs="+", default=["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"])
     ap.add_argument("--out", default="eval/results/SCORECARD.md")
+    ap.add_argument("--out-tokens", type=int, default=100,
+                    help="output tokens per API call, both sides (billed sweep: ~64-103 per full-page call, ~96 per route call)")
     a = ap.parse_args()
+    global OUT_TOKENS
+    OUT_TOKENS = a.out_tokens
 
     os.environ.setdefault("ROUTER_REQUIRE_OCR", "1")  # never let a missing OCR helper inflate the visual share
     import pipeline.router as router
@@ -270,7 +277,7 @@ def main() -> None:
     L += ["## 5. Assumptions behind ESTIMATED numbers", "",
           "- Image tokens ≈ w·h/750 after downscaling to ≤1568 px long side and ≤1.15 MP (`app/costs.py`). "
           "Not yet checked against a provider: `eval/billing_probe.py` measures it once a key exists.",
-          "- Output 40 tokens per call; text tokens ≈ characters/4. **Thinking tokens are ignored.** Opus 5.5 "
+          f"- Output {OUT_TOKENS} tokens per call on both sides (`--out-tokens`; billed sweep ≈ 64–103 per call), text tokens ≈ characters/4. Image tokens from `app/costs.py` (calibrated on billed usage, ≈ px/800, no downscale). The page side caches only the image, not the prompt (the app meter caches both, as billed). **Thinking tokens are ignored.** Opus 5.5 "
           "always thinks (billed as output), so multi-call routes are under-estimated relative to one-call "
           "baselines.",
           "- List prices from `eval/pricing.py` (Anthropic first-party, 2026-11-03). Cache write 1.25×, read 0.1× "

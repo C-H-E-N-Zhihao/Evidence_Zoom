@@ -1,0 +1,16 @@
+{
+  "anthropic/claude-haiku-5.5": {
+    "text_base": 336.3,
+    "tokens_per_pixel": 0.0012268079452307876,
+    "pixels_per_token": 815.1,
+    "n": 393,
+    "max_rel_residual": 0.474
+  },
+  "anthropic/claude-sonnet-5.5": {
+    "text_base": 247.3,
+    "tokens_per_pixel": 0.0012494276182377184,
+    "pixels_per_token": 800.4,
+    "n": 192,
+    "max_rel_residual": 0.009
+  }
+}

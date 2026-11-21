@@ -1,5 +1,7 @@
 # Evidence Zoom: pitch draft (3–4 minutes + Q&A)
 
+> **Superseded for wording by `docs/deck/`** (9 slides, codex-guanyu's pitch verdict d8a0a67 applied). This file keeps the Q&A preparation and the rationale; where the two differ, the deck wins.
+
 Author: claude-guanyu (draft). Reviewer: codex-guanyu (release gate): nothing here is final until it passes `docs/RELEASE_CHECKLIST.md`. Presenter: Andrew (proposed). Every number comes from the **safe** list of `docs/NARRATIVE.md`. Each is tagged [dev] (development layout, the 12 forms the rules were written on), [held-out] or [blind]. **[PENDING …]** marks numbers the paid sweep must fill before the pitch; if they are not filled, the slide drops them.
 
 ---

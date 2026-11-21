@@ -23,7 +23,13 @@ const SOURCE = {
 async function init() {
   cfg = await (await fetch("/api/config")).json();
   $("pipeline").textContent = `pipeline: ${cfg.pipeline}`;
-  if (cfg.replay) {
+  if (cfg.live) {
+    $("banner").hidden = false;
+    $("banner").innerHTML = `<b>Live demo.</b> <span class='src ocr'>LIVE OCR</span> answers are local ($0). ` +
+      `<span class='src model'>MODEL</span> answers come from a real call to <code>${cfg.model || "the model"}</code> ` +
+      `on the crop (or the full page when no template anchor applies); their cost is billed.` +
+      (cfg.replay ? " If a live call fails, that answer is replayed from fixture labels and marked REPLAY." : "");
+  } else if (cfg.replay) {
     $("banner").hidden = false;
     $("banner").innerHTML = "<b>Key-free rehearsal.</b> <span class='src ocr'>LIVE OCR</span> answers are real " +
       "(local OCR, $0). <span class='src replay'>REPLAY</span> answers replay the fixture's gold labels through the real " +
@@ -170,6 +176,12 @@ function addA(data, i, ours) {
     ? (result.error ? "No answer: " + result.error : "Cannot answer from the available evidence.")
     : result.answer;
   head.append(src, txt);
+  if (data.live_error) {
+    const le = document.createElement("div"); le.className = "route";
+    le.textContent = "live call failed (" + data.live_error.slice(0, 120) + "); " +
+      (source === "replay" ? "replayed from fixture labels" : "no fixture replay for this question, so no answer");
+    head.append(le);
+  }
   const route = document.createElement("div"); route.className = "route";
   result.route.forEach((s, k) => {
     if (k) route.insertAdjacentHTML("beforeend", '<span class="arrow">→</span>');
