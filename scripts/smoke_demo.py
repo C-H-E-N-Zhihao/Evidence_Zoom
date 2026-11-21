@@ -23,7 +23,7 @@ os.environ.setdefault("DEMO_REPLAY", "1")
 
 from fastapi.testclient import TestClient  # noqa: E402
 
-from app.server import FIXTURES, app  # noqa: E402
+from app.server import FIXTURES, _qkey, app  # noqa: E402
 
 TICKS = "Which circumstance boxes did driver B tick? Answer with the box numbers."
 POLICY = "What is vehicle A's insurance policy number?"
@@ -51,7 +51,7 @@ def main() -> int:
 
     a = c.post("/api/images/fixture/eas-002a").json()["image_id"]
     b = c.post("/api/images/fixture/eas-002b").json()["image_id"]
-    gold_policy = FIXTURES["eas-002a"]["items"][" ".join(POLICY.lower().split())].answer
+    gold_policy = FIXTURES["eas-002a"]["items"][_qkey(POLICY)].answer
 
     print("1. policy number (OCR)")
     d = ask(c, a, POLICY)
@@ -72,7 +72,7 @@ def main() -> int:
     check("route goes overview -> zoom -> answer", steps[-3:] == ["overview", "zoom", "answer"], str(steps))
     check("overview and zoom images returned", [v["step"] for v in d["views"]] == ["overview", "zoom"])
     box = d["result"]["evidence_boxes"][0]["box"] if d["result"]["evidence_boxes"] else None
-    gold = FIXTURES["eas-002a"]["items"][" ".join(TICKS.lower().split())].evidence_boxes[0]
+    gold = FIXTURES["eas-002a"]["items"][_qkey(TICKS)].evidence_boxes[0]
     check("evidence box lands on B's tick 8", box is not None and abs(box[1] - gold[1]) < 0.005,
           f"{box} vs {gold}")
 
