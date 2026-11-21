@@ -11,7 +11,7 @@ Route = `cascade:fn:pipeline.ocr:answer|pipeline.anchor:factory_then_overview` (
 |---|---|---:|---:|---|
 | **held-out v2** | 7B | **35/96** | 72/96 | **12/12** / 5/12 |
 | **held-out v2** | 72B | **50/96** | **91/96** | 5/12 / 0/12 |
-| development v1 | 7B | 84/96 | 75/96 (`../e2e`, b42ece9) | 1/12 / 2/12 |
+| development v1 | 7B | 84/96 | 75/96 (`../e2e`, b42ece9) | 1/12 / 0/12 (corrected: 2/12 was the b42ece9 route, judge 063) |
 | development v1 | 72B | 93/96 | 80/96 (`../e2e`, b42ece9) | 0/12 / 0/12 |
 
 Per evidence type, held-out v2: 7B route text 14/48 · layout 12/12 · visual 9/36 (page 43 · 12 · 17); 72B route text 27/48 ·
