@@ -27,7 +27,8 @@ async function init() {
     $("banner").hidden = false;
     $("banner").innerHTML = "<b>Key-free rehearsal.</b> <span class='src ocr'>LIVE OCR</span> answers are real " +
       "(local OCR, $0). <span class='src replay'>REPLAY</span> answers replay the fixture's gold labels through the real " +
-      "overview → zoom → mapping code, to show <i>which pixels</i> a model would inspect. They are not model output, and their costs are estimates.";
+      "router (OCR → template-anchored crop → full-page fallback) and box-mapping code, to show <i>which pixels</i> a model " +
+      "would be sent. They are not model output, and their costs are estimates.";
   }
   for (const p of cfg.pairs) {
     const o = document.createElement("option");
