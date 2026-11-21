@@ -13,6 +13,7 @@ import importlib
 import io
 import json
 import os
+import re
 import threading
 import uuid
 from pathlib import Path
@@ -53,8 +54,16 @@ IMAGES: dict[str, dict] = {}
 
 
 # ---- fixture forms (gold-labelled, from eval/data) ------------------------------------------
+_FORMAT_HINT = re.compile(r"\s*answer (with|yes|a or b|in)\b.*$", re.I)
+
+
 def _qkey(q: str) -> str:
-    return " ".join(q.lower().split())
+    """Normalize a question for fixture lookup. Drops a trailing answer-format instruction
+    ("Answer with the box numbers.", "Answer yes or no.", "Answer A or B.") and punctuation/case,
+    so a judge can type the short form. No fuzzy matching: "did driver A tick 8" must never
+    match "did driver B tick 8"."""
+    q = _FORMAT_HINT.sub("", q.strip())
+    return " ".join(re.sub(r"[^a-z0-9' ]+", " ", q.lower()).split())
 
 
 def _load_fixtures() -> dict[str, dict]:

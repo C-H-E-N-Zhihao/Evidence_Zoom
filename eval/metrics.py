@@ -51,6 +51,30 @@ def evidence_hit(item: EvalItem, res: PipelineResult, thr: float = 0.3) -> bool 
     return None if v is None else v >= thr
 
 
+def _area(b: list[float]) -> float:
+    return max(0.0, b[2] - b[0]) * max(0.0, b[3] - b[1])
+
+
+def _inter(a: list[float], b: list[float]) -> float:
+    return max(0.0, min(a[2], b[2]) - max(a[0], b[0])) * max(0.0, min(a[3], b[3]) - max(a[1], b[1]))
+
+
+def zoom_coverage(item: EvalItem, res: PipelineResult) -> float | None:
+    """Fraction of the gold evidence area inside the regions the pipeline zoomed into (route steps with
+    step == "zoom" and a box). None when the item has no gold box or the pipeline did not zoom.
+
+    Separates "selected the wrong region" from "selected the right region but misread it". Boxes of overlapping
+    zoom steps are not de-duplicated, so the value is capped at 1 per gold box. For mosaics, the route box is the
+    bounding box of the selection, so coverage is an upper bound there.
+    """
+    zooms = [s.box for s in res.route if s.step == "zoom" and s.box]
+    if not item.evidence_boxes or not zooms:
+        return None
+    covered = sum(min(_area(g), sum(_inter(g, z) for z in zooms)) for g in item.evidence_boxes)
+    total = sum(_area(g) for g in item.evidence_boxes)
+    return covered / total if total > 0 else None
+
+
 def summarize(pairs: list[tuple[EvalItem, PipelineResult]]) -> dict:
     """Overall and per-evidence-type metrics for one pipeline."""
     groups: dict[str, list] = defaultdict(list)
@@ -64,6 +88,8 @@ def summarize(pairs: list[tuple[EvalItem, PipelineResult]]) -> dict:
         ious = [v for v in (evidence_iou(i, r) for i, r in ps) if v is not None]
         joint = [answer_correct(i, r) and bool(evidence_hit(i, r)) for i, r in ps if i.evidence_boxes]
         unans = [(i, r) for i, r in ps if not i.answerable]
+        covs = [c for c in (zoom_coverage(i, r) for i, r in ps) if c is not None]
+        zoomed = [(i, r) for i, r in ps if any(s.step == "zoom" for s in r.route)]
         costs = [r.total_cost() for _, r in ps]
         lats = [r.total_latency_ms() for _, r in ps]
         out[g] = {
@@ -72,6 +98,12 @@ def summarize(pairs: list[tuple[EvalItem, PipelineResult]]) -> dict:
             "evidence_hit@0.3": mean(hits) if hits else None,
             "evidence_iou_mean": mean(ious) if ious else None,
             "joint_answer_evidence": mean(joint) if joint else None,
+            "zoom_rate": len(zoomed) / len(ps),
+            "zoom_covers_gold@0.9": mean(c >= 0.9 for c in covs) if covs else None,
+            "zoom_coverage_mean": mean(covs) if covs else None,
+            "acc_given_zoom_covers": (mean(answer_correct(i, r) for i, r in zoomed
+                                           if (zoom_coverage(i, r) or 0) >= 0.9)
+                                      if any((zoom_coverage(i, r) or 0) >= 0.9 for i, r in zoomed) else None),
             "abstain_rate": mean(r.abstained for _, r in ps),
             "correct_abstain_rate": mean(r.abstained for _, r in unans) if unans else None,
             "errors": sum(r.error is not None and r.error != "refusal" for _, r in ps),

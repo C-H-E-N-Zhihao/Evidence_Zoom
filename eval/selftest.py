@@ -53,6 +53,14 @@ def t_metrics() -> None:
     check("iou half", abs(iou([0, 0, 1, 1], [0, 0, .5, 1]) - .5) < 1e-9)
     check("evidence none when no gold", evidence_iou(item(boxes=[]), res(boxes=[[0, 0, 1, 1]])) is None)
     check("evidence 0 when no prediction", evidence_iou(item(), res()) == 0.0)
+    from .metrics import zoom_coverage
+
+    g = item(boxes=[[0.1, 0.1, 0.3, 0.3]])
+    check("zoom coverage full", zoom_coverage(g, res(route=[RouteStep("zoom", box=[0, 0, .5, .5])])) == 1.0)
+    check("zoom coverage none", zoom_coverage(g, res(route=[RouteStep("zoom", box=[.6, .6, .9, .9])])) == 0.0)
+    check("zoom coverage half",
+          abs(zoom_coverage(g, res(route=[RouteStep("zoom", box=[0.1, 0.1, 0.2, 0.3])])) - 0.5) < 1e-9)
+    check("no zoom -> None", zoom_coverage(g, res(route=[RouteStep("overview")])) is None)
     s = summarize([(item(et="text"), res()), (item(et="visual"), res("A"))])
     check("summary groups", s["all"]["n"] == 2 and s["text"]["accuracy"] == 1 and s["visual"]["accuracy"] == 0)
 
@@ -135,6 +143,11 @@ def t_geometry() -> None:
     check("window clipped inside image", edge[0] >= 0 and edge[2] <= 1 and edge[1] >= 0 and edge[3] <= 1)
     big = _gold_window(item(boxes=[[0.1, 0.1, 0.9, 0.2]]), img, 100)
     check("window grows to cover large evidence", big[0] <= .1 and big[2] >= .9)
+    from .pipelines.baselines import normalize_box
+
+    shown = Image.new("RGB", (400, 200))
+    check("pixel box normalized", normalize_box([100, 50, 200, 100], shown) == [0.25, 0.25, 0.5, 0.5])
+    check("normalized box unchanged", normalize_box([0.1, 0.2, 0.3, 0.4], shown) == [0.1, 0.2, 0.3, 0.4])
     mb = _map_box([0, 0, 1, 1], (.2, .3, .4, .5))
     check("box maps back from crop", all(abs(x - y) < 1e-9 for x, y in zip(mb, [.2, .3, .4, .5])))
     mb = _map_box([.5, .5, 1, 1], (.2, .3, .4, .5))

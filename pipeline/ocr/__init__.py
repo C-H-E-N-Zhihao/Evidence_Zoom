@@ -1,9 +1,12 @@
 """Conservative OCR exit for typed fields on the two-column accident statement."""
+from collections import OrderedDict
+import hashlib
 import io
 import json
 import os
 import re
 import subprocess
+import threading
 import time
 
 from eval.schema import EvidenceBox, PipelineResult, RouteStep, Usage
@@ -47,21 +50,66 @@ def locate(spans, field, side):
             return None
         headers[key] = hits[0]["box"]
     left, right = headers["a"], headers["b"]
-    if left[2] >= right[0] or abs(left[1] - right[1]) > .03:
+    if left[2] >= right[0]:
         return None
+    delta_x = (right[0] + right[2] - left[0] - left[2]) / 2
+    slope = (right[1] + right[3] - left[1] - left[3]) / (2 * delta_x)
+    if abs(slope) > .15:
+        return None
+    def row_bounds(box):
+        # Compare heights along the header baseline; evidence stays in original coordinates.
+        shift = slope * (box[0] + box[2]) / 2
+        return box[1] - shift, box[3] - shift
+
     # Labels align with the vehicle headers. The right header starts column B.
     cut = right[0] - .015
     column = [s for s in spans if (s["box"][0] < cut) == (side == "a")
-              and s["box"][1] >= headers[side][3]]
+              and row_bounds(s["box"])[0] >= row_bounds(headers[side])[1]]
     labels = {"policy": ("policy no.", "policy number"), "registration": ("registration",),
               "insurer": ("insurer",), "driver": ("driver",)}
     matches = [s for s in column if s["text"].lower().strip().rstrip(":") in labels[field]]
     if len(matches) != 1 or matches[0]["confidence"] < .8:
         return None
     label = matches[0]["box"]
-    values = [s for s in column if s["box"][0] > label[2]
-              and min(label[3], s["box"][3]) - max(label[1], s["box"][1]) > .4 * (label[3]-label[1])]
+    top, bottom = row_bounds(label)
+    values = []
+    for span in column:
+        candidate_top, candidate_bottom = row_bounds(span["box"])
+        overlap = min(bottom, candidate_bottom) - max(top, candidate_top)
+        if span["box"][0] > label[2] and overlap > .4 * (bottom - top):
+            values.append(span)
     return values[0] if len(values) == 1 and values[0]["confidence"] >= .8 else None
+
+
+# Each worker keeps recent recognition results in memory. Cache spans, never page images.
+_page_spans = OrderedDict()
+_cache_lock = threading.Lock()
+
+
+def recognize_page(image):
+    helper = os.environ.get("EVIDENCE_OCR_BIN", "evidence-ocr")
+    if image.mode not in ("RGB", "RGBA", "L"):
+        image = image.convert("RGBA")
+    cache_enabled = os.environ.get("EVIDENCE_OCR_CACHE", "1") != "0"
+    if cache_enabled:
+        key = (helper, image.mode, image.size, hashlib.sha256(image.tobytes()).digest())
+        with _cache_lock:
+            if key in _page_spans:
+                _page_spans.move_to_end(key)
+                return json.loads(_page_spans[key]), True
+
+    # Run outside the lock so independent requests can recognize different pages in parallel.
+    stream = io.BytesIO()
+    image.save(stream, format="PNG")
+    process = subprocess.run([helper], input=stream.getvalue(), capture_output=True, check=True, timeout=30)
+    spans = json.loads(process.stdout)
+    if cache_enabled and len(process.stdout) <= 256 * 1024:
+        with _cache_lock:
+            _page_spans[key] = process.stdout
+            _page_spans.move_to_end(key)
+            if len(_page_spans) > 16:
+                _page_spans.popitem(last=False)
+    return spans, False
 
 
 def answer(image, question):
@@ -72,11 +120,8 @@ def answer(image, question):
         start = time.perf_counter()
         result.route.append(RouteStep("ocr"))
         try:
-            stream = io.BytesIO()
-            image.save(stream, format="PNG")
-            process = subprocess.run([os.environ.get("EVIDENCE_OCR_BIN", "evidence-ocr")],
-                                     input=stream.getvalue(), capture_output=True, check=True, timeout=30)
-            spans = json.loads(process.stdout)
+            spans, reused = recognize_page(image)
+            result.route[0].note = "Reused page OCR" if reused else "Recognized page locally"
             span = None
             response = None
             if field:
