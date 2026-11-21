@@ -20,7 +20,7 @@ from pathlib import Path
 from PIL import Image
 
 from .metrics import cost_curve, summarize
-from .pipelines.baselines import REGISTRY
+from .pipelines.baselines import REGISTRY, parse_name
 from .schema import EvalItem, PipelineResult
 
 
@@ -34,6 +34,8 @@ def load_items(path: Path) -> list[EvalItem]:
 def get_pipeline(name: str):
     if name in REGISTRY:
         return REGISTRY[name]()
+    if (p := parse_name(name)) is not None:
+        return p
     mod, _, fn = name.partition(":")
     return getattr(importlib.import_module(mod), fn)()
 

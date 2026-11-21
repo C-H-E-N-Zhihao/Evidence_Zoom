@@ -111,6 +111,92 @@ def gold_crop(pad: float = 0.05, model: str = ab.DEFAULT_MODEL) -> Pipeline:
     return run
 
 
+def _gold_window(item: EvalItem, img: Image.Image, side_px: int) -> tuple[float, float, float, float]:
+    """Square window of `side_px` original pixels centred on the gold boxes' union (clipped to the image).
+    If the union is larger than the window, the window grows to cover it (the evidence is never cut)."""
+    x0 = min(b[0] for b in item.evidence_boxes) * img.width
+    y0 = min(b[1] for b in item.evidence_boxes) * img.height
+    x1 = max(b[2] for b in item.evidence_boxes) * img.width
+    y1 = max(b[3] for b in item.evidence_boxes) * img.height
+    w, h = max(side_px, x1 - x0), max(side_px, y1 - y0)
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    wx0 = min(max(0.0, cx - w / 2), max(0.0, img.width - w))
+    wy0 = min(max(0.0, cy - h / 2), max(0.0, img.height - h))
+    return (wx0 / img.width, wy0 / img.height, min(1.0, (wx0 + w) / img.width), min(1.0, (wy0 + h) / img.height))
+
+
+def _crop(img: Image.Image, region: tuple[float, float, float, float]) -> Image.Image:
+    return img.crop((round(region[0] * img.width), round(region[1] * img.height),
+                     round(region[2] * img.width), round(region[3] * img.height)))
+
+
+def gold_crop_px(side_px: int, model: str = ab.DEFAULT_MODEL) -> Pipeline:
+    """Crop-budget sweep: fixed-size native-pixel window around the gold evidence."""
+    def run(item: EvalItem, img: Image.Image) -> PipelineResult:
+        name = f"gold_crop_px{side_px}"
+        if not item.evidence_boxes:
+            return _ask(item, img, name=name, step="fallback", model=model)
+        region = _gold_window(item, img, side_px)
+        return _ask(item, _crop(img, region), name=name, step="zoom", region=region, model=model)
+    return run
+
+
+OVERVIEW_CROP_NOTE = (
+    "Image 1 is a low-resolution overview of the whole page. Image 2 is a full-resolution crop of the region "
+    "{region} of the page (normalized x0,y0,x1,y1). Give `box` in coordinates of the WHOLE page."
+)
+
+
+def overview_plus_gold_crop(overview_px: int = 512, crop_px: int = 384, model: str = ab.DEFAULT_MODEL) -> Pipeline:
+    """Upper bound for the 006 policy at this budget: overview + the *correct* crop, in one call.
+    The gap between this and the model-selected crop is the price of finding the region (006)."""
+    def run(item: EvalItem, img: Image.Image) -> PipelineResult:
+        name = f"overview{overview_px}+gold_crop_px{crop_px}"
+        s = min(1.0, overview_px / max(img.size))
+        ov = img.resize((max(1, round(img.width * s)), max(1, round(img.height * s))), Image.LANCZOS)
+        if not item.evidence_boxes:
+            return _ask(item, ov, name=name, step="overview", model=model)
+        region = _gold_window(item, img, crop_px)
+        crop = _crop(img, region)
+        res = PipelineResult(answer=None, pipeline=name, question_id=item.question_id, image_id=item.image_id)
+        res.route += [RouteStep(step="overview", note=f"{ov.width}x{ov.height}px"),
+                      RouteStep(step="zoom", box=list(region), note=f"gold, {crop.width}x{crop.height}px")]
+        note = OVERVIEW_CROP_NOTE.format(region=[round(v, 3) for v in region])
+        content = [ab.image_block(ov), ab.image_block(crop), {"type": "text", "text": f"{note}\n\n{item.question}"}]
+        try:
+            text, usage, stop = ab.call(content, step_index=1, system=SYSTEM, model=model,
+                                        images_px=[[ov.width, ov.height], [crop.width, crop.height]])
+        except Exception as e:
+            res.error = f"{type(e).__name__}: {e}"
+            return res
+        res.usage.append(usage)
+        if stop == "refusal":
+            res.abstained, res.error = True, "refusal"
+            return res
+        ans, abstain, box = parse_reply(text)
+        res.answer, res.abstained = (None, True) if abstain else (ans, ans is None)
+        res.route.append(RouteStep(step="abstain" if res.abstained else "answer"))
+        if box:
+            res.evidence_boxes.append(EvidenceBox(box=box, source="zoom"))
+        return res
+    return run
+
+
+def parse_name(name: str) -> Optional[Pipeline]:
+    """Parametrized names for sweeps: gold_crop_px:<side>, lowres:<long_side>, overview_gold:<ov>:<crop>."""
+    parts = name.split(":")
+    try:
+        if parts[0] == "gold_crop_px" and len(parts) == 2:
+            return gold_crop_px(int(parts[1]))
+        if parts[0] == "lowres" and len(parts) == 2:
+            return lowres(int(parts[1]))
+        if parts[0] == "overview_gold" and len(parts) == 3:
+            return overview_plus_gold_crop(int(parts[1]), int(parts[2]))
+    except ValueError:
+        return None
+    return None
+
+
 def mock(item: EvalItem, img: Image.Image) -> PipelineResult:
     """No API call: returns the gold answer and box. For testing the harness and the app end to end."""
     return PipelineResult(

@@ -36,7 +36,18 @@ python -m eval.plot_cost_curve eval/results/run_<timestamp>.json
 | `full_image` / `full_image_cached` | Full image per question; the cached variant marks the image for prompt caching (fair repeated-question baseline, 007 §2) |
 | `lowres512`, `lowres256` | Fixed low-resolution overview only |
 | `gold_crop`, `gold_crop_tight` | Gold evidence box cropped from original pixels at native size (5 % / 0 % margin): the upper bound for any zoom policy |
+| `gold_crop_px:<side>` | Crop-budget sweep: a `side`×`side` native-pixel window centred on the gold evidence (grown if the evidence is bigger) |
+| `lowres:<long_side>` | Low-resolution sweep |
+| `overview_gold:<ov>:<crop>` | Overview (long side `ov`) + correct crop (`crop` px) in one call: the upper bound for the 006 policy at that budget |
 | `module:factory` | Any external pipeline, e.g. the OCR path or router in `pipeline/` |
+
+Sweep example (006's first comparison, gold crop before a model-selected crop):
+
+```bash
+python -m eval.run_eval --items eval/data/<set>/items.jsonl --max-cost 1.00 --pipelines \
+    full_image full_image_cached lowres:384 lowres:768 \
+    gold_crop_px:192 gold_crop_px:384 gold_crop_px:768 overview_gold:384:384 overview_gold:512:384
+```
 
 All baselines share one prompt and answer format (`pipelines/baselines.py`). The default model is `claude-opus-5-5` at low effort, with server-side refusal fallback enabled; the served model is priced from the response.
 
