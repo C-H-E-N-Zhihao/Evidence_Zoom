@@ -11,6 +11,7 @@ from eval.schema import EvidenceBox, PipelineResult, RouteStep, Usage
 
 def requested_field(question):
     q = question.lower().strip(" ?.").replace("’", "'")
+    q = q.replace("insurance policy", "policy")
     field = r"(insurer|driver|registration(?: number)?|policy (?:number|no\.?))"
     vehicle = r"(?:vehicle|car) ([ab])"
     for pattern, reversed_order in [
