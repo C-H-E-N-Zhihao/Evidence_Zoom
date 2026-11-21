@@ -168,6 +168,7 @@ $("ask").onsubmit = async (e) => {
 };
 
 async function askQ(q) {
+  const imageId = image.image_id;
   $("q").value = ""; $("send").disabled = true;
   addQ(q);
   // visible progress while a (possibly slow, on-device) model call runs
@@ -180,10 +181,12 @@ async function askQ(q) {
   $("chat").append(wait); wait.scrollIntoView({ block: "end" });
   try {
     const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image_id: image.image_id, question: q, model: cfg.live ? cfg.model : null }) });
+      body: JSON.stringify({ image_id: imageId, question: q, model: cfg.live ? cfg.model : null }) });
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || r.status);
     data.question = q;
+    data.imageId = imageId;
+    data.elapsedMs = Date.now() - t0;
     answers.push(data);
     const ours = data.result.usage.reduce((s, u) => s + (u.cost_usd || 0), 0);
     totals.ours += ours; totals.cached += data.baseline.cached_usd; totals.full += data.baseline.uncached_usd;
@@ -290,18 +293,19 @@ function addA(data, i, ours) {
     const btn = document.createElement("button"); btn.type = "button"; btn.className = "btn ghost cmp-btn";
     btn.textContent = "Compare: ask the whole page instead";
     const out = document.createElement("div"); out.className = "cmp";
-    const ourMs = result.usage.reduce((a, u) => a + (u.latency_ms || 0), 0);
     btn.onclick = async () => {
       btn.disabled = true; const t0 = Date.now();
       const tk = setInterval(() => { out.textContent = `Sending the whole page to the same model… ${((Date.now() - t0) / 1000).toFixed(0)} s`; }, 400);
       try {
         const r = await fetch("/api/compare", { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image_id: image.image_id, question: q, model: data.model || cfg.model }) });
+          body: JSON.stringify({ image_id: data.imageId, question: q, model: data.model }) });
         const c = await r.json(); if (!r.ok) throw new Error(c.detail || r.status);
-        const bill = cfg.on_device || String(c.model).startsWith("local:") ? "no provider charge" : "billed";
-        out.innerHTML = `<b>Our route</b>: ${usd(ours)} · ${inTok} input tok · ${(ourMs / 1000).toFixed(1)} s` +
+        if (c.error) throw new Error(c.error);
+        const bill = String(c.model).startsWith("local:") ? "no provider charge" : "billed";
+        out.innerHTML = `<b>Our route</b>: ${usd(ours)} · ${inTok} input tok · ${(data.elapsedMs / 1000).toFixed(1)} s` +
           `<br><b>Whole page</b> (${c.image_px[0]}×${c.image_px[1]} px, same model): ${usd(c.cost_usd)} · ${c.input_tokens} input tok · ` +
-          `${(c.latency_ms / 1000).toFixed(1)} s · answer: ${c.abstained ? "no answer" : (c.answer || "–")} <span class="est">(${bill})</span>`;
+          `${((Date.now() - t0) / 1000).toFixed(1)} s (${bill}) · answer: `;
+        out.append(document.createTextNode(c.abstained ? "no answer" : (c.answer || "–")));
         btn.remove();
       } catch (e) { out.textContent = "Comparison failed: " + e; btn.disabled = false; }
       finally { clearInterval(tk); }
