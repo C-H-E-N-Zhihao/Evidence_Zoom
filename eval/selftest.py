@@ -161,6 +161,10 @@ def t_pairs_curve_report() -> None:
     check("report renders rows", "| `p` | all |" in md)
     check("report flags aborted run", "not a clean measurement" in md)
     check("report flags geometric degradation", "Geometric degradation" in md)
+    two = [(item(et="text"), res()), (item(et="text"), res())]
+    run2 = {"meta": {"time": "t", "commit": "c", "items": "x", "spent_usd": 0},
+            "report": {"full_image_cached@or:x": {"summary": summarize(two), "complete": True}}}
+    check("report flags 'cached' run with no cache reads", "no cache reads were billed" in report.table(run2))
 
 
 def t_geometry() -> None:

@@ -31,6 +31,11 @@ def table(run: dict) -> str:
         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for name, rep in run["report"].items():
+        s_all = rep["summary"].get("all") or {}
+        if "cached" in name and s_all.get("n", 0) > 1 and not s_all.get("cache_read_tokens"):
+            lines.insert(2, f"> **`{name}` is labelled cached, but no cache reads were billed:** treat it as the "
+                            "UNCACHED full page. Its row must not be quoted as the cached baseline (the OpenRouter "
+                            "backend does not send cache_control).\n")
         if rep.get("aborted") or not rep.get("complete", True):
             lines.insert(2, f"> **`{name}` is not a clean measurement:** "
                             f"{rep.get('aborted') or 'incomplete (budget cap)'}; degraded results: {rep.get('degraded', '?')}.\n")

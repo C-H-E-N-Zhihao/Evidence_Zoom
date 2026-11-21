@@ -30,7 +30,9 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
 def image_block(img: Image.Image, fmt: str = "PNG", detail: Optional[str] = None, cache: bool = False) -> dict:
-    """OpenAI-style image part. `detail` ("low"/"high") matters for OpenAI models; others ignore it."""
+    """OpenAI-style image part. `detail` ("low"/"high") matters for OpenAI models; others ignore it.
+    NOTE: `cache` is IGNORED here (no cache_control is sent), so `full_image_cached@or:...` is billed uncached;
+    eval.report flags such rows. Do not quote them as the cached baseline."""
     buf = io.BytesIO()
     img.convert("RGB").save(buf, format=fmt)
     url = f"data:image/{fmt.lower()};base64," + base64.standard_b64encode(buf.getvalue()).decode()
