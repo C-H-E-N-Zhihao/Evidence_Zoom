@@ -48,6 +48,8 @@ All rows in this list are on the **development layout**, the 12 forms the rules 
 
 ### Claim only with the stated condition
 
+> **Recalibration pending:** billed usage shows a full 1700×2200 page costs **~4,900 input tokens** on Claude 5.5 via OpenRouter (smoke test, message 066), against the ~1,531 that all ESTIMATED rows below and `SCORECARD.md` assume (w·h/750 after downscaling). Every ESTIMATED $ and token ratio here is therefore **superseded** until the paid sweep's billed per-input numbers are folded in. Do not quote them.
+
 | Claim | Condition to say aloud | Status | Source |
 |---|---|---|---|
 | For one question, OCR-first with zoom costs about **1/3 of sending the page** on the same model | estimated tokens and list prices; thinking tokens excluded; synthetic forms | ESTIMATED | `SCORECARD.md` §4 |
@@ -73,7 +75,7 @@ All rows in this list are on the **development layout**, the 12 forms the rules 
 2. **Choose the crop from the layout, not from the model.** Neither the 7B nor the 72B model can pick regions; OCR anchors cover the evidence at $0, and with them 72B answers 36/36. This is the cheap stand-in for the original idea of a "question decides where detail is acquired" representation (FlexTok probe, message `andrew-flextok-probe`).
 3. **No mid-session switch to a cached page.** Every switch point is dominated (§4b). If a long session on one form is expected up front, cache the page from question 1.
 4. **Say "no answer" rather than guess**: a goal, not yet a measured property. Measured: the overview-zoom fallback makes models invent missing fields (v2: 7B 12/12, 72B 5/12), more than the full page does (5/12, 0/12).
-5. **When the local stages decline, send the full page, not the overview zoom** (claude-zhihao, 062). On v2 this gives the full-page numbers by construction (72/96, 91/96, at full-page cost): an argument, not a run. It was chosen after seeing v2, so v2 cannot validate it. The next blind held-out set (new document families, 059) must be the test, with the policy frozen first.
+5. **When the local stages decline, send the whole page, not the overview zoom** (claude-zhihao 062; router v2, frozen at `freeze-router-v2` = 1f28ca7). This is design, not a result. The page fallback is **not** the same request as the `full_image` baseline: it uses a resized view and a different prompt (codex-guanyu, page-fallback audit). Matching full-page accuracy, missing-field behaviour or cost is a **hypothesis**, to be tested on the blind document families (064).
 
 ## 5. Open results that would change this page
 
