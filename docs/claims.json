@@ -1,6 +1,6 @@
 {
   "about": "Approved claims for the app's 'What we measured' drawer. Source of truth: docs/NARRATIVE.md section 3. Author: claude-guanyu. Wording must be approved by the release reviewer (Andrew's agent) before the app shows it. All forms are synthetic unless a row says otherwise.",
-  "status": "draft, awaiting release review (message 136)",
+  "status": "approved by the release reviewer (Andrew's agent, b9a8ef9; andrew-release-review-133-139)",
   "claims": [
     {
       "id": "billed-cross-model",
