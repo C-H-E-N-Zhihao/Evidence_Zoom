@@ -4,17 +4,18 @@
         [--models claude-opus-5-5 claude-sonnet-5-5 claude-haiku-5-5] [--out eval/results/SCORECARD.md]
 
 Needs macOS (the OCR route uses Apple Vision). Runs pipeline.router with the REAL OCR route and an ORACLE visual
-backend (pipeline.visual.selftest.oracle: selects the gold cells and answers with gold). Every number in the output
-carries one of three labels:
+backend (pipeline.visual.replay.oracle: on the view the router sends directly, i.e. the anchor crop or the page
+fallback, it answers with gold and maps the gold box into that view). Every number carries one of three labels:
 
   MEASURED   observed on this machine: OCR exits, OCR correctness, wrong exits, OCR latency, route mix
-  ORACLE     visual path with gold selection and gold answers: checks geometry (crop, mosaic, box mapping) only;
-             says nothing about a real model's selection or reading accuracy
-  ESTIMATED  tokens from image sizes (~w*h/750 after downscaling to 1568 px / 1.15 MP, app/costs.py) and list prices
-             (eval/pricing.py); output = 40 tokens per call, text = prompt length / 4. Ignores thinking tokens, which
-             Opus 5.5 always spends (billed as output), so real costs are higher, especially for multi-call routes.
+  ORACLE     visual path replayed with gold answers: checks the router's view choice and box mapping only;
+             says nothing about a real model's reading accuracy
+  ESTIMATED  the billed calibration shared with the app meter (app/costs.py: image ~ w*h/800, no downscale; prompt
+             ~247 tokens per call; on the cached page, image AND prompt are cached), list prices (eval/pricing.py),
+             and --out-tokens output per call on both sides. Ignores thinking tokens, which Opus 5.5 always spends
+             (billed as output), so real costs are higher, especially for multi-call routes.
 
-A "measured paid" column is reserved and stays empty until a key-backed run (eval.run_eval) fills it.
+Billed results are not computed here: see eval/results/paid_20261121-162336/ and REPORT_same_model_sonnet.md.
 """
 from __future__ import annotations
 
@@ -51,18 +52,25 @@ def route_of(r: PipelineResult) -> str:
 
 
 def full_image_usage(img: Image.Image, it: EvalItem, model: str, q_index: int, cached: bool) -> Usage:
-    from app.costs import image_tokens
-    from .pipelines.baselines import SYSTEM
+    """Same token model as app.costs.full_image_baseline (the UI meter), priced at `model`.
+
+    Uncached: image + calibrated prompt. Cached: image AND prompt sit in the cache (as billed in the paid sweep),
+    only the question is uncached; cache write on the first question about the image, reads after.
+    """
+    from app.costs import TEXT_BASE_TOKENS, image_tokens
 
     tok = image_tokens(*img.size)
-    u = Usage(0, "anthropic", model, input_text_tokens=len(SYSTEM) // 4 + len(it.question) // 4,
-              output_tokens=OUT_TOKENS, estimated=True, image_px=[list(img.size)])
+    q = max(8, len(it.question) // 4)
+    prompt = max(TEXT_BASE_TOKENS, q)
+    u = Usage(0, "anthropic", model, output_tokens=OUT_TOKENS, estimated=True, image_px=[list(img.size)])
     if not cached:
-        u.input_image_tokens = tok
-    elif q_index == 0:
-        u.cache_write_tokens = tok
+        u.input_text_tokens, u.input_image_tokens = prompt, tok
     else:
-        u.cache_read_tokens = tok
+        u.input_text_tokens = q
+        if q_index == 0:
+            u.cache_write_tokens = tok + prompt - q
+        else:
+            u.cache_read_tokens = tok + prompt - q
     u.cost_usd = cost_usd(u)
     return u
 
@@ -71,12 +79,18 @@ OUT_TOKENS = 100  # set from --out-tokens in main(); billed paid sweep: ~64-103 
 
 
 def reprice(r: PipelineResult, model: str) -> float:
-    """Re-price the oracle's estimated API usage at `model`; local OCR stays $0."""
+    """Re-price the oracle's estimated API usage at `model`; local OCR stays $0.
+
+    Each API call gets the same calibrated prompt size as the page side (app.costs.TEXT_BASE_TOKENS), uncached.
+    """
+    from app.costs import TEXT_BASE_TOKENS
+
     total = 0.0
     for u in r.usage:
         if u.provider == "local":
             continue
-        v = Usage(**{**u.__dict__, "model": model, "provider": "anthropic", "output_tokens": OUT_TOKENS})
+        v = Usage(**{**u.__dict__, "model": model, "provider": "anthropic", "output_tokens": OUT_TOKENS,
+                     "input_text_tokens": TEXT_BASE_TOKENS})
         total += cost_usd(v)
     return total
 
@@ -171,8 +185,9 @@ def main() -> None:
 
     vis = [x for x in rows if x["route"] != "ocr_exit"]
     L += ["## 2. Visual path geometry (ORACLE)", "",
-          "The oracle picks exactly the gold cells and answers with gold, so these numbers verify the grid → "
-          "mosaic → box mapping, **not** a model's ability to choose cells or read ticks.", "",
+          "The router sends one view directly: the OCR-anchored crop, or the whole page as fallback. The oracle "
+          "answers on that view with gold and maps the gold box into it, so these numbers check the view choice "
+          "and the box mapping back to the page, **not** a model's ability to read ticks or sketches.", "",
           "| group | n via visual | accuracy (oracle) | evidence IoU mean (oracle) | image tokens/q (ESTIMATED) |",
           "|---|---:|---:|---:|---:|"]
     for g in GROUPS:
@@ -184,11 +199,13 @@ def main() -> None:
                  f"{(sum(ious) / len(ious)) if ious else float('nan'):.2f} | {median(x['img_tok'] for x in xs):.0f} |")
     L += ["", f"Full page for comparison: {page_px[0]}×{page_px[1]} px ≈ **{full_tok}** image tokens (ESTIMATED).", ""]
 
-    L += ["## 3. Cost per question (ESTIMATED) — measured paid column reserved", "",
-          "Router = real OCR ($0) + the oracle's visual calls re-priced at each model. Full page = one call per "
-          "question with the whole page; cached = cache write on the first question per image, reads after.", "",
-          "| model | group | router $/q | full page $/q | full page cached $/q | router ÷ cached | measured paid |",
-          "|---|---|---:|---:|---:|---:|---|"]
+    L += ["## 3. Cost per question (ESTIMATED)", "",
+          "Router = real OCR ($0) + the oracle's API calls re-priced at each model (uncached). Full page = one call "
+          "per question with the whole page; cached = image and prompt cached, write on the first question per "
+          "image, reads after (same token model as the app meter). Billed results are in "
+          "`paid_20261121-162336/` and `REPORT_same_model_sonnet.md`, not here.", "",
+          "| model | group | router $/q | full page $/q | full page cached $/q | router ÷ cached |",
+          "|---|---|---:|---:|---:|---:|"]
     for m in a.models:
         for g in GROUPS:
             xs = sel(g)
@@ -197,8 +214,7 @@ def main() -> None:
             rc = sum(x["router_cost"][m] for x in xs) / len(xs)
             fu = sum(x["full"][m][0] for x in xs) / len(xs)
             fc = sum(x["full"][m][1] for x in xs) / len(xs)
-            L.append(f"| `{m}` | {g} | {rc:.5f} | {fu:.5f} | {fc:.5f} | {rc / fc if fc else float('nan'):.2f} | "
-                     f"pending key |")
+            L.append(f"| `{m}` | {g} | {rc:.5f} | {fu:.5f} | {fc:.5f} | {rc / fc if fc else float('nan'):.2f} |")
     L += ["", "Per-group cached numbers depend on question order: in the dataset the text questions come first "
           "on each page and absorb the cache write. Only the `all` rows, and section 4, are order-fair.", ""]
 
@@ -213,8 +229,8 @@ def main() -> None:
     ks = sorted({1, 2, 3, max(len(v) for v in by_img.values())})
     L += ["## 4. Cost per page vs. number of questions asked (ESTIMATED, order-averaged)", "",
           "Mean cumulative $ per page when a handler asks k random questions about it (200 random orders per "
-          "page, seed 0). Cached full page: cache write on the first question, reads after. The router does not "
-          "cache its overview here, which slightly favours the baseline.", "",
+          "page, seed 0). Cached full page: cache write on the first question, reads after. The router's crop and "
+          "page-fallback calls are priced uncached, which slightly favours the baseline.", "",
           "| router model | full-page model | " + " | ".join(f"k={k}: router / full / cached" for k in ks) + " |",
           "|---|---|" + "---:|" * len(ks)]
     for rm, fm in pairs:
@@ -275,9 +291,13 @@ def main() -> None:
           "not know in advance.", ""]
 
     L += ["## 5. Assumptions behind ESTIMATED numbers", "",
-          "- Image tokens ≈ w·h/750 after downscaling to ≤1568 px long side and ≤1.15 MP (`app/costs.py`). "
-          "Not yet checked against a provider: `eval/billing_probe.py` measures it once a key exists.",
-          f"- Output {OUT_TOKENS} tokens per call on both sides (`--out-tokens`; billed sweep ≈ 64–103 per call), text tokens ≈ characters/4. Image tokens from `app/costs.py` (calibrated on billed usage, ≈ px/800, no downscale). The page side caches only the image, not the prompt (the app meter caches both, as billed). **Thinking tokens are ignored.** Opus 5.5 "
+          "- Tokens use the same model as the app meter (`app/costs.py`), calibrated on billed usage "
+          "(`token_calibration.json`): image ≈ w·h/800 with no downscale up to 1700×2200 (larger images "
+          "unverified); prompt ≈ 247 tokens per API call (Sonnet fit; the Haiku fit has a larger intercept and up "
+          "to 47 % residual across prompt types). On the cached page, image and prompt are cached and only the "
+          "question (characters/4) is uncached, as billed.",
+          f"- Output {OUT_TOKENS} tokens per call on both sides (`--out-tokens`; billed sweep ≈ 64–103 per call). "
+          "**Thinking tokens are ignored.** Opus 5.5 "
           "always thinks (billed as output), so multi-call routes are under-estimated relative to one-call "
           "baselines.",
           "- List prices from `eval/pricing.py` (Anthropic first-party, 2026-11-03). Cache write 1.25×, read 0.1× "
