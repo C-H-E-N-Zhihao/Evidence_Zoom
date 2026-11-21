@@ -35,8 +35,8 @@ def table(run: dict) -> str:
           if meta.get("pipeline_tree") else []),
         *([f"Images: digest `{meta['images_digest']}` over {len(meta.get('images_sha256') or {})} files (compare with the set's images.sha256)\n"]
           if meta.get("images_digest") else []),
-        "| pipeline | group | n | acc | ANLS | joint | hit@0.3 | abstain | correct abstain | $/q | p50 ms | in tok/q | of which image | out tok/q | calls/q | pair follow | zoomed | zoom covers gold | acc when covered | GPU s/q |",
-        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| pipeline | group | n | acc | ANLS | relaxed | joint | hit@0.3 | abstain | correct abstain | $/q | p50 ms | in tok/q | of which image | out tok/q | calls/q | pair follow | zoomed | zoom covers gold | acc when covered | GPU s/q |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for name, rep in run["report"].items():
         s_all = rep["summary"].get("all") or {}
@@ -61,7 +61,7 @@ def table(run: dict) -> str:
             star = "*" if s["any_estimated"] else ""
             pf = pct(rep.get("pair_follow_rate")) if g == "all" else ""
             lines.append(
-                f"| `{name}` | {g} | {n} | {pct(s['accuracy'])} | {pct(s.get('anls'))} | {pct(s['joint_answer_evidence'])} | "
+                f"| `{name}` | {g} | {n} | {pct(s['accuracy'])} | {pct(s.get('anls'))} | {pct(s.get('relaxed_accuracy'))} | {pct(s['joint_answer_evidence'])} | "
                 f"{pct(s['evidence_hit@0.3'])} | {pct(s['abstain_rate'])} | {pct(s['correct_abstain_rate'])} | "
                 f"{s['cost_usd_mean']:.5f}{star} | {s['latency_ms_median']:.0f} | "
                 f"{(s['input_image_tokens'] + s['input_text_tokens'] + s['cache_read_tokens']) / n:.0f} | "

@@ -52,6 +52,11 @@ def t_metrics() -> None:
     check("ANLS one typo in 10 chars = 0.9", abs(anls(item("1234567890"), res("1234567891")) - 0.9) < 1e-9)
     check("ANLS below threshold = 0", anls(item("cat"), res("dog")) == 0.0)
     check("ANLS best accepted variant", anls(item("ten", acc=["10"]), res("10")) == 1.0)
+    from .metrics import relaxed_accuracy as ra
+    check("relaxed: number within 5 %", ra(item("100"), res("104")) == 1.0 and ra(item("100"), res("106")) == 0.0)
+    check("relaxed: percent sign parsed", ra(item("0.5"), res("50%")) == 1.0)
+    check("relaxed: units not stripped (Pix2Struct)", ra(item("100"), res("100 kg")) == 0.0)
+    check("relaxed: strings ignore case", ra(item("Blue"), res("blue")) == 1.0)
     check("ANLS abstain on answerable = 0, on unanswerable = 1",
           anls(item("B"), res(None, abst=True)) == 0.0 and anls(item(None, ok=False, boxes=[]), res(None, abst=True)) == 1.0)
     check("answer on unanswerable is wrong", not answer_correct(item(None, ok=False, boxes=[]), res("123")))

@@ -61,6 +61,40 @@ def anls(item: EvalItem, res: PipelineResult, tau: float = 0.5) -> float:
     return best
 
 
+def _to_float(text: str) -> float | None:
+    try:
+        if text.endswith("%"):
+            return float(text.rstrip("%")) / 100.0
+        return float(text)
+    except ValueError:
+        return None
+
+
+def relaxed_accuracy(item: EvalItem, res: PipelineResult, max_relative_change: float = 0.05) -> float:
+    """ChartQA relaxed accuracy, following Pix2Struct's `relaxed_correctness` (pix2struct/metrics.py).
+
+    Parseable numbers (with an optional trailing %) match within 5 % relative change; otherwise the strings match
+    ignoring case. Units and thousands separators are NOT stripped (codex-guanyu, fa568a3). Our only deviation:
+    outer whitespace is stripped. Max over `answer` + `accepted_answers`. Unanswerable items: 1 if abstained.
+    """
+    if not item.answerable:
+        return 1.0 if res.abstained else 0.0
+    if res.abstained or res.answer is None:
+        return 0.0
+    pred = res.answer.strip()
+    for g in [item.answer, *item.accepted_answers]:
+        if not g:
+            continue
+        g = g.strip()
+        pf, gf = _to_float(pred), _to_float(g)
+        if pf is not None and gf:
+            if abs(pf - gf) / abs(gf) <= max_relative_change:
+                return 1.0
+        elif pred.lower() == g.lower():
+            return 1.0
+    return 0.0
+
+
 def iou(a: list[float], b: list[float]) -> float:
     ix = max(0.0, min(a[2], b[2]) - max(a[0], b[0]))
     iy = max(0.0, min(a[3], b[3]) - max(a[1], b[1]))
@@ -128,6 +162,7 @@ def summarize(pairs: list[tuple[EvalItem, PipelineResult]]) -> dict:
             "n": len(ps),
             "accuracy": mean(correct) if correct else None,
             "anls": mean(anls(i, r) for i, r in ps) if ps else None,
+            "relaxed_accuracy": mean(relaxed_accuracy(i, r) for i, r in ps) if ps else None,
             "evidence_hit@0.3": mean(hits) if hits else None,
             "evidence_iou_mean": mean(ious) if ious else None,
             "joint_answer_evidence": mean(joint) if joint else None,
