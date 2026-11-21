@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import os
 import random
 from pathlib import Path
 
@@ -12,7 +13,11 @@ from PIL import Image, ImageDraw, ImageFont
 
 HERE = Path(__file__).parent
 W, H = 1650, 2340
-SEED = 3003
+# Overrides (defaults reproduce the committed v3 set): EAS3_SEED, EAS3_OUT (output folder), EAS3_PREFIX (id prefix).
+# Used to generate fresh forms of the same template, e.g. v3b (message 115).
+SEED = int(os.environ.get("EAS3_SEED", "3003"))
+OUT = Path(os.environ.get("EAS3_OUT", str(HERE)))
+PREFIX = os.environ.get("EAS3_PREFIX", "eas3")
 
 def font(path, size, index=0):
     return ImageFont.truetype(path, size, index=index)
@@ -205,8 +210,8 @@ def union(*bs):
 
 def items_for(form, geo, tag):
     n = form["n"]
-    iid = f"eas3-{n:03d}{tag}"
-    pid = f"eas3-{n:03d}"
+    iid = f"{PREFIX}-{n:03d}{tag}"
+    pid = f"{PREFIX}-{n:03d}"
     b = sorted(form["b"])
     bans = ", ".join(map(str, b)) if b else "none"
     import itertools
@@ -237,15 +242,15 @@ def items_for(form, geo, tag):
 
 
 def main():
-    (HERE / "images").mkdir(exist_ok=True)
+    (OUT / "images").mkdir(parents=True, exist_ok=True)
     lines = []
     for base, partner in make_forms():
         for tag, f in (("a", base), ("b", partner)):
             img, geo = render(f)
             iid, its = items_for(f, geo, tag)
-            img.save(HERE / "images" / f"{iid}.png")
+            img.save(OUT / "images" / f"{iid}.png")
             lines += its
-    with open(HERE / "items.jsonl", "w") as fh:
+    with open(OUT / "items.jsonl", "w") as fh:
         for it in lines:
             fh.write(json.dumps(it) + "\n")
     print(len(lines), "items")
