@@ -21,7 +21,7 @@ from pathlib import Path
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from PIL import Image
+from PIL import Image, ImageOps
 from pydantic import BaseModel
 
 from .costs import full_image_baseline
@@ -129,11 +129,20 @@ def load_fixture(fixture_id: str):
 async def upload(file: UploadFile = File(...)):
     data = await file.read()
     try:
-        im = Image.open(io.BytesIO(data))
-        im.verify()
+        with Image.open(io.BytesIO(data)) as im:
+            im.verify()
+        with Image.open(io.BytesIO(data)) as im:
+            suffix = Path(file.filename or "x.png").suffix.lower() or ".png"
+            if im.getexif().get(274) in range(2, 9):
+                # Persist display-oriented pixels once so preview, OCR and evidence share a canvas.
+                oriented = ImageOps.exif_transpose(im)
+                if oriented.mode not in ("1", "L", "LA", "P", "RGB", "RGBA", "I;16"):
+                    oriented = oriented.convert("RGB")
+                buf = io.BytesIO()
+                oriented.save(buf, format="PNG")
+                data, suffix = buf.getvalue(), ".png"
     except Exception:
         raise HTTPException(400, "not an image")
-    suffix = Path(file.filename or "x.png").suffix.lower() or ".png"
     path = UPLOADS / f"{uuid.uuid4().hex}{suffix}"
     path.write_bytes(data)
     return _register(path)
