@@ -373,11 +373,26 @@ def _ink_per_row(page, lay, side, shrink=0.28, stats=None):
             continue
         dark = cell < 180
         ys, xs = np.where(dark.mean(1) > 0.35)[0], np.where(dark.mean(0) > 0.35)[0]
+        square = False
         if len(ys) >= 2 and len(xs) >= 2:
-            by0, by1, bx0, bx1 = ys.min(), ys.max(), xs.min(), xs.max()
-            if stats is not None:
+            bx0, bx1 = xs.min(), xs.max()
+            # horizontal edge runs; the box is the top run plus the run one box-width below it (square), so the top
+            # edge of the NEXT row's box (when the cell reaches it) is not mistaken for this box's bottom (message 146)
+            runs, start = [], ys[0]
+            for a, b in zip(ys, ys[1:]):
+                if b - a > 1:
+                    runs.append((start, a)); start = b
+            runs.append((start, ys[-1]))
+            by0 = runs[0][0]
+            want = by0 + (bx1 - bx0)
+            cand = min(runs[1:] or runs, key=lambda r: abs(r[1] - want))
+            by1 = cand[1]
+            square = len(runs) >= 2 and abs((by1 - by0) - (bx1 - bx0)) <= 0.25 * max(1, bx1 - bx0)
+            if square and stats is not None:
                 stats["outline"] = stats.get("outline", 0) + 1
-        else:
+        if not square and len(ys) >= 2 and len(xs) >= 2:
+            pass  # keep the estimate above, but the row does not count as a crisp outline
+        elif not square:
             by0, by1, bx0, bx1 = 0, cell.shape[0] - 1, 0, cell.shape[1] - 1
         bh, bw = by1 - by0, bx1 - bx0
         inner = cell[by0 + int(bh * shrink):by1 - int(bh * shrink) + 1, bx0 + int(bw * shrink):bx1 - int(bw * shrink) + 1]

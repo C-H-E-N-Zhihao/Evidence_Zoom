@@ -99,7 +99,8 @@ def _load_fixtures() -> dict[str, dict]:
     # layout 1 (development), layout 2 (held-out, later development), layout 3 fresh forms (v3b: configured from one
     # example of layout 3, frozen before these forms were generated). A judge can switch layouts in the menu.
     for items_file in (data / "demo_sample" / "items.jsonl", data / "accident_statement" / "items.jsonl",
-                       data / "accident_statement_v2" / "items.jsonl", data / "accident_statement_v3b" / "items.jsonl"):
+                       data / "accident_statement_v2" / "items.jsonl", data / "accident_statement_v3b" / "items.jsonl",
+                       data / "homework_v1" / "items.jsonl"):
         if not items_file.exists():
             continue
         for line in items_file.read_text().splitlines():
@@ -213,6 +214,7 @@ class Ask(BaseModel):
     image_id: str
     question: str
     model: str | None = None  # live only: one of APP_MODELS
+    mode: str | None = None  # "claims" (form router) | "general" (OCR text first, any image) | None = auto
 
 
 @app.post("/api/compare")
@@ -272,6 +274,9 @@ def ask(req: Ask):
         return any(u.get("provider") not in ("local", "replay", "estimate", None) for u in d.get("usage", []))
 
     live_error = None
+    # route: the claims router for configured claim forms, the general assistant (OCR text first) otherwise
+    general = req.mode == "general" or (req.mode != "claims" and (meta.get("fixture") or "").startswith("hw-"))
+    pipe = importlib.import_module("pipeline.general") if general else pipeline
     with _replay_lock:  # the visual module's hooks are process-global; one question at a time
         chosen = _use_model(req.model) if LIVE else None
         if visual is not None:
@@ -285,7 +290,7 @@ def ask(req: Ask):
                 _cap.direct_zoom = True  # keep the shipped route; only the model call is blocked
                 visual.CALL_OVERRIDE = _cap
             try:
-                result = pipeline.answer(img, req.question)
+                result = pipe.answer(img, req.question)
             finally:
                 if visual is not None:
                     visual.VIEW_SINK = None
@@ -315,7 +320,7 @@ def ask(req: Ask):
                                     else replay.unavailable(req.question))
         if not LIVE or live_error:
             try:
-                result = pipeline.answer(img, req.question)
+                result = pipe.answer(img, req.question)
             finally:
                 if visual is not None:
                     visual.CALL_OVERRIDE = None
@@ -372,7 +377,7 @@ def ask(req: Ask):
             "check": check,
             "model": chosen, "on_device": _on_device(chosen or ""),
             "question_index": meta["questions"] - 1,
-            "pipeline": pipeline.__name__}
+            "pipeline": pipe.__name__}
 
 
 @app.get("/")

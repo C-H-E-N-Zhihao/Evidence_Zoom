@@ -110,3 +110,5 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 16px; pa
 .check { font-size: 12.5px; margin: 2px 0 6px; padding: 4px 8px; border-left: 3px solid var(--ocr); background: color-mix(in srgb, var(--ocr) 10%, transparent); }
 .check.warn { border-left-color: #d69e2e; background: color-mix(in srgb, #d69e2e 16%, transparent); }
 .check.muted { border-left-color: var(--line); background: transparent; color: var(--muted); }
+.tutor { font-size: 13.5px; line-height: 1.5; margin: 4px 0 6px; padding: 6px 10px; border-radius: 6px;
+         background: color-mix(in srgb, var(--accent) 10%, transparent); white-space: pre-wrap; }

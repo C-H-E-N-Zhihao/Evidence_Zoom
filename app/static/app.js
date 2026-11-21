@@ -69,8 +69,10 @@ async function init() {
     const o = document.createElement("option");
     o.value = p.pair_id;
     const what = (p.forms.find((f) => f.note && f.note.includes("counterfactual")) || {}).note || "";
-    const diff = what.includes("tick") ? "B's ticks differ" : what.includes("sketch") ? "the sketch differs" : "";
-    const layout = p.pair_id.startsWith("eas3b") ? "layout 3 (configured template) · " :
+    const diff = p.pair_id.startsWith("hw-") ? "the circled option and the chart differ" :
+      what.includes("tick") ? "B's ticks differ" : what.includes("sketch") ? "the sketch differs" : "";
+    const layout = p.pair_id.startsWith("hw-") ? "homework (general assistant) · " :
+      p.pair_id.startsWith("eas3b") ? "layout 3 (configured template) · " :
       p.pair_id.startsWith("eas2") ? "layout 2 · " : p.pair_id.startsWith("eas-") ? "layout 1 · " : "";
     o.textContent = p.pair_id === "demo" ? "demo form" : `${layout}${p.pair_id}${diff ? " · pair: " + diff : ""}`;
     $("pair").append(o);
@@ -225,6 +227,20 @@ function explain(data) {
   const est = r.usage.some((u) => u.estimated) ? " (estimated)" : "";
   const lab = (r.evidence_boxes || []).map((e) => e.label).find(Boolean);
   if (source === "ocr") return `Read on this computer by OCR${lab ? ` from the printed line "${lab}"` : ""}: no model call, $0.`;
+  const txt = r.route.find((st) => st.step === "native_text");
+  if (txt && !zoom) {
+    const nl = /(\d+) lines/.exec(txt.note || "");
+    return `Answered from the OCR text alone: the model was sent ${nl ? nl[1] + " lines of text" : "the page's text"} and ` +
+      `no image (~${inTok} input tokens${est} instead of ~${pageTok} (estimated) for the page image).`;
+  }
+  if (txt && zoom) {
+    const fb = r.route.find((st) => st.step === "fallback" && st.target === "image");
+    const why = fb && fb.note ? fb.note.replace(/^needs pixels: /, "") : "";
+    const pxs = /(\d+)x(\d+)px/.exec(zoom.note || "");
+    return `The OCR text was not enough${why ? ` (needs: ${why})` : ""}, so the model was sent ` +
+      `${zoom.target === "full page" ? "the whole page" : "a band of the page around the lines it pointed to"}` +
+      `${pxs ? ` (${pxs[1]}×${pxs[2]} px)` : ""}: ~${inTok} input tokens in total${est}.`;
+  }
   if (!zoom) return source === "unavailable" ? "No stage could answer this question, so nothing was invented." : "";
   const t = zoom.target || "", size = px ? `${px[1]}×${px[2]} px` : "";
   const pct = pageTok ? Math.round((1 - inTok / pageTok) * 100) : 0;
@@ -302,8 +318,14 @@ function addA(data, i, ours) {
       if (ck.agrees === false) ckEl.classList.add("warn");
     }
   }
+  const tnote = (result.route.find((st) => st.step === "answer" && /explanation: /.test(st.note || "")) || {}).note || "";
+  let tutor = null;
+  if (tnote) {
+    tutor = document.createElement("div"); tutor.className = "tutor";
+    tutor.textContent = tnote.split("explanation: ").slice(1).join("explanation: ");
+  }
   const why = document.createElement("div"); why.className = "explain"; why.textContent = explain(data);
-  d.append(head, ...(why.textContent ? [why] : []), ...(ckEl ? [ckEl] : []), route, cost);
+  d.append(head, ...(tutor ? [tutor] : []), ...(why.textContent ? [why] : []), ...(ckEl ? [ckEl] : []), route, cost);
   // live only: ask the same model with the whole page, and show both sides with real (billed) numbers
   if (cfg.live && (source === "model" || source === "ocr")) {
     const q = data.question || (d.previousElementSibling && d.previousElementSibling.textContent) || "";

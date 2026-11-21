@@ -26,13 +26,14 @@ BAND_ABOVE, BAND_BELOW = 0.04, 0.30  # crop band around the named lines (page fr
 
 SYSTEM_TEXT = (
     "You answer questions about an image using ONLY its OCR text, given as numbered lines [L1], [L2], ... in reading "
-    "order. If the lines contain what is needed, answer and cite the ids of the lines you used. For tutoring "
-    "questions (solve, explain, check my work), give the answer and a short, clear explanation. If the answer depends "
+    "order. If the lines contain what is needed, answer and cite the ids of the lines you used. Put only the short "
+    "answer in \"answer\" (a number, word or short phrase); for tutoring questions (solve, explain, check my work) add a "
+    "short, clear step-by-step explanation in \"explanation\". If the answer depends "
     "on something OCR cannot capture (a drawing, diagram, graph or picture; a tick, circle, highlight or "
     "crossing-out; handwriting that is missing or garbled; colour; where something is placed), do not guess: ask for "
     "the image and list the ids of the lines nearest to what must be looked at. If the information is not in the image "
     "at all, abstain. Reply with JSON only, one of:\n"
-    '{"answer": "...", "lines": [ids]}\n'
+    '{"answer": "...", "explanation": "... (optional)", "lines": [ids]}\n'
     '{"need_image": true, "lines": [ids], "look_for": "what to inspect, in a few words"}\n'
     '{"abstain": true}'
 )
@@ -113,6 +114,8 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
             return res
         if not d.get("need_image") and d.get("answer") not in (None, ""):
             res.answer, res.abstained = str(d["answer"]), False
+            if d.get("explanation"):
+                res.route[-1].note = (res.route[-1].note or "") + f" | explanation: {str(d['explanation'])[:600]}"
             for s in cited:
                 res.evidence_boxes.append(EvidenceBox([round(v, 4) for v in s["box"]], source="ocr",
                                                       label=s["text"].strip()[:60]))

@@ -9,6 +9,11 @@
 <body>
 <header>
   <div class="brand">Evidence Zoom <span class="tag">frugal multimodal QA</span></div>
+  <select id="mode-pick" class="model-pick" title="Which route answers: the claim-form router, or the general assistant (OCR text first) for any image">
+    <option value="">Auto (claim form / general)</option>
+    <option value="claims">Claim form router</option>
+    <option value="general">General assistant (any image)</option>
+  </select>
   <select id="model-pick" class="model-pick" hidden title="Model used for questions that need pixels"></select>
   <button class="btn tour-btn" id="tour-btn" type="button">▶ Guided tour</button>
   <button class="btn ghost claims-btn" id="claims-btn" type="button">What we measured</button>
