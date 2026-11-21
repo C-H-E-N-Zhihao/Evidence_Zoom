@@ -98,6 +98,26 @@ def git_commit() -> str:
         return "unknown"
 
 
+FREEZE_TAG = "freeze-anchor-ocr-v1"
+
+
+def code_provenance() -> dict:
+    """What code actually ran: tree hash of pipeline/ at HEAD, whether pipeline/ or eval/ had uncommitted changes,
+    and whether pipeline/ equals the frozen tag (held-out test, release checklist B). Never raises."""
+    def git(*args: str) -> str:
+        return subprocess.run(["git", *args], capture_output=True, text=True).stdout.strip()
+
+    try:
+        tree = git("rev-parse", "HEAD:pipeline")
+        frozen = git("rev-parse", f"{FREEZE_TAG}^{{commit}}:pipeline")
+        dirty = {d: bool(git("status", "--porcelain", "--", d)) for d in ("pipeline", "eval")}
+        return {"pipeline_tree": tree[:12], "pipeline_dirty": dirty["pipeline"], "eval_dirty": dirty["eval"],
+                "freeze_tag": FREEZE_TAG, "pipeline_equals_freeze": bool(tree) and tree == frozen
+                and not dirty["pipeline"]}
+    except Exception as e:
+        return {"provenance_error": f"{type(e).__name__}: {e}"}
+
+
 # Matched against fallback notes. Normal OCR fallbacks ("Visual inspection required") and the intended
 # ROUTER_SKIP_OCR ablation ("OCR skipped") do not match.
 _DEGRADED_MARKERS = ("unavailable", "raised", "not found", "credentials")
@@ -191,6 +211,7 @@ def main() -> None:
     meta = {"commit": git_commit(), "items": a.items, "n_items": len(items), "pipelines": a.pipelines,
             "spent_usd": spent, "budget_hit": budget_hit, "max_error_rate": a.max_error_rate,
             "degrade": a.degrade, "geometric_degrade": a.degrade.startswith(("rotate", "perspective", "phone")),
+            **code_provenance(),
             "time": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
     out = Path(a.out) / f"run_{time.strftime('%Y%m%d-%H%M%S')}.json"
     out.parent.mkdir(parents=True, exist_ok=True)

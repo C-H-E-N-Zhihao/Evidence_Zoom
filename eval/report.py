@@ -27,6 +27,12 @@ def table(run: dict) -> str:
         "",
         *(["> Geometric degradation: gold boxes no longer align exactly, so `joint` and `hit@0.3` and any gold_crop "
            "rows are approximate.\n"] if meta.get("geometric_degrade") else []),
+        *([f"Code: `pipeline/` tree `{meta['pipeline_tree']}`"
+           + (" = frozen tag `" + meta['freeze_tag'] + "`" if meta.get("pipeline_equals_freeze") else
+              " **≠ frozen tag `" + str(meta.get('freeze_tag')) + "`**")
+           + (" · **uncommitted changes in pipeline/**" if meta.get("pipeline_dirty") else "")
+           + (" · uncommitted changes in eval/" if meta.get("eval_dirty") else "") + "\n"]
+          if meta.get("pipeline_tree") else []),
         "| pipeline | group | n | acc | joint | hit@0.3 | abstain | correct abstain | $/q | p50 ms | in tok/q | of which image | out tok/q | calls/q | pair follow | zoomed | zoom covers gold | acc when covered | GPU s/q |",
         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
