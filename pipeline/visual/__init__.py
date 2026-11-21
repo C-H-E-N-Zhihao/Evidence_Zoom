@@ -437,5 +437,13 @@ def factory_force_zoom():          # overview may only choose cells (for models 
     return eval_pipeline(force_zoom=True, name="visual_force_zoom")
 
 
+def factory_split():                # E2: VISUAL_OVERVIEW_MODEL picks cells, VISUAL_ZOOM_MODEL reads the crop
+    ov, zm = os.environ["VISUAL_OVERVIEW_MODEL"], os.environ["VISUAL_ZOOM_MODEL"]
+    short = lambda m: m.split("/")[-1]
+    return eval_pipeline(overview_model=ov, zoom_model=zm, force_zoom=os.environ.get("VISUAL_FORCE_ZOOM") == "1",
+                         name=f"visual_ov[{short(ov)}]_zoom[{short(zm)}]"
+                              + ("_force" if os.environ.get("VISUAL_FORCE_ZOOM") == "1" else ""))
+
+
 def factory_two_zooms():
     return eval_pipeline(max_zooms=2, name="visual_ov512_g8x6_z2")

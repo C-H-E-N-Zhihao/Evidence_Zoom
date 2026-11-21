@@ -55,6 +55,7 @@ class Usage:
     image_px: Optional[list[list[int]]] = None  # [[w, h], ...] of the images actually sent
     retry: bool = False
     note: Optional[str] = None
+    device: Optional[str] = None  # "gpu" for self-hosted model calls (vLLM), "cpu" for OCR/classical; None = unknown/API
 
 
 @dataclass

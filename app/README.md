@@ -40,5 +40,5 @@ questions. Every answer carries a source badge:
   step are shown under the answer (overview with grid, row-aligned mosaic crop). Tokens and cost are estimates.
 - **NO ANSWER**: a stage was unavailable (e.g. a question with no fixture label); nothing is invented.
 
-Rehearsal check: on `eas-002`, "Which circumstance boxes did driver B tick?" answers 8 on form a and 7 on
+Rehearsal check: on `eas-002`, the suggested question "Which circumstance boxes did driver B tick? Answer with the box numbers." answers 8 on form a and 7 on
 form b, with the box on the right row of the original page; the policy-number question is LIVE OCR on both.

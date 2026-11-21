@@ -98,3 +98,16 @@ Rates are computed over items the base pipeline got right. The value-swap test u
 python -m eval.run_eval --items eval/data/accident_statement/items.jsonl --degrade phone_photo \
     --pipelines pipeline.router:factory full_image_cached --max-cost 1.00
 ```
+
+## Model-free stages
+
+`checkbox_pixels` wraps andrew-ocr's classical checkbox reader (`experiments/checkbox_pixels.py`; needs numpy and scipy). It costs $0, its local latency is recorded, and it hands off with `fallback` when it cannot answer. A three-stage chain of OCR, then pixel ticks, then the model:
+
+```bash
+python -m eval.run_eval --items eval/data/accident_statement/items.jsonl --max-cost 0.01 --pipelines \
+    "cascade:fn:pipeline.ocr:answer|cascade:checkbox_pixels|pipeline.visual:factory" pipeline.router:factory
+```
+
+## Local GPU time is not free
+
+Self-hosted model calls (`local:` backend) record `device: "gpu"`, and reports show **GPU s/q**: wall-clock seconds per question, one request at a time, so roughly GPU time. They cost $0 by default. To price them as rented hardware, set `EVAL_GPU_USD_PER_HOUR=<rate>`; costs are then marked estimated. State the rate you used, for example a cloud on-demand price for the GPU type. CPU-local stages (OCR, checkbox_pixels) stay $0.

@@ -137,20 +137,26 @@ def main() -> None:
         "",
         "## 1. Route mix and OCR (MEASURED)",
         "",
-        "| group | n | OCR exit | OCR exit correct | **OCR wrong exit** | to visual path | OCR latency p50 (ms) |",
-        "|---|---:|---:|---:|---:|---:|---:|",
+        "| group | n | OCR exit | OCR exit correct | **OCR wrong exit** | to visual path | "
+        "OCR ms p50, first question on page | OCR ms p50, later questions |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|",
     ]
+
+    def p50(v):
+        return f"{median(v):.0f}" if v else "–"
+
     for g in GROUPS:
         xs = sel(g)
         if not xs:
             continue
         ex = [x for x in xs if x["route"] == "ocr_exit" and not x["r"].abstained]
-        lat = [x["ocr_ms"] for x in xs if x["ocr_ms"] > 0]
+        first = [x["ocr_ms"] for x in xs if x["ocr_ms"] > 0 and x["q_index"] == 0]
+        later = [x["ocr_ms"] for x in xs if x["ocr_ms"] > 0 and x["q_index"] > 0]
         L.append(f"| {g} | {len(xs)} | {len(ex)} | {sum(x['correct'] for x in ex)} | "
                  f"**{sum(not x['correct'] for x in ex)}** | {sum(x['route'] != 'ocr_exit' for x in xs)} | "
-                 f"{median(lat):.0f} |" if lat else
-                 f"| {g} | {len(xs)} | {len(ex)} | {sum(x['correct'] for x in ex)} | "
-                 f"**{sum(not x['correct'] for x in ex)}** | {sum(x['route'] != 'ocr_exit' for x in xs)} | – |")
+                 f"{p50(first)} | {p50(later)} |")
+    L += ["", "The OCR route keeps a page index across questions (andrew-ocr, 88119ad), so later questions on the same "
+          "page reuse recognition. `EVIDENCE_OCR_CACHE=0` forces cold recognition for a comparison."]
     errs = [x for x in rows if x["error"]]
     L += ["", f"Pipeline errors: {len(errs)}." + (" First: " + errs[0]["error"][:120] if errs else ""),
           "OCR under degraded inputs (phone photo, scans): see "

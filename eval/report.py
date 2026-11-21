@@ -27,8 +27,8 @@ def table(run: dict) -> str:
         "",
         *(["> Geometric degradation: gold boxes no longer align exactly, so `joint` and `hit@0.3` and any gold_crop "
            "rows are approximate.\n"] if meta.get("geometric_degrade") else []),
-        "| pipeline | group | n | acc | joint | hit@0.3 | abstain | correct abstain | $/q | p50 ms | in tok/q | of which image | out tok/q | calls/q | pair follow | zoomed | zoom covers gold | acc when covered |",
-        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| pipeline | group | n | acc | joint | hit@0.3 | abstain | correct abstain | $/q | p50 ms | in tok/q | of which image | out tok/q | calls/q | pair follow | zoomed | zoom covers gold | acc when covered | GPU s/q |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for name, rep in run["report"].items():
         if rep.get("aborted") or not rep.get("complete", True):
@@ -48,7 +48,8 @@ def table(run: dict) -> str:
                 f"{(s['input_image_tokens'] + s['input_text_tokens'] + s['cache_read_tokens']) / n:.0f} | "
                 f"{(str(round(s['input_image_tokens'] / n)) if s['input_image_tokens'] else '–')} | "
                 f"{s['output_tokens'] / n:.0f} | {s['calls'] / n:.2f} | {pf} | "
-                f"{pct(s.get('zoom_rate'))} | {pct(s.get('zoom_covers_gold@0.9'))} | {pct(s.get('acc_given_zoom_covers'))} |"
+                f"{pct(s.get('zoom_rate'))} | {pct(s.get('zoom_covers_gold@0.9'))} | {pct(s.get('acc_given_zoom_covers'))} | "
+                f"{(s.get('gpu_seconds') or 0) / n:.2f} |"
             )
     lines += ["", "`*` = contains estimated usage. Cost per question excludes one-off indexing unless the pipeline "
               "recorded it in `usage`. `in tok/q` = all input tokens incl. images and cache reads, as the backend "
