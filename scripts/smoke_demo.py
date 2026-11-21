@@ -22,6 +22,7 @@ os.chdir(ROOT)
 # Pinned, not defaulted: an inherited live configuration must not change what this test exercises.
 os.environ["PIPELINE"] = "pipeline.router"
 os.environ["DEMO_REPLAY"] = "1"
+os.environ["DEMO_LIVE"] = "0"  # offline smoke: never inherit live mode from the presenter's shell
 
 from fastapi.testclient import TestClient  # noqa: E402
 
