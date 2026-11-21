@@ -1,0 +1,51 @@
+# Pixel tick check (`pipeline.anchor.tick_check`) on freshly generated forms: independent check by claude-zhihao
+
+Code: master 792d8e3 (`tick_check` as added in 69e8d1c, `TICK_CHECK_MIN_PX = 1500`). $0, no model calls; Apple Vision OCR helper
+compiled from `pipeline/ocr/recognize.swift`. Pillow 13.0.0.
+
+**Fresh data, never seen when the threshold was set:** 6 pairs per layout, **seed 90210**, written to a scratch folder (not
+committed; regenerate with the commands below). Layout 1 = `accident_statement` generator v1, layout 2 = `--layout v2`, layout 3 =
+`accident_statement_v3` generator with `EAS3_SEED=90210`. 24 tick questions per layout (B's ticked boxes + "did A tick 8").
+
+## Clean, full resolution (1700 × 2200 or A4 equivalent)
+
+| set | correct | wrong | unavailable |
+|---|---:|---:|---:|
+| fresh layout 1 | 24 | 0 | 0 |
+| fresh layout 2 | 24 | 0 | 0 |
+| fresh layout 3 | 24 | 0 | 0 |
+| committed layout 1 (dev) | 24 | 0 | 0 |
+| committed layout 3 (dev, canonical images) | 24 | 0 | 0 |
+
+**72/72 on unseen forms**, which reproduces 142's development result on new seeds.
+
+## Full-resolution degradations (the 1500 px gate does **not** stop these)
+
+| condition (from `bench.ocr_robustness`) | fresh layout 1: correct / wrong / unavailable | fresh layout 3 |
+|---|---|---|
+| jpeg_q40 | 24 / 0 / 0 | 24 / 0 / 0 |
+| perspective_3% | 24 / 0 / 0 | 0 / 0 / 24 (declined) |
+| rotate_5 | **22 / 2 / 0** | 0 / 0 / 24 (declined) |
+| blur_1.5 | **10 / 14 / 0** | 24 / 0 / 0 |
+| photo_fullres (phone_photo without the 1280 px downscale: 2.5° + 3 % perspective + blur 1.2 + JPEG 55) | **12 / 12 / 0** | 0 / 0 / 24 (declined) |
+| scale_1280 | 0 / 0 / 24 (gated) | 0 / 0 / 24 (gated) |
+
+**Reading.** On clean or JPEG full-resolution scans the check is reliable, also on new forms. But the resolution gate is not
+a quality gate: a **blurred or photographed page that keeps ≥ 1500 px passes the gate and the check is then wrong in up to
+14/24 cases on layout 1**, in a way that shows up in the app as a confident "agrees" or "disagrees". Layout 3 declines most distorted
+pages instead (the template layout isn't found), which is the safe failure. Also: 5° tilt gave 2 wrong on fresh layout 1, where 142
+reported 24/24 on the development forms.
+
+Reproduce (from the repo root, `SP` = any scratch folder, `EVIDENCE_OCR_BIN` = the compiled helper):
+
+```sh
+python -m eval.data.accident_statement.generate --n 6 --seed 90210 --layout v1 --out-dir $SP/tickcheck_v1
+python -m eval.data.accident_statement.generate --n 6 --seed 90210 --layout v2 --out-dir $SP/tickcheck_v2
+EAS3_SEED=90210 EAS3_OUT=$SP/tickcheck_v3 EAS3_PREFIX=tc3 python -m eval.data.accident_statement_v3.generate
+PYTHONPATH=. python eval/results/tick_check_fresh/score_tickcheck.py $SP/tickcheck_v1 $SP/tickcheck_v2 $SP/tickcheck_v3
+PYTHONPATH=. python eval/results/tick_check_fresh/tickcheck_degr.py $SP/tickcheck_v1 $SP/tickcheck_v3
+```
+
+Caveat: the v3 generator **ignores `--help`** and writes into its own folder by default. Running it without `EAS3_OUT` overwrites
+the local (git-ignored) v3 images with Pillow-13 renders that no longer match `images.sha256`. Restore them from
+`origin/data/blind-family-images`.
