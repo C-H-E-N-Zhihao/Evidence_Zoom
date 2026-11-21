@@ -2,7 +2,7 @@
 
 **Demo goal:** A claims handler opens an accident statement, asks about a policy number or a checked circumstance, and can verify the answer on the original page. The app tries OCR first. When a question needs pixels, it starts with a small overview and requests detail from selected regions. We want to measure when that costs less than sending the full page for every question. [AXA challenge](https://app.lauzhack.com/Challenges)
 
-**Current milestone:** Improve region selection on the local model. The key-free demo has passed its second-operator rehearsal. The team is requesting the API key separately.
+**Current milestone:** Improve region selection on the local model. The key-free demo has passed its second-operator rehearsal. The team is requesting the API key separately. The [judge narrative and claims ledger](docs/NARRATIVE.md) links the demo script to its supporting results.
 
 | Goal | Current evidence | Next deliverable and completion check | Point of contact |
 |---|---|---|---|
