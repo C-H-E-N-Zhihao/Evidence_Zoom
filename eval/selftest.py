@@ -172,6 +172,12 @@ def t_pairs_curve_report() -> None:
     run2 = {"meta": {"time": "t", "commit": "c", "items": "x", "spent_usd": 0},
             "report": {"full_image_cached@or:x": {"summary": summarize(two), "complete": True}}}
     check("report flags 'cached' run with no cache reads", "no cache reads were billed" in report.table(run2))
+    run2["meta"].update(pipeline_tree="abc123", freeze_tag="freeze-x", pipeline_equals_freeze=False, pipeline_dirty=True)
+    md2 = report.table(run2)
+    check("report flags code that is not the freeze", "≠ frozen tag" in md2 and "uncommitted changes in pipeline/" in md2)
+    from .run_eval import code_provenance
+
+    check("code_provenance never raises and returns a dict", isinstance(code_provenance(), dict))
 
 
 def t_geometry() -> None:
