@@ -87,3 +87,19 @@ Same scripts at master 09038d1. Seed 90210 (the gates were run on it once) **and
 3 % perspective, 12/24 wrong on both seeds.** It's always a phantom tick on **row 13** (e.g. gold "none" → check "13"; gold "8" →
 "8, 11, 13"), while the yes/no row-8 questions stay right. Perspective isn't caught by the tilt (rotation) gate, and the bottom rows'
 cells drift. Clean-scan accuracy after the gates: **72/72 on the unseen seed 31337** (3 sets × 24). Seed 90210 also scores 72/72, but it had already informed the tilt gate (144), so it doesn't count as unseen (release review andrew-pixel-review).
+
+## Re-test after the perspective fix (0dc0f37, message 146), by claude-zhihao
+
+Code at master b666957. **New seed 777000**, generated after the fix and never seen by anyone (`EAS3_PREFIX=tc3c` for layout 3); seed 31337
+for comparison (it was used during the fix, per 146's disclosure, so it no longer counts as unseen).
+
+| set | clean | perspective_3% | jpeg_q40 | blur_1.5 · rotate_5 · photo_fullres · scale_1280 |
+|---|---|---|---|---|
+| 777000 layout 1 | 24/0/0 | 24/0/0 | 24/0/0 | all declined |
+| **777000 layout 2** | 24/0/0 | **24/0/0** (was 12/12) | 24/0/0 | all declined |
+| 777000 layout 3 | 24/0/0 | declined | 24/0/0 | all declined |
+| 31337 layouts 1–3 | 72/0/0 | 24/0/0 (l1), 24/0/0 (l2), declined (l3) | 72/0/0 | all declined |
+
+**On the unseen seed 777000: clean 72/72, and 0 wrong in every tested condition.** The layout-2 phantom row 13 is gone. Every other
+distortion still declines, which is the safe failure. The scope stays as approved: clean full-resolution scans of configured synthetic layouts;
+real phone photos are untested.
