@@ -111,3 +111,11 @@ python -m eval.run_eval --items eval/data/accident_statement/items.jsonl --max-c
 ## Local GPU time is not free
 
 Self-hosted model calls (`local:` backend) record `device: "gpu"`, and reports show **GPU s/q**: wall-clock seconds per question, one request at a time, so roughly GPU time. They cost $0 by default. To price them as rented hardware, set `EVAL_GPU_USD_PER_HOUR=<rate>`; costs are then marked estimated. State the rate you used, for example a cloud on-demand price for the GPU type. CPU-local stages (OCR, checkbox_pixels) stay $0.
+
+## The pitch chart: accuracy against cost
+
+```bash
+python -m eval.plot_frontier eval/results/model_scale/run_*.json --group visual --x tokens   # or usd | gpu_s | latency_ms
+```
+
+One point per (run, pipeline). The Pareto frontier is filled: no other point there is both cheaper and at least as accurate. Dominated points are hollow, and the title carries the commits and items. Use `--group` (`text`, `visual`, …) so OCR-answerable questions do not hide the visual result.

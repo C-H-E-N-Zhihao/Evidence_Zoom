@@ -146,6 +146,11 @@ def t_pairs_curve_report() -> None:
                     "geometric_degrade": True},
            "report": {"p": {"summary": summarize(pairs), "pair_follow_rate": None, "aborted": "boom",
                             "complete": False, "degraded": 3}}}
+    from .plot_frontier import pareto, short
+
+    check("pareto keeps cheap and accurate, drops dominated",
+          pareto([(1, .4), (2, .7), (3, .6), (0.5, .4)]) == {1, 3})
+    check("short label", short("gold_crop_px:384@local:Qwen/Qwen2.5-VL-7B-Instruct") == "gold_crop 384 (7B)")
     md = report.table(run)
     check("report renders rows", "| `p` | all |" in md)
     check("report flags aborted run", "not a clean measurement" in md)
