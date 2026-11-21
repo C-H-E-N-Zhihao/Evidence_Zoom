@@ -6,7 +6,7 @@ Owner: claude-guanyu (narrative), reconciling the rehearsal and the scorecard (h
 
 1. A claims handler at AXA asks questions about an accident statement: a policy number, which boxes a driver ticked, who hit whom in the sketch.
 2. Sending the whole page to a vision model for every question is the expensive default.
-3. Evidence Zoom answers printed fields with local OCR for $0, and sends a model only the pixels a question needs, chosen from the page layout. On our test forms, that lets a small open model match a 10× larger one reading the full page, and lets the large one answer every visual question.
+3. For a known form template, Evidence Zoom answers printed fields with local OCR for $0, and sends a model only the pixels a question needs, chosen from the template's layout. On the template it was built for, that lets a small open model match a 10× larger one reading the full page, and lets the large one answer every visual question. On an unseen layout it finds nothing to anchor on and falls back to the full-page cost: it does not guess. The rules are per-template configuration, which suits a standardised form such as the European Accident Statement. They are not general document understanding.
 4. Every answer points to the region of the original page it came from, so the handler can check it.
 
 ## 2. What the judge sees (two-minute script)
@@ -27,12 +27,16 @@ Launch: `./scripts/demo.sh` (macOS for live OCR) → `http://localhost:8000`. Fu
 
 ### Safe to claim
 
+All rows in this list are on the **development layout**, the 12 forms the rules were written on, unless marked held-out. Say that.
+
 | Claim | Status | Source |
 |---|---|---|
-| OCR answers 48 of 96 synthetic questions (all text and layout questions), all correct, **0 wrong answers** | MEASURED | `eval/results/SCORECARD.md` §1 |
-| 0 wrong OCR answers under all 10 tested degradations (JPEG, blur, 2° and 5° tilt, perspective, phone photo, downscaling): 48 correct of 60 OCR-eligible questions on each, except 24 at 768 px (the rest fall back, never guess) | MEASURED | `eval/results/REPORT_ocr_robustness_82f3112.md` (5° tilt was 4 of 60 before the alignment fix ac9b30e) |
+| **Held-out layout:** run unchanged on a second layout, the frozen OCR route answers 0/48 and the anchor selects 0/36. Everything falls back to the model, with 0 wrong OCR answers. The $0 savings do **not** transfer to an unseen layout without configuring it. | MEASURED (held-out v2, frozen code 0b2a138) | `eval/results/REPORT_heldout_v2_ocr.md`, `REPORT_heldout_v2_anchor_coverage.md` (2189570), message 059 |
+| **End to end, development layout, all 96 questions:** OCR → anchor crop → overview gets 7B 79/96 against 75/96 on the full page, and 72B 95/96 against 80/96 | MEASURED. 1 of the route's misses per model is a setup error (OCR helper missing on the first item, eas-001a-q1), fixed in the harness at 458b8cb | `eval/results/model_scale/e2e/README.md` (d944d8f) |
+| OCR answers 48 of 96 synthetic questions (all text and layout questions), all correct, **0 wrong answers** | MEASURED (development layout) | `eval/results/SCORECARD.md` §1 |
+| 0 wrong OCR answers under all 10 tested degradations (JPEG, blur, 2° and 5° tilt, perspective, phone photo, downscaling): 48 correct of 60 OCR-eligible questions on each, except 24 at 768 px (the rest fall back) | MEASURED (development layout). **Not a general safety guarantee:** on v2, Vision read `JI-9779-2542` as `J1-9779-2542`. Only an unrelated header check stopped that becoming a wrong answer (059). | `eval/results/REPORT_ocr_robustness_82f3112.md` |
 | OCR takes ~0.6 s for the first question on a page and ~10 ms for later ones (page index reused) | MEASURED | andrew-ocr, 88119ad |
-| Questions the system cannot answer get no answer, not an invented one | MEASURED (replay mode) | message 045 |
+| Questions about a field that is not on the form: 72B declines 12/12 on the route; **7B invents an answer in 2/12** ("D. Dubois", "H. Keller" for a licence number), although the 7B full page declines 12/12. In the key-free demo the "no answer" comes from replay | MEASURED (development layout, e2e) | `eval/results/model_scale/e2e/run_20261121-160458.json`, message 045 |
 | A small open model reads better from the right crop than from the page: Qwen2.5-VL-7B 42 % on the full page → **67 % on the correct crop**, at ~1/4 of the input tokens | MEASURED (36 visual questions, local GPU) | `eval/results/REPORT_local_qwen7b_visual.md` |
 | The layout tells us where to look without any model: the OCR-chosen crop contains the evidence for **36/36** visual questions on clean forms, and still 36/36 under JPEG, blur, 1024/768 px and 2°/5° tilt (deskew) | MEASURED (selection only, $0) | `eval/results/REPORT_anchor_coverage.md` at 27dca74 |
 | The OCR-chosen crop is small: ~13–192 estimated image tokens for tick questions, ~124–978 for the sketch, against ~1,531 for the full page | ESTIMATED tokens from measured crop sizes | same |
@@ -56,15 +60,15 @@ Launch: `./scripts/demo.sh` (macOS for live OCR) → `http://localhost:8000`. Fu
 |---|---|---|
 | "Zoom is cheaper than the page" in general | With a cached page and many questions per form, the page is cheaper (k ≥ 7, ESTIMATED) | Measured billed usage over realistic question counts |
 | "The model finds the right region itself" | **Measured false** at 7B and 72B (see "safe to claim"); the region must come from the layout | – (settled) |
-| The anchor-crop accuracy generalizes | One synthetic layout, 36 visual questions, 12 per question type; the 7B on the anchor crop still misses 14/36, mostly q5 (single tick row, 8/12) and the sketch (5/12) | Other layouts and real forms; more items |
-| End-to-end accuracy of OCR → anchor → overview on all 96 questions | Run in progress (message 052) | `pipeline.router:factory_anchor` results |
+| The OCR and anchor rules generalize to other forms | **Measured false** on the held-out layout v2 (0/48 OCR answers, 0/36 anchors; all fall back safely). Causes: v2 repeats the vehicle header, and its sketch precedes the circumstances (059) | Per-template configuration, or a layout-independent selector, then re-test on unseen layouts and other document types (claude-andrew-b, 059) |
+| "OCR exits are safe in general" | On v2 an I→1 misread (`J1-9779-2542`) was stopped only by an unrelated check | Normalise look-alike characters for IDs (I/1, O/0) and re-test held-out |
 | Any billed $ saving | No paid run exists; all $ are estimates | `eval/first_paid_sweep.sh` (message 050) |
 | Works on real claims | All forms are synthetic renders. Tilt up to 5° is handled by OCR and by the anchor crop (deskew). Perspective and phone-photo coverage are not cleanly measured (gold boxes not transformed), and 2/12 phone-photo tick questions find no anchor and fall back | Real photographed forms; gold boxes transformed for perspective |
 | "Local is free" | GPU time is not free | Report GPU s/q and price it with `EVAL_GPU_USD_PER_HOUR` (stated rate) |
 
 ## 4. Design decisions the numbers justify
 
-1. **OCR first, always.** It handled half the questions at $0 with no wrong answers, including on degraded inputs.
+1. **OCR first, always**, but per template. On the development layout it handled half the questions at $0 with no wrong answers; on an unseen layout it answers nothing and falls back, which costs money but invents nothing.
 2. **Choose the crop from the layout, not from the model.** Neither the 7B nor the 72B model can pick regions; OCR anchors cover the evidence at $0, and with them 72B answers 36/36. This is the cheap stand-in for the original idea of a "question decides where detail is acquired" representation (FlexTok probe, message `andrew-flextok-probe`).
 3. **No mid-session switch to a cached page.** Every switch point is dominated (§4b). If a long session on one form is expected up front, cache the page from question 1.
 4. **Say "no answer" rather than guess.** The router falls back, the visual route abstains, and the meter charges the attempt.
