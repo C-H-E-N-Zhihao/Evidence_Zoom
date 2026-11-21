@@ -16,7 +16,7 @@ Eval harness:  python -m eval.run_eval --items ... --pipelines pipeline.router:f
 App:           PIPELINE=pipeline.router uvicorn app.server:app
 Env: ROUTER_SKIP_OCR=1 disables the OCR stage (ablation: visual path alone).
      ROUTER_ANCHOR=0 removes the OCR-anchored crop stage (pipeline.anchor) between OCR and the overview
-     (default on, except under DEMO_REPLAY=1).
+     (default on, except when an overview-only replay/test oracle is installed).
      ROUTER_FALLBACK=page|overview: what runs when OCR and the anchor decline (default page; overview under oracles).
      ROUTER_REQUIRE_OCR=1 raises if the OCR helper is unavailable (use for paid runs: without it the
      OCR-answerable questions silently go to the paid visual path).
@@ -87,19 +87,21 @@ def answer(image, question: str, anchor: bool | None = None, fallback: str | Non
     message 062: on an unseen layout the model-chosen overview zoom halves accuracy and invents missing fields)
     or "overview" (overview -> model-chosen zoom, the v1 behaviour). Default from ROUTER_FALLBACK."""
     if anchor is None:
-        # Default ON for real models (message 052: the anchor crop is the measured winner). Exception: when a
-        # replay/test oracle is installed (pipeline.visual.CALL_OVERRIDE: key-free demo, visual selftest,
-        # eval.scorecard) or DEMO_REPLAY=1. Those oracles expect the overview as the first model call, so the
-        # anchor stays off there unless ROUTER_ANCHOR=1 is set explicitly.
+        # Default ON for real models (message 052: the anchor crop is the measured winner). Exception: a test
+        # oracle installed in pipeline.visual.CALL_OVERRIDE that only models the overview route (no
+        # `direct_zoom` attribute) keeps the v1 route. The fixture replay (demo, selftest, scorecard) declares
+        # direct_zoom, so it follows the shipped route.
         vis = sys.modules.get("pipeline.visual")
-        oracle = vis is not None and getattr(vis, "CALL_OVERRIDE", None) is not None
-        default = "0" if oracle or os.environ.get("DEMO_REPLAY") == "1" else "1"
+        ov = getattr(vis, "CALL_OVERRIDE", None) if vis is not None else None
+        oracle = ov is not None and not getattr(ov, "direct_zoom", False)  # direct-zoom replays follow the product
+        default = "0" if oracle else "1"
         anchor = os.environ.get("ROUTER_ANCHOR", default) == "1"
     if fallback is None:
         # Same exception as the anchor: the replay/test oracles model the overview route.
         vis = sys.modules.get("pipeline.visual")
-        oracle = vis is not None and getattr(vis, "CALL_OVERRIDE", None) is not None
-        default_fb = "overview" if oracle or os.environ.get("DEMO_REPLAY") == "1" else "page"
+        ov = getattr(vis, "CALL_OVERRIDE", None) if vis is not None else None
+        oracle = ov is not None and not getattr(ov, "direct_zoom", False)  # direct-zoom replays follow the product
+        default_fb = "overview" if oracle else "page"
         fallback = os.environ.get("ROUTER_FALLBACK", default_fb)
     if fallback not in ("page", "overview"):
         raise ValueError(f"ROUTER_FALLBACK must be 'page' or 'overview', not {fallback!r}")

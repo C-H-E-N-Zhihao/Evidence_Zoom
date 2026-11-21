@@ -107,10 +107,17 @@ def run():
     assert [s.step for s in r.route] == ["ocr", "fallback", "zoom", "answer"] and r.answer == "8", r.route
     r = router.answer(None, "q")  # default on: anchor used
     assert r.answer == "8", r.route
-    os.environ["DEMO_REPLAY"] = "1"  # demo replay: default off
+    vis_mod = sys.modules["pipeline.visual"]
+    vis_mod.CALL_OVERRIDE = object()  # overview-only oracle: default off
     r = router.answer(None, "q")
     assert r.answer == "10, 16", r.route
-    del os.environ["DEMO_REPLAY"]
+
+    class _Direct:  # direct-zoom replay: shipped route
+        direct_zoom = True
+    vis_mod.CALL_OVERRIDE = _Direct()
+    r = router.answer(None, "q")
+    assert r.answer == "8", r.route
+    vis_mod.CALL_OVERRIDE = None
     r = router.answer(None, "q", anchor=False)
     assert r.answer == "10, 16", r.route
     _install("pipeline.anchor", _anchor_miss)
@@ -139,7 +146,7 @@ def run():
     assert r.answer == "10, 16" and "anchor" not in str(r.route), r.route
     sys.modules.pop("pipeline.anchor", None)
     router.ensure_ocr_bin = real_ensure; _clear()
-    print("router: 16 checks passed")
+    print("router: 17 checks passed")
 
 
 if __name__ == "__main__":
