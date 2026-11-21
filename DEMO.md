@@ -58,7 +58,7 @@ It runs six offline checks and ends with `ALL CHECKS PASSED`:
 | command | visual answers from | needs | cost |
 |---|---|---|---|
 | `./scripts/demo.sh` | stored answers, **replayed** and labelled REPLAY | nothing | $0 |
-| `./scripts/demo-live.sh` | **Claude Haiku 5.5** via OpenRouter, labelled MODEL | `OPENROUTER_API_KEY` (env or git-ignored `.env`) | ≈ $0.0002 per visual question, capped by `APP_LIVE_MAX_USD` (default $1) |
+| `./scripts/demo-live.sh` | **Claude Haiku 5.5** via OpenRouter, labelled MODEL | `OPENROUTER_API_KEY` (env or git-ignored `.env`) | ≈ $0.0002 per visual question, new calls stop once `APP_LIVE_MAX_USD` (default $1) is reached (a stop threshold, not a billing maximum) |
 | `./scripts/demo-local.sh` | **Qwen2.5-VL-7B on this Mac** via Ollama, labelled MODEL | `brew install ollama`, `ollama serve`, `ollama pull qwen2.5vl:7b` (6 GB) | $0, and the document never leaves the machine |
 
 All three use local OCR for printed fields and fall back to the labelled replay if a model call fails.
@@ -70,7 +70,7 @@ Present the tick questions on-device; the sketch question is answered better by 
 **Switching models live:** when Ollama is running, `./scripts/demo-live.sh` also offers the on-device model in a picker
 (top right); each answer names the model that produced it ("answered by … · cloud API / on this laptop"), and
 **Compare: ask the whole page instead** under a live answer sends the same question with the whole page to the same
-model and shows both costs, token counts and times side by side (real calls; counts toward the spend cap).
+model and shows both costs, token counts and times side by side (real calls; counts toward the spend threshold).
 **Avoid empty tick lists live:** on forms where driver B ticked nothing (eas-004, eas3b-002), Haiku tends to decline
 and the on-device Qwen once listed all 17 boxes. Use pairs where B ticked something (eas-002, eas3b-003: the tour's pairs).
 

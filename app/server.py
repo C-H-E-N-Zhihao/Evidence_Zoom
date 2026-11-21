@@ -50,7 +50,8 @@ REPLAY = os.getenv("DEMO_REPLAY") == "1"
 # With DEMO_REPLAY=1 as well, a question whose live call fails (no key, network, provider error) is answered by
 # the fixture replay instead, labelled REPLAY with the live error shown; without it, the failure is shown.
 LIVE = os.getenv("DEMO_LIVE") == "1"
-# Spend guard for live demos: once this server's billed live spend reaches the cap, model calls stop (OCR still
+# Spend guard for live demos: once this server's billed live spend reaches the threshold (checked before each call,
+# so the last call can overshoot it slightly; a stop threshold, not a billing maximum), model calls stop (OCR still
 # answers locally) and, with DEMO_REPLAY=1, visual questions fall back to the labelled replay.
 LIVE_MAX_USD = float(os.getenv("APP_LIVE_MAX_USD", "1.00"))
 # Models the presenter may switch between at runtime (comma-separated model strings); default: just EVAL_MODEL.
@@ -222,7 +223,7 @@ def compare(req: Ask):
     if not LIVE:
         raise HTTPException(400, "the whole-page comparison needs live mode (scripts/demo-live.sh or demo-local.sh)")
     if LIVE_SPENT >= LIVE_MAX_USD:
-        raise HTTPException(429, f"live spend cap ${LIVE_MAX_USD:.2f} reached")
+        raise HTTPException(429, f"live spend stop threshold ${LIVE_MAX_USD:.2f} reached")
     meta = IMAGES.get(req.image_id)
     if meta is None:
         raise HTTPException(404, "unknown image_id")
@@ -280,7 +281,7 @@ def ask(req: Ask):
             capped = LIVE_SPENT >= LIVE_MAX_USD
             if capped and visual is not None:
                 def _cap(*_a, **_k):
-                    raise RuntimeError(f"live spend cap ${LIVE_MAX_USD:.2f} reached (APP_LIVE_MAX_USD)")
+                    raise RuntimeError(f"live spend stop threshold ${LIVE_MAX_USD:.2f} reached (APP_LIVE_MAX_USD)")
                 _cap.direct_zoom = True  # keep the shipped route; only the model call is blocked
                 visual.CALL_OVERRIDE = _cap
             try:
@@ -333,7 +334,6 @@ def ask(req: Ask):
         # The visual stage failed before any model call (no key / no fixture). A real run would still pay the
         # call it attempted (router@v2: the anchor crop or the full page; v1: the overview), so charge its
         # estimate; otherwise a failure would make the savings look better.
-        import re
         from .costs import MODEL, TEXT_BASE_TOKENS, image_tokens, price
         from eval.schema import Usage
         tried = [st for st in result.get("route", []) if st.get("step") in ("zoom", "overview")]
@@ -352,7 +352,24 @@ def ask(req: Ask):
                         and not any(st.get("step") in ("overview", "zoom") for st in result["route"])
                         and not any(u.get("device") == "gpu" for u in result.get("usage", []))) else
               "mock" if pipeline.__name__ == "app.mock_pipeline" else "model")
+    # model-free second opinion on tick questions (pixel ink inside the located boxes); gated by resolution
+    check = None
+    if source in ("model", "replay"):
+        try:
+            from pipeline.anchor import tick_check
+            check = tick_check(img, req.question)
+            if check.get("available") and not result.get("abstained") and result.get("answer") is not None:
+                a = str(result["answer"]).lower()
+                if check["kind"] == "tick_row":
+                    check["agrees"] = a.strip().startswith(check["answer"])
+                else:
+                    got = sorted(int(x) for x in re.findall(r"\d+", a))
+                    want = check["ticked"]
+                    check["agrees"] = (got == want) if got or "none" not in a else (want == [])
+        except Exception as e:
+            check = {"available": False, "reason": f"pixel check failed ({type(e).__name__})"}
     return {"result": result, "baseline": baseline, "source": source, "views": views, "live_error": live_error,
+            "check": check,
             "model": chosen, "on_device": _on_device(chosen or ""),
             "question_index": meta["questions"] - 1,
             "pipeline": pipeline.__name__}

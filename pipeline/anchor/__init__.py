@@ -323,3 +323,75 @@ def factory_then_overview():
     from pipeline.visual import eval_pipeline
 
     return cascade(from_answer_fn(answer, "anchor_crop"), eval_pipeline(), "anchor_then_overview")
+
+
+# ---- pixel tick check: a model-free second opinion on tick questions ----------------------------------------
+# On a configured layout the anchor knows where each tick box is. Ink inside a box (outline excluded) says whether
+# it is ticked. Exploratory: correct on 96/96 tick questions of the four synthetic accident layouts at full scan
+# resolution (clean, JPEG q40, 2 and 5 degree tilt), but wrong at 1024 px and on simulated phone photos, so it only
+# runs when the page's long side is >= TICK_CHECK_MIN_PX and otherwise says it is unavailable (message 142).
+TICK_CHECK_MIN_PX = 1500
+
+
+def _ink_per_row(page, lay, side, shrink=0.28):
+    import numpy as np
+
+    g = np.asarray(page.convert("L"), dtype=np.float32)
+    h_img, w_img = g.shape
+    x0, x1 = lay.cols[side]
+    ks = sorted(lay.rows)
+    pitch = (lay.rows[ks[-1]][0] - lay.rows[ks[0]][0]) / max(1, ks[-1] - ks[0])
+    out = {}
+    for n, (y0, y1) in lay.rows.items():
+        c = (y0 + y1) / 2  # cell = row centre +- 0.55 pitch, so the whole box is inside even if the text is short
+        cell = g[int((c - 0.55 * pitch) * h_img):int((c + 0.55 * pitch) * h_img), int(x0 * w_img):int(x1 * w_img)]
+        if cell.size == 0:
+            continue
+        dark = cell < 180
+        ys, xs = np.where(dark.mean(1) > 0.35)[0], np.where(dark.mean(0) > 0.35)[0]
+        if len(ys) >= 2 and len(xs) >= 2:
+            by0, by1, bx0, bx1 = ys.min(), ys.max(), xs.min(), xs.max()
+        else:
+            by0, by1, bx0, bx1 = 0, cell.shape[0] - 1, 0, cell.shape[1] - 1
+        bh, bw = by1 - by0, bx1 - bx0
+        inner = cell[by0 + int(bh * shrink):by1 - int(bh * shrink) + 1, bx0 + int(bw * shrink):bx1 - int(bw * shrink) + 1]
+        out[n] = float((inner < 180).mean()) if inner.size else 0.0
+    return out
+
+
+def tick_check(image, question: str) -> dict:
+    """{'available': bool, 'reason': str, 'kind': 'ticks'|'tick_row', 'side': 'a'|'b', 'ticked': [rows],
+    'row': n (tick_row only), 'answer': str}. Never raises; declines with a reason instead."""
+    try:
+        sel = select(image, question)
+    except Exception as e:  # OCR helper missing etc.
+        return {"available": False, "reason": f"no OCR layout ({type(e).__name__})"}
+    if sel is None or sel.kind not in ("ticks", "tick_row"):
+        return {"available": False, "reason": "not a tick question on a configured layout"}
+    page = sel.image
+    if max(page.size) < TICK_CHECK_MIN_PX:
+        return {"available": False, "reason": f"page below {TICK_CHECK_MIN_PX} px: pixel check not reliable at this resolution"}
+    spans, _ = ocr_spans(page)
+    lay = layout(spans, page)
+    if lay is None:
+        from pipeline import templates
+        lay = templates.layout(spans, page)
+    q = question.lower()
+    who = re.search(r"driver ([ab])\b|vehicle ([ab])\b", q)
+    side = (who.group(1) or who.group(2)) if who else None
+    if lay is None or side not in lay.cols:
+        return {"available": False, "reason": "tick column not found"}
+    ink = _ink_per_row(page, lay, side)
+    vals = sorted(ink.values())
+    thr = max(0.08, vals[len(vals) // 2] * 3 + 0.04)
+    ticked = sorted(n for n, v in ink.items() if v > thr)
+    out = {"available": True, "reason": "", "kind": sel.kind, "side": side, "ticked": ticked}
+    if sel.kind == "tick_row":
+        m = re.search(r"circumstance (\d{1,2})\b|box (\d{1,2})\b", q)
+        n = int(m.group(1) or m.group(2)) if m else None
+        out["row"] = n
+        out["answer"] = "yes" if n in ticked else "no"
+    else:
+        out["answer"] = ", ".join(map(str, ticked)) if ticked else "none"
+    return out
+

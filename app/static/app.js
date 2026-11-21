@@ -40,8 +40,11 @@ async function init() {
   if (cfg.live && (cfg.models || []).length > 1) {
     $("banner").hidden = false;
     $("banner").innerHTML = `<b>Live demo.</b> <span class='src ocr'>LIVE OCR</span> answers are local ($0). ` +
-      `<span class='src model'>MODEL</span> answers come from the model chosen top right: a <b>cloud API</b> (billed), or a model ` +
-      `<b>on this laptop</b> (no API call, no provider charge, the document never leaves the machine). Each answer names its model.` +
+      `<span class='src model'>MODEL</span> answers come from the model chosen top right: ` +
+      cfg.models.map((m) => `<code>${m.id.replace(/^local:|^or:anthropic\//, "")}</code> ` + (m.on_device
+        ? "(<b>on this laptop</b>: no API call, no provider charge, the document never leaves the machine)"
+        : m.id.startsWith("local:") ? "(self-hosted server, no provider charge)" : "(<b>cloud API</b>, billed)")).join(" or ") +
+      `. Each answer names its model.` +
       (cfg.replay ? " If a live call fails, that answer is replayed from fixture labels and marked REPLAY." : "");
   } else if (cfg.live) {
     $("banner").hidden = false;
@@ -285,8 +288,22 @@ function addA(data, i, ours) {
   cost.innerHTML = `${usd(ours)}${est} · ${inTok} input tok vs full page ~${baseline.image_tokens + (baseline.text_tokens || 0)} ` +
     `· <span class="save">${save >= 0 ? "−" : "+"}${Math.abs(save).toFixed(0)}%</span> vs uncached full page` +
     `${cfg.page_model ? " on " + cfg.page_model : ""} (estimate)`;
+  // model-free second opinion on tick questions
+  const ck = data.check;
+  let ckEl = null;
+  if (ck && (ck.available || /resolution/.test(ck.reason || ""))) {
+    ckEl = document.createElement("div"); ckEl.className = "check";
+    if (!ck.available) { ckEl.classList.add("muted"); ckEl.textContent = `Pixel check: not run (${ck.reason}).`; }
+    else {
+      const verdict = ck.agrees === true ? "agrees ✓" : ck.agrees === false ? "disagrees: check this by eye" : "";
+      ckEl.textContent = `Pixel check (no model, ink inside the located boxes): ${ck.kind === "tick_row"
+        ? `box ${ck.row} for driver ${ck.side.toUpperCase()} looks ${ck.answer === "yes" ? "ticked" : "empty"}`
+        : `driver ${ck.side.toUpperCase()}'s ticked boxes look like ${ck.answer}`}${verdict ? " · " + verdict : ""}`;
+      if (ck.agrees === false) ckEl.classList.add("warn");
+    }
+  }
   const why = document.createElement("div"); why.className = "explain"; why.textContent = explain(data);
-  d.append(head, ...(why.textContent ? [why] : []), route, cost);
+  d.append(head, ...(why.textContent ? [why] : []), ...(ckEl ? [ckEl] : []), route, cost);
   // live only: ask the same model with the whole page, and show both sides with real (billed) numbers
   if (cfg.live && (source === "model" || source === "ocr")) {
     const q = data.question || (d.previousElementSibling && d.previousElementSibling.textContent) || "";
