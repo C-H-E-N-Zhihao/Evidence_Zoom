@@ -85,6 +85,13 @@ def t_pricing() -> None:
         check("CPU-local stays $0 under a GPU rate", cost_usd(c) == 0)
     finally:
         del os.environ["EVAL_GPU_USD_PER_HOUR"]
+    from .backends.openrouter_backend import _prepare, image_block as or_image
+
+    part = or_image(Image.new("RGB", (4, 4)), cache=True)
+    on, off = _prepare([part], True)[0], _prepare([part], False)[0]
+    check("openrouter cache mark -> cache_control only when enabled",
+          on.get("cache_control") == {"type": "ephemeral"} and "cache_control" not in off
+          and "_cache" not in on and "_cache" not in off)
     u = Usage(0, "openrouter", "unknown/model", input_text_tokens=10)
     check("unknown API model flagged estimated", cost_usd(u) == 0 and u.estimated)
 

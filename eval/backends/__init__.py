@@ -20,7 +20,7 @@ def get(model: str):
         local = model.startswith("local:")
         bare = model.split(":", 1)[1]
         ns = SimpleNamespace(
-            image_block=lambda img, cache=False, **kw: orb.image_block(img, **kw),
+            image_block=lambda img, cache=False, **kw: orb.image_block(img, cache=cache, **kw),
             call=lambda content, **kw: orb.call(content, **{**kw, "model": bare, "local": local}),
         )
         return ns, bare

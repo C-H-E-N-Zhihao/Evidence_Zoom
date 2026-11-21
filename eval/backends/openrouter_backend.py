@@ -18,6 +18,7 @@ import io
 import json
 import os
 import time
+import urllib.error
 import urllib.request
 from typing import Optional
 
@@ -31,15 +32,28 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 def image_block(img: Image.Image, fmt: str = "PNG", detail: Optional[str] = None, cache: bool = False) -> dict:
     """OpenAI-style image part. `detail` ("low"/"high") matters for OpenAI models; others ignore it.
-    NOTE: `cache` is IGNORED here (no cache_control is sent), so `full_image_cached@or:...` is billed uncached;
-    eval.report flags such rows. Do not quote them as the cached baseline."""
+
+    `cache=True` marks the part; call() turns the mark into an Anthropic-style `cache_control` breakpoint only for
+    `anthropic/...` models (and retries once without it if the request is rejected). Whether caching actually
+    happened is read from the billed response: eval.report flags any "cached" run with zero cache reads."""
     buf = io.BytesIO()
     img.convert("RGB").save(buf, format=fmt)
     url = f"data:image/{fmt.lower()};base64," + base64.standard_b64encode(buf.getvalue()).decode()
     part: dict = {"type": "image_url", "image_url": {"url": url}}
     if detail:
         part["image_url"]["detail"] = detail
+    if cache:
+        part["_cache"] = True
     return part
+
+
+def _prepare(content: list[dict], use_cache: bool) -> list[dict]:
+    out = []
+    for p in content:
+        p = {k: v for k, v in p.items() if k != "_cache"} | (
+            {"cache_control": {"type": "ephemeral"}} if use_cache and p.get("_cache") else {})
+        out.append(p)
+    return out
 
 
 def _endpoint(local: bool) -> tuple[str, dict]:
@@ -64,16 +78,38 @@ def call(
     timeout_s: float = 120.0,
     **_ignored,
 ) -> tuple[str, Usage, str]:
-    messages = ([{"role": "system", "content": system}] if system else []) + [{"role": "user", "content": content}]
-    body: dict = {"model": model, "messages": messages, "max_tokens": max_tokens, "temperature": 0}
-    if not local:
-        body["usage"] = {"include": True}
+    anthropic_model = model.startswith("anthropic/")
+    use_cache = anthropic_model and any(p.get("_cache") for p in content)
+
+    def body_for(cache: bool) -> dict:
+        msgs = ([{"role": "system", "content": system}] if system else []) + \
+               [{"role": "user", "content": _prepare(content, cache)}]
+        b: dict = {"model": model, "messages": msgs, "max_tokens": max_tokens}
+        # Sampling parameters: current Claude models reject them (400), so send temperature only to
+        # self-hosted servers (deterministic eval) and to non-Anthropic API models.
+        if local or not anthropic_model:
+            b["temperature"] = 0
+        if not local:
+            b["usage"] = {"include": True}
+        return b
+
     url, headers = _endpoint(local)
-    req = urllib.request.Request(url, data=json.dumps(body).encode(), method="POST",
-                                 headers={"Content-Type": "application/json", **headers})
+
+    def post(b: dict) -> dict:
+        req = urllib.request.Request(url, data=json.dumps(b).encode(), method="POST",
+                                     headers={"Content-Type": "application/json", **headers})
+        with urllib.request.urlopen(req, timeout=timeout_s) as r:
+            return json.loads(r.read())
+
     t0 = time.perf_counter()
-    with urllib.request.urlopen(req, timeout=timeout_s) as r:
-        resp = json.loads(r.read())
+    try:
+        resp = post(body_for(use_cache))
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode(errors="replace")[:300]
+        if use_cache and e.code == 400 and "cache" in detail.lower():
+            resp = post(body_for(False))  # provider rejected the breakpoint: run uncached, report flags it
+        else:
+            raise RuntimeError(f"HTTP {e.code}: {detail}") from None
     latency_ms = (time.perf_counter() - t0) * 1000
     if "error" in resp:
         raise RuntimeError(f"{resp['error']}")
