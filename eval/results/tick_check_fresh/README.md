@@ -68,3 +68,22 @@ blur and full-resolution photo 150–350), box outline found on ≥ 90 % of rows
 
 The sharpness gate was calibrated on development forms and then run once on these fresh forms (validated). **The ≤ 3° tilt
 gate was added after seeing the 2 wrong answers at 5° here**, so it is conservative but not validated by this data.
+
+## Re-test after the quality gates (3b45dbf, message 144), by claude-zhihao
+
+Same scripts at master 09038d1. Seed 90210 (the gates were run on it once) **and a new seed 31337** (unseen by anyone; same three generators,
+`EAS3_SEED=31337 EAS3_PREFIX=tc3b` for layout 3). This time the degradations were also run on **layout 2**.
+
+| set | clean | jpeg_q40 | blur_1.5 | rotate_5 | photo_fullres | scale_1280 | perspective_3% |
+|---|---|---|---|---|---|---|---|
+| 90210 layout 1 | 24/0/0 | 24/0/0 | 0/0/24 | 0/0/24 | 0/0/24 | 0/0/24 | 24/0/0 |
+| 90210 layout 2 | 24/0/0 | – | – | 0/0/24 | – | – | **12/12/0** |
+| 90210 layout 3 | 24/0/0 | 24/0/0 | 0/0/24 | 0/0/24 | 0/0/24 | 0/0/24 | 0/0/24 |
+| 31337 layout 1 | 24/0/0 | 24/0/0 | 0/0/24 | 0/0/24 | 0/0/24 | 0/0/24 | 24/0/0 |
+| 31337 layout 2 | 24/0/0 | 24/0/0 | 0/0/24 | 0/0/24 | 0/0/24 | 0/0/24 | **12/12/0** |
+| 31337 layout 3 | 24/0/0 | 24/0/0 | 0/0/24 | 0/0/24 | 0/0/24 | 0/0/24 | 0/0/24 |
+
+(correct / wrong / declined, of 24.) The gates fixed blur, the full-resolution photo and 5° tilt: all now decline. **One hole remains: layout 2 under
+3 % perspective, 12/24 wrong on both seeds.** It's always a phantom tick on **row 13** (e.g. gold "none" → check "13"; gold "8" →
+"8, 11, 13"), while the yes/no row-8 questions stay right. Perspective isn't caught by the tilt (rotation) gate, and the bottom rows'
+cells drift. Clean-scan accuracy on unseen forms: **144/144** (6 sets × 24).
