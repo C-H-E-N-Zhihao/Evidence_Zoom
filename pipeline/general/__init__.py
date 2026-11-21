@@ -22,17 +22,20 @@ from typing import Optional
 from eval.schema import EvidenceBox, PipelineResult, RouteStep, Usage
 
 MAX_LINES = 220
-BAND_ABOVE, BAND_BELOW = 0.04, 0.30  # crop band around the named lines (page fractions)
+BAND_ABOVE, BAND_BELOW = 0.30, 0.30  # crop band around the named lines (page fractions). Drawings sit above their
+# labels (axis labels, legends, keys) as often as below their question text: homework_v2 held-out, 8264c05.
 
 SYSTEM_TEXT = (
     "You answer questions about an image using ONLY its OCR text, given as numbered lines [L1], [L2], ... in reading "
-    "order. If the lines contain what is needed, answer and cite the ids of the lines you used. Put only the short "
-    "answer in \"answer\" (a number, word or short phrase); for tutoring questions (solve, explain, check my work) add a "
-    "short, clear step-by-step explanation in \"explanation\". If the answer depends "
-    "on something OCR cannot capture (a drawing, diagram, graph or picture; a tick, circle, highlight or "
-    "crossing-out; handwriting that is missing or garbled; colour; where something is placed), do not guess: ask for "
-    "the image and list the ids of the lines nearest to what must be looked at. If the information is not in the image "
-    "at all, abstain. Reply with JSON only, one of:\n"
+    "order. If the lines contain what is needed, answer and cite the ids of the lines you used (at most 6). Put only "
+    "the short answer in \"answer\" (a number, word or short phrase); for tutoring questions (solve, explain, check my "
+    "work) add a short step-by-step explanation in \"explanation\" (at most 60 words). If the answer depends on "
+    "something OCR cannot capture, do not guess: ask for the image and list the ids of the lines nearest to what must "
+    "be looked at. That includes: a drawing, diagram, map, graph, chart or picture; which cell of a table is empty or "
+    "where things sit in a table or grid; a tick, cross, circle, highlight, sticker, line or arrow (OCR often reads a "
+    "tick as V or a cross as X: never decide marks from OCR characters); handwriting that is missing or garbled; "
+    "colour; position. Abstain only when the page clearly does not contain that kind of information at all. "
+    "Reply with JSON only, one of:\n"
     '{"answer": "...", "explanation": "... (optional)", "lines": [ids]}\n'
     '{"need_image": true, "lines": [ids], "look_for": "what to inspect, in a few words"}\n'
     '{"abstain": true}'
@@ -47,9 +50,30 @@ def _lines(spans: list[dict]) -> list[dict]:
 
 
 def _parse(text: str) -> dict:
+    """JSON reply; if it was cut off by the output limit, salvage its fields instead of showing raw JSON."""
+    import re
+
     from pipeline.visual import parse
 
-    return parse(text)
+    d = parse(text)
+    ans = d.get("answer")
+    if isinstance(ans, str) and ans.lstrip().startswith("{"):
+        out: dict = {}
+        if re.search(r'"need_image"\s*:\s*true', text):
+            out["need_image"] = True
+        elif re.search(r'"abstain"\s*:\s*true', text):
+            out["abstain"] = True
+        m = re.search(r'"answer"\s*:\s*"((?:[^"\\]|\\.)*)"', text)
+        if m and not out:
+            out["answer"] = json.loads(f'"{m.group(1)}"')
+        m = re.search(r'"look_for"\s*:\s*"((?:[^"\\]|\\.)*)"', text)
+        if m:
+            out["look_for"] = json.loads(f'"{m.group(1)}"')
+        m = re.search(r'"lines"\s*:\s*\[([0-9,\sL"]*)', text)
+        if m:
+            out["lines"] = re.findall(r"\d+", m.group(1))
+        return out or {"abstain": True}
+    return d
 
 
 def _band(boxes: list[list[float]]) -> tuple[float, float]:
@@ -131,9 +155,16 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
     else:
         rows, target = [(0.0, 1.0)], "full page"
     res.route.append(RouteStep("fallback", target="image", note=f"needs pixels: {look_for or 'not readable from OCR text'}"))
-    return zoom_answer(image, question, rows, [(0.0, 1.0)], prior=res, model=model,
-                       look_for=look_for or "the evidence for the question", target=target, call=call,
-                       name="pixels")
+    res = zoom_answer(image, question, rows, [(0.0, 1.0)], prior=res, model=model,
+                      look_for=look_for or "the evidence for the question", target=target, call=call,
+                      name="pixels")
+    # 4. the band was not enough: one more look, at the whole page (a band can miss a drawing far from its labels)
+    if res.abstained and not res.error and rows != [(0.0, 1.0)]:
+        res.route.append(RouteStep("fallback", target="image", note="not found in the band; whole page"))
+        res = zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=res, model=model,
+                          look_for=look_for or "the evidence for the question", target="full page", call=call,
+                          name="page")
+    return res
 
 
 def factory():
