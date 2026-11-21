@@ -1,8 +1,10 @@
 """Evidence Zoom demo server.
 
 Run:  .venv/bin/uvicorn app.server:app --reload --port 8000
-Pipeline:  PIPELINE=app.mock_pipeline (default) or any module exposing
-           answer(image: PIL.Image.Image, question: str) -> Result
+Pipeline:  PIPELINE=app.mock_pipeline (default), any module exposing
+           answer(image: PIL.Image.Image, question: str) -> dict | PipelineResult,
+           or an eval pipeline name, e.g. PIPELINE=eval:full_image_cached
+           (any name in eval.pipelines.baselines.REGISTRY, or eval:module:factory).
 """
 import importlib
 import io
@@ -23,7 +25,19 @@ STATIC = ROOT / "static"
 UPLOADS = ROOT / "uploads"
 UPLOADS.mkdir(exist_ok=True)
 
-pipeline = importlib.import_module(os.getenv("PIPELINE", "app.mock_pipeline"))
+
+class _EvalAdapter:
+    """Wrap an eval pipeline (item, image) -> PipelineResult as answer(image, question)."""
+
+    def __init__(self, name: str):
+        from eval.pipelines.baselines import as_app_answer
+        from eval.run_eval import get_pipeline
+        self.answer = as_app_answer(get_pipeline(name))
+        self.__name__ = f"eval:{name}"
+
+
+_spec = os.getenv("PIPELINE", "app.mock_pipeline")
+pipeline = _EvalAdapter(_spec[5:]) if _spec.startswith("eval:") else importlib.import_module(_spec)
 
 app = FastAPI(title="Evidence Zoom")
 # image_id -> {"path": Path, "w": int, "h": int, "questions": int}
@@ -80,7 +94,11 @@ def ask(req: Ask):
         raise HTTPException(404, "unknown image_id")
     with Image.open(meta["path"]) as im:
         result = pipeline.answer(im.convert("RGB"), req.question)
-    out_tokens = sum(u.get("output_tokens", 0) for u in result.get("usage", [])) or 60
+    if hasattr(result, "to_dict"):
+        result = result.to_dict()
+    # the full-image baseline would produce one answer: use the final call's output size
+    usage = result.get("usage") or [{}]
+    out_tokens = usage[-1].get("output_tokens") or 60
     baseline = full_image_baseline(meta["w"], meta["h"],
                                    max(8, len(req.question) // 4), out_tokens,
                                    meta["questions"])
