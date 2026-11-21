@@ -33,6 +33,24 @@ def short(name: str) -> str:
     return name.replace("pipeline.", "").replace(":factory", "").replace("_px:", " ")
 
 
+def served_models(rep: dict) -> str:
+    """Short names of the models that actually served a pipeline's API/GPU calls (OCR and local CPU stages
+    excluded), e.g. "7B", "72B+7B". Empty if none."""
+    seen: list[str] = []
+    for r in rep.get("results", []):
+        for u in r.get("usage", []):
+            if u.get("provider") == "local" and u.get("device") != "gpu" and "Qwen" not in (u.get("model") or ""):
+                continue
+            m = u.get("model") or ""
+            if u.get("provider") in ("fake", "estimate") or not m:
+                continue
+            s = re.search(r"(\d+B)", m)
+            tag = s.group(1) if "Qwen" in m and s else m.split("/")[-1]
+            if tag not in seen:
+                seen.append(tag)
+    return "+".join(sorted(seen, key=lambda t: -float(t[:-1]) if t[:-1].isdigit() else 0))
+
+
 def x_of(s: dict, kind: str) -> float | None:
     n = s["n"] or 1
     if kind == "tokens":
@@ -74,7 +92,12 @@ def main() -> None:
             if x is None:
                 continue
             pts.append((x, s["accuracy"]))
-            labels.append(short(name))
+            lab = short(name)
+            if "@" not in name:  # module:factory pipelines: take the model from what actually served the calls
+                served = served_models(rep)
+                if served:
+                    lab += f" ({served})"
+            labels.append(lab)
             est.append(bool(s.get("any_estimated")) and a.x == "usd")
     if not pts:
         raise SystemExit("no points (check --group and that runs are not aborted)")

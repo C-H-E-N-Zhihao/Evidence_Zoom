@@ -151,6 +151,12 @@ def t_pairs_curve_report() -> None:
     check("pareto keeps cheap and accurate, drops dominated",
           pareto([(1, .4), (2, .7), (3, .6), (0.5, .4)]) == {1, 3})
     check("short label", short("gold_crop_px:384@local:Qwen/Qwen2.5-VL-7B-Instruct") == "gold_crop 384 (7B)")
+    from .plot_frontier import served_models
+
+    rep = {"results": [{"usage": [{"provider": "local", "model": "Apple Vision OCR (anchor)"},
+                                  {"provider": "local", "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ", "device": "gpu"}]},
+                       {"usage": [{"provider": "local", "model": "Qwen/Qwen2.5-VL-7B-Instruct"}]}]}
+    check("served models from usage (OCR excluded, old runs without device)", served_models(rep) == "72B+7B")
     md = report.table(run)
     check("report renders rows", "| `p` | all |" in md)
     check("report flags aborted run", "not a clean measurement" in md)

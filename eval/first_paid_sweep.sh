@@ -37,13 +37,13 @@ run "1 controls, clean" $PY -m eval.run_eval --items "$I" --out "$OUT" --max-cos
 
 # 2. the product routes end to end (OCR first), cheap model on the visual stage
 run "2 routes, clean" env EVAL_MODEL="$CHEAP" $PY -m eval.run_eval --items "$I" --out "$OUT" --max-cost "$BUDGET" \
-  --pipelines pipeline.router:factory pipeline.anchor:factory_then_overview \
+  --pipelines pipeline.router:factory pipeline.router:factory_anchor pipeline.anchor:factory_then_overview \
   "cascade:fn:pipeline.ocr:answer|cascade:checkbox_pixels|pipeline.anchor:factory_then_overview"
 
 # 3. the same routes on phone-photo inputs, against the strong cached page
 run "3 routes, phone photo" env EVAL_MODEL="$CHEAP" $PY -m eval.run_eval --items "$I" --out "$OUT" \
   --max-cost "$BUDGET" --degrade phone_photo \
-  --pipelines pipeline.router:factory pipeline.anchor:factory_then_overview "full_image_cached@$STRONG"
+  --pipelines pipeline.router:factory pipeline.router:factory_anchor "full_image_cached@$STRONG"
 
 # 4. does the answer depend on the cited region? (subset)
 run "4 reliance, cheap full page" env EVAL_MODEL="$CHEAP" $PY -m eval.reliance --items "$I" --pipeline full_image \
