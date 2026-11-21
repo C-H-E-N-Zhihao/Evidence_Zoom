@@ -36,21 +36,22 @@ Use another port with `./scripts/demo.sh 8010`.
 ./scripts/test.sh
 ```
 
-It runs four offline checks and ends with `ALL CHECKS PASSED`:
+It runs six offline checks and ends with `ALL CHECKS PASSED`:
 
 | check | what it proves |
 |---|---|
+| OCR field lookup | reading a field next to its label; refusing partial or uncertain IDs |
 | router unit checks | OCR → visual hand-off, error handling (stubbed stages) |
 | visual path geometry | on 96 test questions, grid → selected cells → crop → box mapped back to the page lands exactly on the true evidence (IoU 1.0) |
-| eval harness | the scoring code runs end to end |
+| eval harness | ~40 unit checks on scoring, pricing and guards, plus an end-to-end run |
 | demo smoke test | the exact judge script below, through the app's HTTP API |
 
 ---
 
 ## The two-minute judge script
 
-1. In the **Fixture form** menu, choose **`eas-002 · b: moved one of B's ticks from 8`**.
-   Form *a* opens. Form *b* is the same form with one tick moved.
+1. In the **Fixture form** menu, choose **`eas-002 · pair: B's ticks differ`**.
+   Form *a* opens. Form *b* is the same form with one of driver B's ticks moved (the menu does not say which).
 2. Click the suggestion **"What is vehicle A's insurance policy number?"**
    You see the **LIVE OCR** badge, the policy number, a green box on it in the page, and the route
    `ocr → answer` at **$0**.
@@ -60,9 +61,10 @@ It runs four offline checks and ends with `ALL CHECKS PASSED`:
    and the **zoom mosaic**, with the row numbers stitched next to driver B's tick column. On the page, a pink
    box marks the tick.
 4. Click **form b** and ask the tick question again. The answer changes to **7** and the box moves one row up.
+   The line above the page now shows `a: 8 · b: 7`; switching back to form a keeps its conversation.
    The policy number is still read by OCR, because only the tick differs.
 5. Optional: type **"Is there a dog in the picture?"**. You get **NO ANSWER** and the reason. The demo never
-   invents an answer.
+   invents an answer, and the cost meter still charges the overview call a live run would have paid.
 
 The **Session cost** panel compares this route with sending the full page to the same model every time,
 with and without prompt caching. **All costs are estimates** from token arithmetic.
@@ -76,9 +78,10 @@ with and without prompt caching. **All costs are estimates** from token arithmet
 | the vision model's two replies (which cells to zoom; the final answer and box) | **replayed** from the test form's stored answer (`pipeline/visual/replay.py`) |
 | token counts and $ | **estimated** (~width × height / 750 tokens per image; list prices in `eval/pricing.py`) |
 
-Measured so far, offline: OCR answers 48 of the 96 test questions, all correctly, in about 0.6 s, with 0 wrong
-answers, also on degraded scans and photos. Model accuracy and billed savings need a live model run (see
-`eval/results/SCORECARD.md`).
+Measured so far: OCR answers 48 of the 96 test questions, all correctly, in about 0.6 s, with 0 wrong answers,
+also on degraded scans and photos. A first live run with a small open model (Qwen2.5-VL-7B on our GPU) showed
+that a good crop helps it (42% → 67% on the visual questions) but that it does not yet choose the crop well
+itself (`eval/results/REPORT_local_qwen7b_visual.md`). Cost figures are in `eval/results/SCORECARD.md`.
 
 ---
 
