@@ -51,6 +51,15 @@ It runs six offline checks and ends with `ALL CHECKS PASSED`:
 
 ---
 
+## Presenting: the guided tour
+
+Click **▶ Guided tour** (top bar). Each **Next ▶** performs one step of the judge script below (pick the form, ask,
+switch to form b, then layout 3) and shows one sentence to say. Every answer also gets a plain-language line under
+it ("Read on this computer by OCR from the printed line …", or "The form's own layout located … ; the model was sent
+only that crop: ~N tokens instead of ~M for the whole page"). **What we measured** (top bar) opens the approved
+results, each with its limits and the path of its receipt in the repository. It stays empty until the release
+reviewer approves `docs/claims.json`.
+
 ## The two-minute judge script
 
 1. In the **Fixture form** menu, choose **`eas-002 · pair: B's ticks differ`**.
