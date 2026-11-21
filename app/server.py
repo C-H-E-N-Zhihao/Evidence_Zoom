@@ -130,7 +130,13 @@ def config():
         pairs.setdefault(f["pair_id"] or fid, []).append(
             {"fixture": fid, "note": f["note"], "questions": f["questions"]})
     from .costs import MODEL as page_model
+    from urllib.parse import urlparse
+    base = os.getenv("OPENAI_BASE_URL", "")
+    loopback = (urlparse(base).hostname or "") in ("localhost", "127.0.0.1", "::1")
+    model = os.getenv("EVAL_MODEL", "")
     return {"pipeline": pipeline.__name__, "replay": REPLAY, "live": LIVE,
+            # the "runs on this laptop" claim holds only for a local: model behind a loopback endpoint (release review)
+            "on_device": bool(LIVE and model.startswith("local:") and loopback),
             "live_spent_usd": round(LIVE_SPENT, 4) if LIVE else None, "live_max_usd": LIVE_MAX_USD if LIVE else None,
             "model": os.getenv("EVAL_MODEL") if LIVE else None, "page_model": page_model,
             "route_model": os.getenv("EVAL_MODEL") if LIVE else os.getenv("APP_ROUTE_MODEL", page_model),

@@ -30,9 +30,12 @@ async function init() {
   if (cfg.live) {
     $("banner").hidden = false;
     $("banner").innerHTML = `<b>Live demo.</b> <span class='src ocr'>LIVE OCR</span> answers are local ($0). ` +
-      (String(cfg.model || "").startsWith("local:")
+      (cfg.on_device
         ? `<span class='src model'>MODEL</span> answers come from <code>${cfg.model.slice(6)}</code> running <b>on this laptop</b> ` +
-          `(no API call, $0, the document never leaves the machine), on the crop or the full page.`
+          `(no API call, no provider charge, the document never leaves the machine), on the crop or the full page.`
+        : String(cfg.model || "").startsWith("local:")
+        ? `<span class='src model'>MODEL</span> answers come from <code>${cfg.model.slice(6)}</code> on a self-hosted server ` +
+          `(no provider charge), on the crop or the full page.`
         : `<span class='src model'>MODEL</span> answers come from a real call to <code>${cfg.model || "the model"}</code> ` +
           `on the crop (or the full page when no template anchor applies); their cost is billed.`) +
       (cfg.replay ? " If a live call fails, that answer is replayed from fixture labels and marked REPLAY." : "");
@@ -154,7 +157,7 @@ async function askQ(q) {
   // visible progress while a (possibly slow, on-device) model call runs
   const wait = document.createElement("div"); wait.className = "msg-a waiting";
   const who = !cfg.live ? "Running the route" : String(cfg.model || "").startsWith("local:")
-    ? `OCR, then ${cfg.model.slice(6)} on this laptop if pixels are needed` : `OCR, then ${cfg.model} if pixels are needed`;
+    ? `OCR, then ${cfg.model.slice(6)}${cfg.on_device ? " on this laptop" : ""} if pixels are needed` : `OCR, then ${cfg.model} if pixels are needed`;
   const t0 = Date.now();
   const tick = () => { wait.textContent = `${who}… ${((Date.now() - t0) / 1000).toFixed(0)} s`; };
   tick(); const timer = setInterval(tick, 500);
