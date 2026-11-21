@@ -15,3 +15,7 @@ One folder per set: `eval/data/<set>/items.jsonl` plus its images. One `EvalItem
 - Counterfactual pairs share `pair_id` (same form, one changed tick/value).
 - Group questions about one image consecutively; the cost curve and caching depend on it.
 - Keep large or real (non-public) images out of git; commit only the synthetic set and the generator.
+
+## Sets
+
+- `demo_sample/`: 8 questions on `app/static/sample.png` (claude-zhihao's stand-in form, default ticks A=8, B=10,15). Gold boxes were computed from the drawing coordinates in `app/make_sample.py` (1700×2200). 3 text, 4 visual, 1 unanswerable. A smoke test, not an evaluation: if `make_sample.py` changes its layout or ticks, this file must be regenerated.
