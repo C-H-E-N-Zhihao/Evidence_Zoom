@@ -73,11 +73,11 @@ It runs six offline checks and ends with `ALL CHECKS PASSED`:
 The **Session cost** panel compares this route with sending the full page to the same model every time,
 with and without prompt caching. **All costs are estimates** from token arithmetic.
 
-6. **A different layout.** In the menu, choose **`layout 3 (template from 1 example) · eas3b-002`**. This form
-   has a different design: stacked vehicle bands, values under their labels, bare row numbers, both tick columns
-   left of the text. The built-in rules cannot read it. A **10-line template written from one example** of this
-   layout can. Ask the policy number: **LIVE OCR**, route `ocr → answer`, and the answer says it came *from the
-   line labelled "Policy No"*. Ask B's ticks: the template picks B's tick column (`zoom anchor:ticks`).
+6. **A different layout.** In the menu, choose **`layout 3 (configured template) · eas3b-003`**. This form has a
+   different design: stacked vehicle bands, values under their labels, bare row numbers, both tick columns left of
+   the text. The built-in rules cannot read it; a short **configured template** (10 lines) can. Ask the policy
+   number: **LIVE OCR**, route `ocr → answer`, and the answer says it came *from the line labelled "Policy No"*.
+   Ask B's ticks: the template picks B's tick column (`zoom anchor:ticks`); form a has 3, 16 and form b has 2, 3.
    Optional: on **`layout 2 · eas2-001`** the policy number is *not* answered by OCR. Vision reads `J1-…` for
    `JI-…`, and the look-alike guard sends it to the page instead of risking a wrong ID.
 
