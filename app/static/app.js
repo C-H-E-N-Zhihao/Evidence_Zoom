@@ -251,6 +251,9 @@ function explain(data) {
       `~${inTok} input tokens${est} instead of ~${pageTok} (estimated) for the whole page, ${pct}% fewer` +
       (t.includes("deskew") ? "; the tilted page was straightened first." : ".");
   }
+  if (t === "full page" && r.route.some((st) => /text step off/.test(st.note || "")))
+    return `This on-device model does not reliably tell when OCR text is not enough (measured), so it was sent the whole page ` +
+      `(${size}, ~${inTok} input tokens${est}); OCR still ran locally for the green boxes.`;
   if (t === "full page")
     return `No configured layout covers this question, so the whole page was sent (${size}, ~${inTok} input tokens${est}).` +
       (r.abstained && !r.error ? " The model reported that the answer is not on the form, instead of inventing one." : "");

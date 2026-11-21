@@ -289,8 +289,11 @@ def ask(req: Ask):
                     raise RuntimeError(f"live spend stop threshold ${LIVE_MAX_USD:.2f} reached (APP_LIVE_MAX_USD)")
                 _cap.direct_zoom = True  # keep the shipped route; only the model call is blocked
                 visual.CALL_OVERRIDE = _cap
+            # small local models do not reliably ask for pixels when OCR text is not enough
+            # (REPORT_homework_v3_qwen7b.md): in general mode they get the whole page instead of the text step
+            kw = {"text_step": not (chosen or "").startswith("local:")} if general else {}
             try:
-                result = pipe.answer(img, req.question)
+                result = pipe.answer(img, req.question, **kw)
             finally:
                 if visual is not None:
                     visual.VIEW_SINK = None

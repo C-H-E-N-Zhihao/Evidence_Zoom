@@ -83,7 +83,9 @@ def _band(boxes: list[list[float]]) -> tuple[float, float]:
 
 
 def answer(image, question: str, prior: Optional[PipelineResult] = None, model: Optional[str] = None,
-           call=None) -> PipelineResult:
+           call=None, text_step: bool = True) -> PipelineResult:
+    """text_step=False skips the OCR-text call and sends the whole page: for small models that do not reliably ask
+    for pixels when text is not enough (Qwen2.5-VL-7B: REPORT_homework_v3_qwen7b.md). OCR still runs (boxes, $0)."""
     from pipeline.ocr import recognize_page
     from pipeline.router import ensure_ocr_bin
     from pipeline.visual import CALL_OVERRIDE, DEFAULT_MODEL, zoom_answer
@@ -109,6 +111,10 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
     res.usage.append(Usage(len(res.route) - 1, "local", "Apple Vision OCR", latency_ms=(time.perf_counter() - t0) * 1000))
 
     look_for, named = "", None
+    if lines and not text_step:
+        res.route.append(RouteStep("fallback", target="image", note="small model: whole page (text step off)"))
+        return zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=res, model=model,
+                           look_for="the evidence for the question", target="full page", call=call, name="page")
     if lines:
         # 2. text-only call
         text = "\n".join(f"[L{i + 1}] {s['text'].strip()}" for i, s in enumerate(lines))
