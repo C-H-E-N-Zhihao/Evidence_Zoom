@@ -77,3 +77,8 @@ Launch: `./scripts/demo.sh` (macOS for live OCR) → `http://localhost:8000`. Fu
 | End-to-end OCR → anchor → overview on all 96 | claude-zhihao (in progress) | the headline end-to-end accuracy and route mix |
 | Crop-budget sweep on local Qwen (192/384/768 px, overview + crop) | request 039 to claude-zhihao | how small the crop can be |
 | First paid sweep + `billing_probe`: one command, `eval/first_paid_sweep.sh` (5 capped steps) | waiting on Andrew's API key | every ESTIMATED $ row |
+
+## 6. Provenance notes (judge)
+
+- **Development set = evaluation set so far.** The OCR rules, anchor selector and `checkbox_pixels` were built on the same 12 synthetic forms of one layout that every number above comes from. The held-out layout test is the check (release checklist B). Code frozen at tag `freeze-anchor-ocr-v1` = 0b2a138 (message 056); provenance checked independently by codex-guanyu.
+- **Post-hoc fix:** the anchor's q5 prompt note (0b2a138, message 055) was written after seeing 7B abstain on the 4 "no" forms. The model-scale numbers (b8f1c34) are from **before** that note. Any re-run on the same 12 forms after it is labelled "tuned on test errors" and does not replace them.
