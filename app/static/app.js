@@ -27,7 +27,23 @@ async function init() {
     $("l-full").textContent = `Full image (${cfg.page_model})`;
   }
   $("pipeline").textContent = `pipeline: ${cfg.pipeline}`;
-  if (cfg.live) {
+  if (cfg.live && (cfg.models || []).length > 1) {  // presenter can switch cloud <-> on-device per question
+    const pick = $("model-pick"); pick.hidden = false;
+    for (const m of cfg.models) {
+      const o = document.createElement("option"); o.value = m.id;
+      o.textContent = m.on_device ? `${m.id.replace(/^local:/, "")} · on this laptop` : `${m.id.replace(/^or:anthropic\//, "")} · cloud API`;
+      pick.append(o);
+    }
+    pick.value = cfg.model || cfg.models[0].id;
+    pick.onchange = () => { cfg.model = pick.value; cfg.on_device = !!(cfg.models.find((m) => m.id === pick.value) || {}).on_device; };
+  }
+  if (cfg.live && (cfg.models || []).length > 1) {
+    $("banner").hidden = false;
+    $("banner").innerHTML = `<b>Live demo.</b> <span class='src ocr'>LIVE OCR</span> answers are local ($0). ` +
+      `<span class='src model'>MODEL</span> answers come from the model chosen top right: a <b>cloud API</b> (billed), or a model ` +
+      `<b>on this laptop</b> (no API call, no provider charge, the document never leaves the machine). Each answer names its model.` +
+      (cfg.replay ? " If a live call fails, that answer is replayed from fixture labels and marked REPLAY." : "");
+  } else if (cfg.live) {
     $("banner").hidden = false;
     $("banner").innerHTML = `<b>Live demo.</b> <span class='src ocr'>LIVE OCR</span> answers are local ($0). ` +
       (cfg.on_device
@@ -164,7 +180,7 @@ async function askQ(q) {
   $("chat").append(wait); wait.scrollIntoView({ block: "end" });
   try {
     const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image_id: image.image_id, question: q }) });
+      body: JSON.stringify({ image_id: image.image_id, question: q, model: cfg.live ? cfg.model : null }) });
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || r.status);
     data.question = q;
@@ -237,6 +253,11 @@ function addA(data, i, ours) {
     from.textContent = lab ? `from the line labelled "${lab}"` : (source === "ocr" ? "" : "field label not verified");
     if (from.textContent) head.append(from);
   }
+  if (source === "model" && data.model) {
+    const mm = document.createElement("div"); mm.className = "note";
+    mm.textContent = `answered by ${data.model.replace(/^local:|^or:anthropic\//, "")} · ${data.on_device ? "on this laptop" : "cloud API"}`;
+    head.append(mm);
+  }
   if (data.live_error) {
     const le = document.createElement("div"); le.className = "note";
     le.textContent = "live call failed (" + data.live_error.slice(0, 120) + "); " +
@@ -275,7 +296,7 @@ function addA(data, i, ours) {
       const tk = setInterval(() => { out.textContent = `Sending the whole page to the same model… ${((Date.now() - t0) / 1000).toFixed(0)} s`; }, 400);
       try {
         const r = await fetch("/api/compare", { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image_id: image.image_id, question: q }) });
+          body: JSON.stringify({ image_id: image.image_id, question: q, model: data.model || cfg.model }) });
         const c = await r.json(); if (!r.ok) throw new Error(c.detail || r.status);
         const bill = cfg.on_device || String(c.model).startsWith("local:") ? "no provider charge" : "billed";
         out.innerHTML = `<b>Our route</b>: ${usd(ours)} · ${inTok} input tok · ${(ourMs / 1000).toFixed(1)} s` +

@@ -67,6 +67,13 @@ All three use local OCR for printed fields and fall back to the labelled replay 
 sketch 5/12. Each model call takes ~9 s (median) and up to ~23 s, so the app shows a waiting line while it works.
 Present the tick questions on-device; the sketch question is answered better by Haiku (live mode).
 
+**Switching models live:** when Ollama is running, `./scripts/demo-live.sh` also offers the on-device model in a picker
+(top right); each answer names the model that produced it ("answered by … · cloud API / on this laptop"), and
+**Compare: ask the whole page instead** under a live answer sends the same question with the whole page to the same
+model and shows both costs, token counts and times side by side (real calls; counts toward the spend cap).
+**Avoid empty tick lists live:** on forms where driver B ticked nothing (eas-004, eas3b-002), Haiku tends to decline
+and the on-device Qwen once listed all 17 boxes. Use pairs where B ticked something (eas-002, eas3b-003: the tour's pairs).
+
 ## Presenting: the guided tour
 
 Click **▶ Guided tour** (top bar). Each **Next ▶** performs one step of the judge script below (pick the form, ask,

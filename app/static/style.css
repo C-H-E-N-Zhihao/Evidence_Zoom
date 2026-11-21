@@ -104,3 +104,6 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 16px; pa
 .waiting { color: var(--muted); font-style: italic; }
 .cmp-btn { margin-top: 6px; font-size: 12px; padding: 4px 8px; color: var(--ink); border: 1px solid var(--line); }
 .cmp { font: 12px ui-monospace, monospace; color: var(--ink); margin-top: 6px; line-height: 1.5; }
+.model-pick { margin-left: auto; margin-right: 10px; font-size: 13px; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--line);
+              background: var(--panel); color: var(--ink); }
+.model-pick + .tour-btn { margin-left: 0; }

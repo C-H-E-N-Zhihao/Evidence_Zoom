@@ -21,5 +21,11 @@ if [ -z "${SSL_CERT_FILE:-}" ]; then
   export SSL_CERT_FILE
 fi
 export EVAL_MODEL="${EVAL_MODEL:-or:anthropic/claude-haiku-5.5}"
+# If Ollama runs on this Mac with the local model, offer it too: the presenter switches cloud <-> on-device in the app.
+LOCAL_VLM="${LOCAL_VLM:-qwen2.5vl:7b}"
+if [ -z "${APP_MODELS:-}" ] && curl -s -m 2 http://localhost:11434/api/tags 2>/dev/null | grep -q "\"$LOCAL_VLM\""; then
+  export APP_MODELS="$EVAL_MODEL,local:$LOCAL_VLM" OPENAI_BASE_URL="${OPENAI_BASE_URL:-http://localhost:11434/v1}"
+  echo "Ollama found: the app can also answer with $LOCAL_VLM on this laptop (model picker, top right)."
+fi
 echo "Evidence Zoom LIVE demo on http://localhost:${PORT}  (model ${EVAL_MODEL}, live spend cap \$${APP_LIVE_MAX_USD:-1.00}; replay only if a live call fails)"
 PIPELINE=pipeline.router DEMO_LIVE=1 DEMO_REPLAY=1 exec .venv/bin/uvicorn app.server:app --port "$PORT"

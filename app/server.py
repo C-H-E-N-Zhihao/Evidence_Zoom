@@ -53,6 +53,23 @@ LIVE = os.getenv("DEMO_LIVE") == "1"
 # Spend guard for live demos: once this server's billed live spend reaches the cap, model calls stop (OCR still
 # answers locally) and, with DEMO_REPLAY=1, visual questions fall back to the labelled replay.
 LIVE_MAX_USD = float(os.getenv("APP_LIVE_MAX_USD", "1.00"))
+# Models the presenter may switch between at runtime (comma-separated model strings); default: just EVAL_MODEL.
+APP_MODELS = [m.strip() for m in os.getenv("APP_MODELS", os.getenv("EVAL_MODEL", "")).split(",") if m.strip()]
+
+
+def _on_device(model: str) -> bool:
+    from urllib.parse import urlparse
+    host = urlparse(os.getenv("OPENAI_BASE_URL", "")).hostname or ""
+    return model.startswith("local:") and host in ("localhost", "127.0.0.1", "::1")
+
+
+def _use_model(requested: str | None) -> str:
+    """Model for this request: the requested one if allowed, else the default. Applied via EVAL_MODEL, which the
+    pipeline reads at call time; requests are serialized by _replay_lock."""
+    m = requested if requested in APP_MODELS else (APP_MODELS[0] if APP_MODELS else os.getenv("EVAL_MODEL", ""))
+    if m:
+        os.environ["EVAL_MODEL"] = m
+    return m
 LIVE_SPENT = 0.0
 _replay_lock = threading.Lock()
 
@@ -137,6 +154,7 @@ def config():
     return {"pipeline": pipeline.__name__, "replay": REPLAY, "live": LIVE,
             # the "runs on this laptop" claim holds only for a local: model behind a loopback endpoint (release review)
             "on_device": bool(LIVE and model.startswith("local:") and loopback),
+            "models": [{"id": m, "on_device": _on_device(m)} for m in APP_MODELS] if LIVE else [],
             "live_spent_usd": round(LIVE_SPENT, 4) if LIVE else None, "live_max_usd": LIVE_MAX_USD if LIVE else None,
             "model": os.getenv("EVAL_MODEL") if LIVE else None, "page_model": page_model,
             "route_model": os.getenv("EVAL_MODEL") if LIVE else os.getenv("APP_ROUTE_MODEL", page_model),
@@ -193,6 +211,7 @@ def get_image(image_id: str):
 class Ask(BaseModel):
     image_id: str
     question: str
+    model: str | None = None  # live only: one of APP_MODELS
 
 
 @app.post("/api/compare")
@@ -212,7 +231,8 @@ def compare(req: Ask):
     from eval.schema import EvalItem
     with Image.open(meta["path"]) as im:
         img = im.convert("RGB")
-    model = os.getenv("EVAL_MODEL", "")
+    with _replay_lock:
+        model = _use_model(req.model)
     item = EvalItem(question_id="live-compare", image_id=req.image_id, image_path="", question=req.question, answer=None)
     t0 = time.perf_counter()
     r = full_image(model=model)(item, img).to_dict()
@@ -252,6 +272,7 @@ def ask(req: Ask):
 
     live_error = None
     with _replay_lock:  # the visual module's hooks are process-global; one question at a time
+        chosen = _use_model(req.model) if LIVE else None
         if visual is not None:
             visual.VIEW_SINK = sink
         if LIVE:
@@ -332,6 +353,7 @@ def ask(req: Ask):
                         and not any(u.get("device") == "gpu" for u in result.get("usage", []))) else
               "mock" if pipeline.__name__ == "app.mock_pipeline" else "model")
     return {"result": result, "baseline": baseline, "source": source, "views": views, "live_error": live_error,
+            "model": chosen, "on_device": _on_device(chosen or ""),
             "question_index": meta["questions"] - 1,
             "pipeline": pipeline.__name__}
 

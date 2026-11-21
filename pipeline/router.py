@@ -155,8 +155,10 @@ def answer(image, question: str, anchor: bool | None = None, fallback: str | Non
             from pipeline.visual import zoom_answer
 
             prior.route.append(RouteStep("fallback", target="page", note="no OCR answer or anchor: full page"))
+            from pipeline.visual import DEFAULT_MODEL
             result = zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=prior,
-                                 look_for="the whole page", target="full page", name="page_fallback")
+                                 look_for="the whole page", target="full page", name="page_fallback",
+                                 model=os.environ.get("EVAL_MODEL") or DEFAULT_MODEL)  # read at call time
         else:
             result = visual(image, question, prior=prior)
     except Exception as e:
