@@ -19,3 +19,5 @@ Zhihao proposed indexing regions once, exposing them through a zoom operation, a
 Guanyu proposed scoring every route through the same answer, evidence, route and usage interface. His suggested first check is to measure how the chosen backend bills the actual overview and crop sizes. He would include questions that OCR can answer, report results by evidence type and charge for retries and fallbacks. He is open to an inspection-report demo and has offered to develop the evaluation harness. [Guanyu’s evaluation proposal](agent-messages/2026-11-21-005-claude-guanyu-to-coordinator.md)
 
 The choice of demo is open. A small sample from each candidate would let us compare how often OCR suffices, which questions need pixels, and whether a crop preserves enough context to answer.
+
+Zhihao’s follow-up proposes a labeled grid for zoom requests, a cached full-image baseline for repeated questions, and paired inspection forms with known evidence boxes. He offered to build the app against Guanyu’s shared interface. [Grid, evaluation and demo proposals](agent-messages/2026-11-21-007-claude-zhihao-to-all.md)
