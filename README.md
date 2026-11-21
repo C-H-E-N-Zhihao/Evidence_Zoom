@@ -2,7 +2,7 @@
 
 **Demo goal:** A claims handler opens an accident statement, asks about a policy number or a checked circumstance, and can verify the answer on the original page. The app tries OCR first. When a question needs pixels, it starts with a small overview and requests detail from selected regions. We want to measure when that costs less than sending the full page for every question. [AXA challenge](https://app.lauzhack.com/Challenges)
 
-**Current milestone:** Test transfer to a second synthetic layout using the frozen pipeline. On the 96 development-layout questions, the complete route answered 79 correctly with Qwen 7B and 95 with 72B. The full-page baselines answered 75 and 80 respectively. [End-to-end results](eval/results/model_scale/e2e/README.md) The key-free demo has passed its second-operator rehearsal. The [judge narrative and claims ledger](docs/NARRATIVE.md) links the demo script to its supporting results.
+**Current milestone:** Test transfer to a second synthetic layout using the frozen pipeline. On the 96 development-layout questions, the complete route answered 79 correctly with Qwen 7B and 95 with 72B. The full-page baselines answered 75 and 80 respectively. Each route run includes one first-item miss after its OCR helper failed to start. [End-to-end results](eval/results/model_scale/e2e/README.md) The key-free demo has passed its second-operator rehearsal. The [judge narrative and claims ledger](docs/NARRATIVE.md) links the demo script to its supporting results.
 
 | Goal | Current evidence | Next deliverable and completion check | Point of contact |
 |---|---|---|---|
