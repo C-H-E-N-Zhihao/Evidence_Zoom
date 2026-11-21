@@ -102,3 +102,5 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 16px; pa
 .claim-src { font-size: 11px; color: var(--muted); }
 .claims-about { font-size: 13px; color: var(--muted); }
 .waiting { color: var(--muted); font-style: italic; }
+.cmp-btn { margin-top: 6px; font-size: 12px; padding: 4px 8px; color: var(--ink); border: 1px solid var(--line); }
+.cmp { font: 12px ui-monospace, monospace; color: var(--ink); margin-top: 6px; line-height: 1.5; }

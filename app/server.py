@@ -195,6 +195,37 @@ class Ask(BaseModel):
     question: str
 
 
+@app.post("/api/compare")
+def compare(req: Ask):
+    """Live only: send the SAME question with the WHOLE original page to the same model (the eval harness's
+    `full_image` baseline) and return its real answer, billed cost, tokens and time, for a side-by-side line."""
+    global LIVE_SPENT
+    if not LIVE:
+        raise HTTPException(400, "the whole-page comparison needs live mode (scripts/demo-live.sh or demo-local.sh)")
+    if LIVE_SPENT >= LIVE_MAX_USD:
+        raise HTTPException(429, f"live spend cap ${LIVE_MAX_USD:.2f} reached")
+    meta = IMAGES.get(req.image_id)
+    if meta is None:
+        raise HTTPException(404, "unknown image_id")
+    import time
+    from eval.pipelines.baselines import full_image
+    from eval.schema import EvalItem
+    with Image.open(meta["path"]) as im:
+        img = im.convert("RGB")
+    model = os.getenv("EVAL_MODEL", "")
+    item = EvalItem(question_id="live-compare", image_id=req.image_id, image_path="", question=req.question, answer=None)
+    t0 = time.perf_counter()
+    r = full_image(model=model)(item, img).to_dict()
+    ms = (time.perf_counter() - t0) * 1000
+    usage = r.get("usage", [])
+    cost = sum(u.get("cost_usd", 0) or 0 for u in usage)
+    LIVE_SPENT += sum(u.get("cost_usd", 0) or 0 for u in usage if u.get("provider") not in ("local", None))
+    tok = sum((u.get("input_image_tokens") or 0) + (u.get("input_text_tokens") or 0) +
+              (u.get("cache_read_tokens") or 0) + (u.get("cache_write_tokens") or 0) for u in usage)
+    return {"answer": r.get("answer"), "abstained": r.get("abstained"), "error": r.get("error"),
+            "cost_usd": cost, "input_tokens": tok, "latency_ms": ms, "model": model, "image_px": [img.width, img.height]}
+
+
 @app.post("/api/ask")
 def ask(req: Ask):
     meta = IMAGES.get(req.image_id)

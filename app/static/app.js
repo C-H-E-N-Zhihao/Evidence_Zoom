@@ -167,6 +167,7 @@ async function askQ(q) {
       body: JSON.stringify({ image_id: image.image_id, question: q }) });
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || r.status);
+    data.question = q;
     answers.push(data);
     const ours = data.result.usage.reduce((s, u) => s + (u.cost_usd || 0), 0);
     totals.ours += ours; totals.cached += data.baseline.cached_usd; totals.full += data.baseline.uncached_usd;
@@ -258,9 +259,34 @@ function addA(data, i, ours) {
   const est = result.usage.some((u) => u.estimated) ? " (est.)" : "";
   const cost = document.createElement("div"); cost.className = "cost";
   cost.innerHTML = `${usd(ours)}${est} · ${inTok} input tok vs full page ~${baseline.image_tokens + (baseline.text_tokens || 0)} ` +
-    `· <span class="save">${save >= 0 ? "−" : "+"}${Math.abs(save).toFixed(0)}%</span> vs uncached full page`;
+    `· <span class="save">${save >= 0 ? "−" : "+"}${Math.abs(save).toFixed(0)}%</span> vs uncached full page` +
+    `${cfg.page_model ? " on " + cfg.page_model : ""} (estimate)`;
   const why = document.createElement("div"); why.className = "explain"; why.textContent = explain(data);
   d.append(head, ...(why.textContent ? [why] : []), route, cost);
+  // live only: ask the same model with the whole page, and show both sides with real (billed) numbers
+  if (cfg.live && (source === "model" || source === "ocr")) {
+    const q = data.question || (d.previousElementSibling && d.previousElementSibling.textContent) || "";
+    const btn = document.createElement("button"); btn.type = "button"; btn.className = "btn ghost cmp-btn";
+    btn.textContent = "Compare: ask the whole page instead";
+    const out = document.createElement("div"); out.className = "cmp";
+    const ourMs = result.usage.reduce((a, u) => a + (u.latency_ms || 0), 0);
+    btn.onclick = async () => {
+      btn.disabled = true; const t0 = Date.now();
+      const tk = setInterval(() => { out.textContent = `Sending the whole page to the same model… ${((Date.now() - t0) / 1000).toFixed(0)} s`; }, 400);
+      try {
+        const r = await fetch("/api/compare", { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image_id: image.image_id, question: q }) });
+        const c = await r.json(); if (!r.ok) throw new Error(c.detail || r.status);
+        const bill = cfg.on_device || String(c.model).startsWith("local:") ? "no provider charge" : "billed";
+        out.innerHTML = `<b>Our route</b>: ${usd(ours)} · ${inTok} input tok · ${(ourMs / 1000).toFixed(1)} s` +
+          `<br><b>Whole page</b> (${c.image_px[0]}×${c.image_px[1]} px, same model): ${usd(c.cost_usd)} · ${c.input_tokens} input tok · ` +
+          `${(c.latency_ms / 1000).toFixed(1)} s · answer: ${c.abstained ? "no answer" : (c.answer || "–")} <span class="est">(${bill})</span>`;
+        btn.remove();
+      } catch (e) { out.textContent = "Comparison failed: " + e; btn.disabled = false; }
+      finally { clearInterval(tk); }
+    };
+    d.append(btn, out);
+  }
   if (views && views.length) {
     const strip = document.createElement("div"); strip.className = "views";
     for (const v of views) {
