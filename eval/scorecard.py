@@ -186,7 +186,49 @@ def main() -> None:
             fc = sum(x["full"][m][1] for x in xs) / len(xs)
             L.append(f"| `{m}` | {g} | {rc:.5f} | {fu:.5f} | {fc:.5f} | {rc / fc if fc else float('nan'):.2f} | "
                      f"pending key |")
-    L += ["", "## 4. Assumptions behind ESTIMATED numbers", "",
+    L += ["", "Per-group cached numbers depend on question order: in the dataset the text questions come first "
+          "on each page and absorb the cache write. Only the `all` rows, and section 4, are order-fair.", ""]
+
+    # ---- 4. cumulative cost vs. questions asked per page, averaged over random question orders -------------
+    import random
+
+    rng = random.Random(0)
+    by_img: dict[str, list[dict]] = defaultdict(list)
+    for x in rows:
+        by_img[x["it"].image_id].append(x)
+    pairs = [(m, m) for m in a.models] + [(a.models[-1], a.models[0])]  # same model; cheap router vs. strong page
+    ks = sorted({1, 2, 3, max(len(v) for v in by_img.values())})
+    L += ["## 4. Cost per page vs. number of questions asked (ESTIMATED, order-averaged)", "",
+          "Mean cumulative $ per page when a handler asks k random questions about it (200 random orders per "
+          "page, seed 0). Cached full page: cache write on the first question, reads after. The router does not "
+          "cache its overview here, which slightly favours the baseline.", "",
+          "| router model | full-page model | " + " | ".join(f"k={k}: router / full / cached" for k in ks) + " |",
+          "|---|---|" + "---:|" * len(ks)]
+    for rm, fm in pairs:
+        acc = {k: [0.0, 0.0, 0.0, 0] for k in ks}
+        for xs in by_img.values():
+            for _ in range(200):
+                order = rng.sample(xs, len(xs))
+                for k in ks:
+                    if k > len(order):
+                        continue
+                    sub = order[:k]
+                    tok_img = imgs[sub[0]["it"].image_path]
+                    cached = sum(full_image_usage(tok_img, x["it"], fm, i, True).cost_usd for i, x in enumerate(sub))
+                    acc[k][0] += sum(x["router_cost"][rm] for x in sub)
+                    acc[k][1] += sum(x["full"][fm][0] for x in sub)
+                    acc[k][2] += cached
+                    acc[k][3] += 1
+        cells = []
+        for k in ks:
+            r_, f_, c_, n_ = acc[k]
+            cells.append(f"{r_ / n_:.4f} / {f_ / n_:.4f} / {c_ / n_:.4f}" if n_ else "–")
+        L.append(f"| `{rm}` | `{fm}` | " + " | ".join(cells) + " |")
+    L += ["", "Reading: the router beats the cached page when few questions are asked per page or when OCR answers "
+          "many of them; the cheap-router / strong-page row is the frugality claim **only if** the cheap model's "
+          "accuracy on crops holds, which only a paid run can show.", ""]
+
+    L += ["## 5. Assumptions behind ESTIMATED numbers", "",
           "- Image tokens ≈ w·h/750 after downscaling to ≤1568 px long side and ≤1.15 MP (`app/costs.py`). "
           "Not yet checked against a provider: `eval/billing_probe.py` measures it once a key exists.",
           "- Output 40 tokens per call; text tokens ≈ characters/4. **Thinking tokens are ignored.** Opus 5.5 "
