@@ -42,33 +42,71 @@ def _squash(text):
     return re.sub(r"\s+", "", text.lower())
 
 
-def locate(spans, field, side):
-    headers = {}
-    for key in "ab":
-        hits = [s for s in spans if _squash(s["text"]) == "vehicle" + key and s["confidence"] >= .8]
-        if len(hits) != 1:
-            return None
-        headers[key] = hits[0]["box"]
-    left, right = headers["a"], headers["b"]
-    if left[2] >= right[0]:
-        return None
+# Label wordings seen on accident-statement layouts (generic synonyms, not tied to one rendering).
+LABELS = {
+    "policy": ("policy no.", "policy no", "policy number", "policy"),
+    "registration": ("registration", "registration number", "registration plate", "registration no.",
+                     "licence plate", "license plate", "number plate", "plate"),
+    "insurer": ("insurer", "insurance company", "insurance", "insured by"),
+    "driver": ("driver", "driver name", "driver's name", "name of driver", "driver (name)"),
+}
+# Characters Vision confuses (digit vs letter). An ID segment that mixes letters and digits AND contains one
+# of these cannot be read safely (held-out v2: "JI-9779-2542" read as "J1-9779-2542"): defer to the model.
+AMBIGUOUS = set("01IOlSB5Z28")
+
+
+def ambiguous_id(text):
+    for seg in re.split(r"[\s\-/.]+", text):
+        if any(c.isalpha() for c in seg) and any(c.isdigit() for c in seg) and AMBIGUOUS & set(seg):
+            return True
+    return False
+
+
+def _label_key(text):
+    return re.sub(r"\s+", " ", text.lower().strip().rstrip(":").strip())
+
+
+def header_pairs(spans):
+    """Same-height ("Vehicle A", "Vehicle B") header pairs, top first. Layouts may repeat the headers
+    (e.g. above the circumstances table); every pair is tried, ambiguity is resolved by the field search."""
+    hs = {k: [s["box"] for s in spans if _squash(s["text"]) == "vehicle" + k and s["confidence"] >= .8]
+          for k in "ab"}
+    pairs = []
+    for a in hs["a"]:
+        for b in hs["b"]:
+            if a[2] < b[0] and abs((a[1] + a[3]) / 2 - (b[1] + b[3]) / 2) < .03 + .15 * (b[0] - a[2]):
+                pairs.append((a, b))
+    return sorted(pairs, key=lambda p: p[0][1])
+
+
+def _locate_with(spans, field, side, left, right):
     delta_x = (right[0] + right[2] - left[0] - left[2]) / 2
     slope = (right[1] + right[3] - left[1] - left[3]) / (2 * delta_x)
     if abs(slope) > .15:
         return None
+
     def row_bounds(box):
         # Compare heights along the header baseline; evidence stays in original coordinates.
         shift = slope * (box[0] + box[2]) / 2
         return box[1] - shift, box[3] - shift
 
+    header = left if side == "a" else right
     # Labels align with the vehicle headers. The right header starts column B.
     cut = right[0] - .015
     column = [s for s in spans if (s["box"][0] < cut) == (side == "a")
-              and row_bounds(s["box"])[0] >= row_bounds(headers[side])[1]]
-    labels = {"policy": ("policy no.", "policy number"), "registration": ("registration",),
-              "insurer": ("insurer",), "driver": ("driver",)}
-    matches = [s for s in column if s["text"].lower().strip().rstrip(":") in labels[field]]
-    if len(matches) != 1 or matches[0]["confidence"] < .8:
+              and row_bounds(s["box"])[0] >= row_bounds(header)[1]]
+    wanted = LABELS[field]
+    matches = [s for s in column if _label_key(s["text"]) in wanted]
+    inline = [s for s in column if ":" in s["text"] and _label_key(s["text"].split(":", 1)[0]) in wanted
+              and s["text"].split(":", 1)[1].strip()]
+    if len(matches) + len(inline) != 1:
+        return None
+    if inline:  # "Policy number: AB-1234-5678" recognised as one span
+        s = inline[0]
+        if s["confidence"] < .8:
+            return None
+        return {**s, "text": s["text"].split(":", 1)[1].strip()}
+    if matches[0]["confidence"] < .8:
         return None
     label = matches[0]["box"]
     top, bottom = row_bounds(label)
@@ -79,6 +117,17 @@ def locate(spans, field, side):
         if span["box"][0] > label[2] and overlap > .4 * (bottom - top):
             values.append(span)
     return values[0] if len(values) == 1 and values[0]["confidence"] >= .8 else None
+
+
+def locate(spans, field, side):
+    """Value span for `field` of vehicle `side`, or None. Tries every header pair; answers only if exactly
+    one distinct value is found (two pairs disagreeing = ambiguous = None)."""
+    found = {}
+    for left, right in header_pairs(spans):
+        v = _locate_with(spans, field, side, left, right)
+        if v is not None:
+            found[v["text"]] = v
+    return next(iter(found.values())) if len(found) == 1 else None
 
 
 # Each worker keeps recent recognition results in memory. Cache spans, never page images.
@@ -130,6 +179,8 @@ def answer(image, question):
                     response = span["text"]
                     if field[0] in ("policy", "registration"):
                         response = clean_id(response)
+                        if response and ambiguous_id(response):
+                            response = None  # e.g. "J1-…" for "JI-…": cannot be read safely
                         span = span if response else None
             else:
                 # Require readable values in both columns to establish uniqueness.
