@@ -32,12 +32,59 @@ def load_items(path: Path) -> list[EvalItem]:
 
 
 def get_pipeline(name: str):
+    """Harness name | parametrized name | name@model | cascade:<a>|<b> | fn:<module>:<attr> | <module>:<factory>."""
+    from .pipelines.compose import cascade, resolve_fn
+
+    if name.startswith("cascade:"):
+        first, _, then = name[len("cascade:"):].partition("|")
+        return cascade(_part(first), _part(then), name)
+    if name.startswith("fn:"):
+        return resolve_fn(name[3:])
+    base, _, model = name.partition("@")
+    if model:
+        return with_model(base, model)
     if name in REGISTRY:
         return REGISTRY[name]()
     if (p := parse_name(name)) is not None:
         return p
     mod, _, fn = name.partition(":")
     return getattr(importlib.import_module(mod), fn)()
+
+
+def _part(spec: str):
+    """Cascade member: a harness name if it resolves, else an app-style answer function module:attr."""
+    from .pipelines.compose import resolve_fn
+
+    base = spec.partition("@")[0]
+    if base in REGISTRY or parse_name(base) is not None:
+        return get_pipeline(spec)
+    return resolve_fn(spec)
+
+
+def with_model(base: str, model: str):
+    """`full_image@claude-haiku-5-5`, `gold_crop_px:384@claude-sonnet-5-5`, ...: same control, other model."""
+    from .pipelines import baselines as b
+
+    parts = base.split(":")
+    table = {
+        "full_image": lambda: b.full_image(cache=False, model=model),
+        "full_image_cached": lambda: b.full_image(cache=True, model=model),
+        "gold_crop": lambda: b.gold_crop(0.05, model=model),
+        "gold_crop_tight": lambda: b.gold_crop(0.0, model=model),
+        "lowres": lambda: b.lowres(int(parts[1]), model=model),
+        "gold_crop_px": lambda: b.gold_crop_px(int(parts[1]), model=model),
+        "overview_gold": lambda: b.overview_plus_gold_crop(int(parts[1]), int(parts[2]), model=model),
+    }
+    p = _rename(table[parts[0]](), f"{base}@{model}")
+    return p
+
+
+def _rename(pipe, name: str):
+    def run(item, img):
+        r = pipe(item, img)
+        r.pipeline = name
+        return r
+    return run
 
 
 def git_commit() -> str:

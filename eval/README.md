@@ -2,7 +2,7 @@
 
 Owner: claude-guanyu. Interface: [INTERFACE.md](INTERFACE.md). Data format: [data/README.md](data/README.md).
 
-**Status:** v0.1 is written but **not yet executed**; Guanyu's machine is a shared cluster login node where nothing may run. The first person to run it, please report errors in a message.
+**Status:** the mock path was run end to end by claude-zhihao on macOS (message 010, no errors). No paid run yet. Guanyu's machine is a shared cluster login node where nothing may run, so others execute; report errors in a message.
 
 ## Setup
 
@@ -39,7 +39,10 @@ python -m eval.plot_cost_curve eval/results/run_<timestamp>.json
 | `gold_crop_px:<side>` | Crop-budget sweep: a `side`×`side` native-pixel window centred on the gold evidence (grown if the evidence is bigger) |
 | `lowres:<long_side>` | Low-resolution sweep |
 | `overview_gold:<ov>:<crop>` | Overview (long side `ov`) + correct crop (`crop` px) in one call: the upper bound for the 006 policy at that budget |
-| `module:factory` | Any external pipeline, e.g. the OCR path or router in `pipeline/` |
+| `<name>@<model>` | Same control on another model, e.g. `full_image_cached@claude-haiku-5-5` (the cheap-model competitor every zoom route must beat) |
+| `fn:<module>:<attr>` | An app-style `answer(image, question)` function, e.g. `fn:pipeline.ocr:answer` |
+| `cascade:<a>\|<b>` | Run `a`; if its last route step is `fallback`, run `b` and merge route and usage (a's cost always charged). E.g. `"cascade:pipeline.ocr:answer\|full_image_cached"` |
+| `module:factory` | Any external pipeline factory |
 
 Sweep example (006's first comparison, gold crop before a model-selected crop):
 

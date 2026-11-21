@@ -23,7 +23,10 @@ CACHE_READ_MULT = 0.10
 
 
 def cost_usd(u: Usage) -> float:
-    """Cost of one call. Unknown models return 0.0 and mark the record as estimated."""
+    """Cost of one call. Local calls cost $0 (latency still counts). Unknown API models return 0.0 and are
+    marked as estimated."""
+    if u.provider == "local":
+        return 0.0
     if u.model not in PRICES:
         u.estimated = True
         u.note = (u.note or "") + f" [no price for {u.model}]"
