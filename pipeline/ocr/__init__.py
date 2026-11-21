@@ -52,16 +52,16 @@ def locate(spans, field, side):
     # Labels align with the vehicle headers. The right header starts column B.
     cut = right[0] - .015
     column = [s for s in spans if (s["box"][0] < cut) == (side == "a")
-              and s["box"][1] >= headers[side][3] and s["confidence"] >= .8]
+              and s["box"][1] >= headers[side][3]]
     labels = {"policy": ("policy no.", "policy number"), "registration": ("registration",),
               "insurer": ("insurer",), "driver": ("driver",)}
     matches = [s for s in column if s["text"].lower().strip().rstrip(":") in labels[field]]
-    if len(matches) != 1:
+    if len(matches) != 1 or matches[0]["confidence"] < .8:
         return None
     label = matches[0]["box"]
     values = [s for s in column if s["box"][0] > label[2]
               and min(label[3], s["box"][3]) - max(label[1], s["box"][1]) > .4 * (label[3]-label[1])]
-    return values[0] if len(values) == 1 else None
+    return values[0] if len(values) == 1 and values[0]["confidence"] >= .8 else None
 
 
 def answer(image, question):
