@@ -160,7 +160,7 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
                       name="pixels")
     # 4. the band was not enough: one more look, at the whole page (a band can miss a drawing far from its labels)
     if res.abstained and not res.error and rows != [(0.0, 1.0)]:
-        res.route.append(RouteStep("fallback", target="image", note="not found in the band; whole page"))
+        res.route.append(RouteStep("fallback", target="image", note="band crop was not enough; one look at the whole page"))
         res = zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=res, model=model,
                           look_for=look_for or "the evidence for the question", target="full page", call=call,
                           name="page")
