@@ -7,6 +7,8 @@ let answers = [];           // [{result, baseline, source, views}]
 let active = -1;
 let totals = { ours: 0, cached: 0, full: 0 };
 let pair = null, side = "a";
+const sessions = {};        // fixture id -> {image, answers, totals, active, chat (DOM nodes)}
+const pairAnswers = {};     // pair_id -> question -> {a: answer, b: answer}
 
 const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const usd = (x) => `$${x.toFixed(x < 0.01 ? 4 : 3)}`;
@@ -31,7 +33,8 @@ async function init() {
     const o = document.createElement("option");
     o.value = p.pair_id;
     const what = (p.forms.find((f) => f.note && f.note.includes("counterfactual")) || {}).note || "";
-    o.textContent = p.pair_id === "demo" ? "demo form" : `${p.pair_id}${what ? " · b: " + what.split(": ").pop() : ""}`;
+    const diff = what.includes("tick") ? "B's ticks differ" : what.includes("sketch") ? "the sketch differs" : "";
+    o.textContent = p.pair_id === "demo" ? "demo form" : `${p.pair_id}${diff ? " · pair: " + diff : ""}`;
     $("pair").append(o);
   }
 }
@@ -55,14 +58,39 @@ function currentForm() {
   return pair.forms.find((f) => f.fixture.endsWith(side)) || pair.forms[0];
 }
 
+function saveSession() {
+  if (!image || !image.fixture) return;
+  sessions[image.fixture] = { image, answers, totals, active, chat: [...$("chat").childNodes] };
+}
+
 async function loadFixture() {
   const f = currentForm(); if (!f) return;
-  $("formnote").hidden = !f.note;
-  $("formnote").textContent = f.note ? `${f.fixture}: ${f.note}` : "";
+  saveSession();
+  const saved = sessions[f.fixture];
+  if (saved) {  // restore this form's conversation instead of starting over
+    ({ image, answers, totals, active } = saved);
+    img.src = image.url;
+    $("chat").replaceChildren(...saved.chat);
+    updateMeter(); setSuggestions(); showPairSummary(); draw();
+    return;
+  }
   await loadImage(await fetch(`/api/images/fixture/${f.fixture}`, { method: "POST" }));
+  showPairSummary();
+}
+
+function showPairSummary() {
+  const note = $("formnote");
+  if (!pair || pair.forms.length < 2) { note.hidden = true; return; }
+  const rows = Object.entries(pairAnswers[pair.pair_id] || {})
+    .filter(([, v]) => "a" in v && "b" in v)
+    .map(([q, v]) => `${q.replace(/ Answer .*$/, "")}  a: ${v.a ?? "—"} · b: ${v.b ?? "—"}`);
+  note.hidden = false;
+  note.textContent = `Showing form ${side} of pair ${pair.pair_id}. ` +
+    (rows.length ? rows.join("  |  ") : "Ask the same question on form a and form b to compare.");
 }
 
 $("pair").onchange = () => {
+  saveSession();
   pair = cfg.pairs.find((p) => p.pair_id === $("pair").value) || null;
   side = "a";
   $("ab").hidden = !pair || pair.forms.length < 2;
@@ -76,6 +104,7 @@ document.querySelectorAll("#ab button").forEach((b) => b.onclick = () => {
 });
 $("file").onchange = async (e) => {
   const f = e.target.files[0]; if (!f) return;
+  saveSession();
   pair = null; $("pair").value = ""; $("ab").hidden = true; $("formnote").hidden = true;
   const fd = new FormData(); fd.append("file", f);
   loadImage(await fetch("/api/images", { method: "POST", body: fd }));
@@ -109,6 +138,11 @@ $("ask").onsubmit = async (e) => {
     const ours = data.result.usage.reduce((s, u) => s + (u.cost_usd || 0), 0);
     totals.ours += ours; totals.cached += data.baseline.cached_usd; totals.full += data.baseline.uncached_usd;
     addA(data, answers.length - 1, ours);
+    if (pair && image.fixture) {
+      const pa = (pairAnswers[pair.pair_id] ||= {});
+      (pa[q] ||= {})[image.fixture.endsWith("b") ? "b" : "a"] = data.result.answer;
+      showPairSummary();
+    }
     select(answers.length - 1);
     updateMeter();
   } catch (err) {
@@ -179,9 +213,9 @@ function updateMeter() {
     $(`v-${k}`).textContent = usd(totals[k]);
   }
   const n = answers.length;
+  const pct = (x) => { const v = (1 - totals.ours / x) * 100; return `${v >= 0 ? "−" : "+"}${Math.abs(v).toFixed(0)}%`; };
   $("meter-foot").textContent = n ? `${n} question${n > 1 ? "s" : ""} on this image · ` +
-    `${((1 - totals.ours / totals.full) * 100).toFixed(0)}% vs full page, ` +
-    `${((1 - totals.ours / totals.cached) * 100).toFixed(0)}% vs cached (estimates)` : "0 questions";
+    `${pct(totals.full)} cost vs full page, ${pct(totals.cached)} vs cached page (estimates)` : "0 questions";
 }
 
 function draw() {

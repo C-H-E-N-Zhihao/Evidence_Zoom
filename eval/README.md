@@ -21,7 +21,7 @@ export OPENROUTER_API_KEY=...       # AXA's $10 credit; or ANTHROPIC_API_KEY; ne
 
 Set one default for a whole run with `EVAL_MODEL=or:…`, or per pipeline with `<name>@<model>`. The aim is to compare models on cost, e.g. a cheap model on a crop against a strong model on the full page. The billing probe currently supports Anthropic only; on other backends, read the image tokens from the first real calls.
 
-Run everything from the repo root (`python -m eval.<module>`).
+Run everything from the repo root (`python -m eval.<module>`). Offline unit checks: `python -m eval.selftest` ($0).
 
 ## 1. Billing check first (free)
 
