@@ -94,6 +94,25 @@ def git_commit() -> str:
         return "unknown"
 
 
+# Matched against fallback notes. Normal OCR fallbacks ("Visual inspection required") and the intended
+# ROUTER_SKIP_OCR ablation ("OCR skipped") do not match.
+_DEGRADED_MARKERS = ("unavailable", "raised", "not found", "credentials")
+
+
+def degraded(r: PipelineResult) -> str | None:
+    """Why a result should not count as a clean measurement, or None.
+
+    Errors (except refusals) and stages that silently fell back because a component was missing (e.g. the OCR
+    helper not built: the router then sends every item to the paid visual path, message 019).
+    """
+    if r.error and r.error != "refusal":
+        return r.error[:80]
+    for s in r.route:
+        if s.step == "fallback" and s.note and any(m in s.note.lower() for m in _DEGRADED_MARKERS):
+            return f"fallback: {s.note[:80]}"
+    return None
+
+
 def main() -> None:
     from .reliance import pair_follow_rate  # local import: reliance imports this module
     ap = argparse.ArgumentParser()
@@ -102,6 +121,9 @@ def main() -> None:
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--max-cost", type=float, default=1.0, help="USD cap for this invocation")
     ap.add_argument("--out", default="eval/results")
+    ap.add_argument("--max-error-rate", type=float, default=0.2,
+                    help="abort a pipeline when more than this fraction of its results errored or degraded")
+    ap.add_argument("--warmup", type=int, default=8, help="results before the error-rate check applies")
     a = ap.parse_args()
 
     items = load_items(Path(a.items))[: a.limit]
@@ -109,29 +131,47 @@ def main() -> None:
     for it in items:
         by_img[it.image_id].append(it)
 
-    spent, report = 0.0, {}
+    spent, report, budget_hit = 0.0, {}, False
     for pname in a.pipelines:
+        if budget_hit:
+            break
         pipe = get_pipeline(pname)
         pairs: list[tuple[EvalItem, PipelineResult]] = []
+        n_bad, aborted = 0, None
         for img_id, its in by_img.items():
             img = Image.open(its[0].image_path).convert("RGB")
             for it in its:
                 if spent >= a.max_cost:
                     print(f"[stop] max cost ${a.max_cost:.2f} reached")
+                    budget_hit = True
                     break
                 r = pipe(it, img)
                 spent += r.total_cost()
                 pairs.append((it, r))
-                print(f"{pname:>18} {it.question_id:>10} ok={r.answer!r:.40} cost=${r.total_cost():.4f} err={r.error}")
+                bad = degraded(r)
+                n_bad += bool(bad)
+                print(f"{pname:>18} {it.question_id:>10} ok={r.answer!r:.40} cost=${r.total_cost():.4f} "
+                      f"err={r.error}{' DEGRADED: ' + bad if bad else ''}")
+                if len(pairs) >= a.warmup and n_bad / len(pairs) > a.max_error_rate:
+                    aborted = (f"{n_bad}/{len(pairs)} results errored or degraded (> {a.max_error_rate:.0%}); "
+                               "stopped so a broken stage does not produce a misleading cost number")
+                    print(f"[abort {pname}] {aborted}")
+                    break
+            if budget_hit or aborted:
+                break
         report[pname] = {
             "summary": summarize(pairs),
             "cost_curve": cost_curve(pairs),
             "pair_follow_rate": pair_follow_rate(pairs),
+            "degraded": n_bad,
+            "aborted": aborted,
+            "complete": len(pairs) == len(items),
             "results": [r.to_dict() for _, r in pairs],
         }
 
     meta = {"commit": git_commit(), "items": a.items, "n_items": len(items), "pipelines": a.pipelines,
-            "spent_usd": spent, "time": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
+            "spent_usd": spent, "budget_hit": budget_hit, "max_error_rate": a.max_error_rate,
+            "time": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
     out = Path(a.out) / f"run_{time.strftime('%Y%m%d-%H%M%S')}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({"meta": meta, "report": report}, indent=2))

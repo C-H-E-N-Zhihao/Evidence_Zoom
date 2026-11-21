@@ -28,6 +28,9 @@ def table(run: dict) -> str:
         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for name, rep in run["report"].items():
+        if rep.get("aborted") or not rep.get("complete", True):
+            lines.insert(2, f"> **`{name}` is not a clean measurement:** "
+                            f"{rep.get('aborted') or 'incomplete (budget cap)'}; degraded results: {rep.get('degraded', '?')}.\n")
         for g in GROUPS:
             s = rep["summary"].get(g)
             if not s or not s["n"]:
