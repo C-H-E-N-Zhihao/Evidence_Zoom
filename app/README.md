@@ -23,3 +23,22 @@ per answer, route chips (ocr → overview → zoom B3 → answer), and a session
 meter comparing Evidence Zoom with full-image (cached / uncached).
 
 All prices and image-token counts in `app/costs.py` are unverified estimates.
+
+## Key-free judge rehearsal
+
+```bash
+./scripts/demo.sh            # http://localhost:8000 ; first run creates .venv and installs deps
+```
+
+Runs `PIPELINE=pipeline.router DEMO_REPLAY=1`. Pick a fixture pair (`eas-002` / `eas-006`: B's tick moves
+between form a and b; `eas-005`: a tick is added; others swap the sketch roles) and click the suggested
+questions. Every answer carries a source badge:
+
+- **LIVE OCR**: answered on this machine by Apple Vision OCR (macOS), $0, evidence box from the OCR span.
+- **REPLAY**: the real router → overview → zoom → box-mapping code runs; only the vision-model replies are
+  replayed from the fixture's gold labels (`pipeline/visual/replay.py`). The images actually sent at each
+  step are shown under the answer (overview with grid, row-aligned mosaic crop). Tokens and cost are estimates.
+- **NO ANSWER**: a stage was unavailable (e.g. a question with no fixture label); nothing is invented.
+
+Rehearsal check: on `eas-002`, "Which circumstance boxes did driver B tick?" answers 8 on form a and 7 on
+form b, with the box on the right row of the original page; the policy-number question is LIVE OCR on both.

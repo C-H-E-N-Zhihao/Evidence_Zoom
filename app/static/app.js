@@ -1,17 +1,45 @@
 const $ = (id) => document.getElementById(id);
 const img = $("img"), canvas = $("overlay"), ctx = canvas.getContext("2d");
 const ROWS = 8, COLS = 6;  // must match pipeline.visual default grid
-let image = null;           // {image_id, width, height, url}
-let answers = [];           // [{result, baseline}]
+let cfg = { pairs: [], replay: false };
+let image = null;           // {image_id, width, height, url, fixture}
+let answers = [];           // [{result, baseline, source, views}]
 let active = -1;
 let totals = { ours: 0, cached: 0, full: 0 };
+let pair = null, side = "a";
 
 const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const usd = (x) => `$${x.toFixed(x < 0.01 ? 4 : 3)}`;
+const SOURCE = {
+  ocr: ["LIVE OCR", "Answered on this machine by Apple Vision OCR. $0, no model call."],
+  replay: ["REPLAY", "Visual route replayed from fixture labels to show the mechanism. Not a model answer; tokens and cost are estimates of what a model call would use."],
+  model: ["MODEL", "Answered by a vision model call."],
+  mock: ["MOCK", "Fake answer from the mock pipeline."],
+  unavailable: ["NO ANSWER", "A pipeline stage was unavailable (e.g. no fixture replay or no API key); nothing was invented."],
+};
+
+async function init() {
+  cfg = await (await fetch("/api/config")).json();
+  $("pipeline").textContent = `pipeline: ${cfg.pipeline}`;
+  if (cfg.replay) {
+    $("banner").hidden = false;
+    $("banner").innerHTML = "<b>Key-free rehearsal.</b> <span class='src ocr'>LIVE OCR</span> answers are real " +
+      "(local OCR, $0). <span class='src replay'>REPLAY</span> answers replay the fixture's gold labels through the real " +
+      "overview → zoom → mapping code, to show <i>which pixels</i> a model would inspect. They are not model output, and their costs are estimates.";
+  }
+  for (const p of cfg.pairs) {
+    const o = document.createElement("option");
+    o.value = p.pair_id;
+    const what = (p.forms.find((f) => f.note && f.note.includes("counterfactual")) || {}).note || "";
+    o.textContent = p.pair_id === "demo" ? "demo form" : `${p.pair_id}${what ? " · b: " + what.split(": ").pop() : ""}`;
+    $("pair").append(o);
+  }
+}
 
 async function loadImage(resp) {
-  image = await resp.json();
-  if (!resp.ok) { alert(image.detail || "upload failed"); image = null; return; }
+  const data = await resp.json();
+  if (!resp.ok) { alert(data.detail || "load failed"); return; }
+  image = data;
   img.src = image.url;
   img.style.display = "block";
   $("empty").style.display = "none";
@@ -19,20 +47,53 @@ async function loadImage(resp) {
   answers = []; active = -1; totals = { ours: 0, cached: 0, full: 0 };
   $("chat").innerHTML = "";
   updateMeter();
+  setSuggestions();
 }
 
+function currentForm() {
+  if (!pair) return null;
+  return pair.forms.find((f) => f.fixture.endsWith(side)) || pair.forms[0];
+}
+
+async function loadFixture() {
+  const f = currentForm(); if (!f) return;
+  $("formnote").hidden = !f.note;
+  $("formnote").textContent = f.note ? `${f.fixture}: ${f.note}` : "";
+  await loadImage(await fetch(`/api/images/fixture/${f.fixture}`, { method: "POST" }));
+}
+
+$("pair").onchange = () => {
+  pair = cfg.pairs.find((p) => p.pair_id === $("pair").value) || null;
+  side = "a";
+  $("ab").hidden = !pair || pair.forms.length < 2;
+  document.querySelectorAll("#ab button").forEach((b) => b.classList.toggle("on", b.dataset.k === side));
+  loadFixture();
+};
+document.querySelectorAll("#ab button").forEach((b) => b.onclick = () => {
+  side = b.dataset.k;
+  document.querySelectorAll("#ab button").forEach((x) => x.classList.toggle("on", x === b));
+  loadFixture();
+});
 $("file").onchange = async (e) => {
   const f = e.target.files[0]; if (!f) return;
+  pair = null; $("pair").value = ""; $("ab").hidden = true; $("formnote").hidden = true;
   const fd = new FormData(); fd.append("file", f);
   loadImage(await fetch("/api/images", { method: "POST", body: fd }));
 };
-$("sample").onclick = async () => loadImage(await fetch("/api/images/sample", { method: "POST" }));
 $("showGrid").onchange = draw;
 img.onload = draw;
 window.onresize = draw;
 
-document.querySelectorAll("#suggest button").forEach((b) =>
-  b.onclick = () => { if (image) { $("q").value = b.textContent; $("ask").requestSubmit(); } });
+function setSuggestions() {
+  const box = $("suggest"); box.innerHTML = "";
+  const f = currentForm();
+  const qs = f ? f.questions : [];
+  for (const q of qs) {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = q;
+    b.onclick = () => { $("q").value = q; $("ask").requestSubmit(); };
+    box.append(b);
+  }
+}
 
 $("ask").onsubmit = async (e) => {
   e.preventDefault();
@@ -44,7 +105,6 @@ $("ask").onsubmit = async (e) => {
       body: JSON.stringify({ image_id: image.image_id, question: q }) });
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || r.status);
-    $("pipeline").textContent = `pipeline: ${data.pipeline}`;
     answers.push(data);
     const ours = data.result.usage.reduce((s, u) => s + (u.cost_usd || 0), 0);
     totals.ours += ours; totals.cached += data.baseline.cached_usd; totals.full += data.baseline.uncached_usd;
@@ -65,23 +125,42 @@ function addError(t) {
   $("chat").append(d);
 }
 function addA(data, i, ours) {
-  const { result, baseline } = data;
+  const { result, baseline, source, views } = data;
   const d = document.createElement("div"); d.className = "msg-a";
-  const ans = document.createElement("div"); ans.className = "ans";
-  ans.textContent = result.abstained ? "Cannot answer from the available evidence." : result.answer;
+  const head = document.createElement("div"); head.className = "ans";
+  const [label, tip] = SOURCE[source] || [source, ""];
+  const src = document.createElement("span"); src.className = `src ${source}`; src.textContent = label; src.title = tip;
+  const txt = document.createElement("span");
+  txt.textContent = result.abstained
+    ? (result.error ? "No answer: " + result.error : "Cannot answer from the available evidence.")
+    : result.answer;
+  head.append(src, txt);
   const route = document.createElement("div"); route.className = "route";
   result.route.forEach((s, k) => {
     if (k) route.insertAdjacentHTML("beforeend", '<span class="arrow">→</span>');
     const c = document.createElement("span"); c.className = `chip ${s.step}`;
-    c.textContent = s.target ? `${s.step} ${s.target}` : s.step; c.title = s.note || "";
+    c.textContent = s.target ? `${s.step} ${s.target.length > 18 ? s.target.slice(0, 18) + "…" : s.target}` : s.step;
+    c.title = [s.target, s.note].filter(Boolean).join(" · ");
     route.append(c);
   });
   const imgTok = result.usage.reduce((s, u) => s + (u.input_image_tokens || 0), 0);
   const save = baseline.uncached_usd > 0 ? (1 - ours / baseline.uncached_usd) * 100 : 0;
+  const est = result.usage.some((u) => u.estimated) ? " (est.)" : "";
   const cost = document.createElement("div"); cost.className = "cost";
-  cost.innerHTML = `${usd(ours)} · ${imgTok} img tok vs full ${baseline.image_tokens} ` +
-    `· <span class="save">${save >= 0 ? "−" : "+"}${Math.abs(save).toFixed(0)}%</span>`;
-  d.append(ans, route, cost);
+  cost.innerHTML = `${usd(ours)}${est} · ${imgTok} img tok vs full page ${baseline.image_tokens} ` +
+    `· <span class="save">${save >= 0 ? "−" : "+"}${Math.abs(save).toFixed(0)}%</span> vs uncached full page`;
+  d.append(head, route, cost);
+  if (views && views.length) {
+    const strip = document.createElement("div"); strip.className = "views";
+    for (const v of views) {
+      const fig = document.createElement("figure");
+      const im = document.createElement("img"); im.src = v.data_url; im.alt = v.step;
+      im.onclick = (ev) => { ev.stopPropagation(); window.open().document.write(`<img src="${v.data_url}">`); };
+      const cap = document.createElement("figcaption"); cap.textContent = `${v.step} · ${v.px[0]}×${v.px[1]}px sent`;
+      fig.append(im, cap); strip.append(fig);
+    }
+    d.append(strip);
+  }
   d.onclick = () => select(i);
   d.dataset.i = i;
   $("chat").append(d); d.scrollIntoView({ block: "end" });
@@ -100,8 +179,8 @@ function updateMeter() {
   }
   const n = answers.length;
   $("meter-foot").textContent = n ? `${n} question${n > 1 ? "s" : ""} on this image · ` +
-    `${((1 - totals.ours / totals.full) * 100).toFixed(0)}% cheaper than full image, ` +
-    `${((1 - totals.ours / totals.cached) * 100).toFixed(0)}% vs cached` : "0 questions";
+    `${((1 - totals.ours / totals.full) * 100).toFixed(0)}% vs full page, ` +
+    `${((1 - totals.ours / totals.cached) * 100).toFixed(0)}% vs cached (estimates)` : "0 questions";
 }
 
 function draw() {
@@ -125,19 +204,15 @@ function draw() {
     for (let rr = 1; rr < ROWS; rr++) ctx.fillText(`R${rr + 1}`, 3, rr * H / ROWS + 12);
   }
   if (!res) return;
-  // dim everything except the zoomed cells
-  const cells = res.route.filter((s) => s.step === "zoom" && s.box);
-  if (cells.length) {
-    ctx.fillStyle = "rgba(0,0,0,.18)"; ctx.beginPath(); ctx.rect(0, 0, W, H);
-    cells.forEach(({ box: b }) => ctx.rect(b[2] * W, b[1] * H, (b[0] - b[2]) * W, (b[3] - b[1]) * H));
-    ctx.fill("evenodd");
-    ctx.setLineDash([6, 4]); ctx.lineWidth = 2; ctx.strokeStyle = css("--cell");
-    cells.forEach(({ box: b }) => ctx.strokeRect(b[0] * W, b[1] * H, (b[2] - b[0]) * W, (b[3] - b[1]) * H));
-    ctx.setLineDash([]);
-  }
+  const zooms = res.route.filter((s) => s.step === "zoom" && s.box);
+  ctx.setLineDash([6, 4]); ctx.lineWidth = 2; ctx.strokeStyle = css("--cell");
+  zooms.forEach(({ box: b }) => ctx.strokeRect(b[0] * W, b[1] * H, (b[2] - b[0]) * W, (b[3] - b[1]) * H));
+  ctx.setLineDash([]);
   res.evidence_boxes.forEach((e) => {
     const [x0, y0, x1, y1] = e.box;
     ctx.lineWidth = 3; ctx.strokeStyle = e.source === "ocr" ? css("--ocr") : css("--zoom");
-    ctx.strokeRect(x0 * W, y0 * H, (x1 - x0) * W, (y1 - y0) * H);
+    ctx.strokeRect(x0 * W - 2, y0 * H - 2, (x1 - x0) * W + 4, (y1 - y0) * H + 4);
   });
 }
+
+init();

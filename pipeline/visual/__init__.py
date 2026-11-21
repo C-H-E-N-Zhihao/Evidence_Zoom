@@ -34,6 +34,7 @@ Region = tuple[float, float, float, float]  # normalized on the ORIGINAL image
 # Model strings follow eval/backends: "claude-…" (Anthropic), "or:<id>" (OpenRouter), "local:<id>" (vLLM on RCP).
 DEFAULT_MODEL = os.environ.get("EVAL_MODEL", "claude-opus-5-5")
 CALL_OVERRIDE: Optional[Callable] = None  # tests only: replaces the backend when `call` is not given
+VIEW_SINK: Optional[Callable] = None      # app: called as VIEW_SINK(step, image_sent) for display
 
 _FORMAT = (
     'Reply with ONE JSON object and nothing else, either\n'
@@ -271,6 +272,8 @@ def answer(
     def ask(view_img: Image.Image, system: str, text: str, model: str, step: str, target, box, note=""):
         res.route.append(RouteStep(step=step, target=target, box=[round(v, 4) for v in box],
                                    note=f"{view_img.width}x{view_img.height}px to {model}{note}"))
+        if VIEW_SINK is not None:
+            VIEW_SINK(step, view_img)
         try:
             image_block, call_fn, model_arg = backend(model)
             reply, usage, stop = call_fn([image_block(view_img), {"type": "text", "text": text}],
