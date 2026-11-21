@@ -127,7 +127,7 @@ Billed results, Haiku on both arms:
 - **Development sheets** (`REPORT_homework_general.md`): route 79/80 at $0.0003 per question; whole page 80/80 at $0.0005.
 - **Held-out sheets** (`REPORT_homework_v2_heldout.md`, written blind by a subagent): route 83/96, whole page 94/96.
   - The route's crop missed graphs and marks that sit *above* the lines the model pointed to.
-  - Say: "text questions are answered from OCR with no image at about 40% of the cost".
+  - On the 44 text questions (including 12 unanswerable), the route sent no image on 40. It scored 41/44 for $0.0098 across all 44. The whole-page model scored 42/44 for $0.0215.
   - Do not say: "same accuracy as the whole page".
 
 There is no replay for homework questions, so this needs `./scripts/demo-live.sh` or `./scripts/demo-local.sh`.
