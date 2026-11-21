@@ -15,3 +15,5 @@ fi
 # layout 3 fresh forms (images are not committed; regenerated from the committed seed, checked against images.sha256)
 [ -f eval/data/accident_statement_v3b/images/eas3b-001a.png ] || EAS3_SEED=7777 EAS3_OUT=eval/data/accident_statement_v3b \
   EAS3_PREFIX=eas3b .venv/bin/python -m eval.data.accident_statement_v3.generate
+# homework sheets for the general assistant (images not committed; regenerated from the committed seed)
+[ -f eval/data/homework_v1/images/hw-001a.png ] || .venv/bin/python -m eval.data.homework_v1.generate >/dev/null
