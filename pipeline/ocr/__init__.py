@@ -1,9 +1,12 @@
 """Conservative OCR exit for typed fields on the two-column accident statement."""
+from collections import OrderedDict
+import hashlib
 import io
 import json
 import os
 import re
 import subprocess
+import threading
 import time
 
 from eval.schema import EvidenceBox, PipelineResult, RouteStep, Usage
@@ -78,6 +81,37 @@ def locate(spans, field, side):
     return values[0] if len(values) == 1 and values[0]["confidence"] >= .8 else None
 
 
+# Each worker keeps recent recognition results in memory. Cache spans, never page images.
+_page_spans = OrderedDict()
+_cache_lock = threading.Lock()
+
+
+def recognize_page(image):
+    helper = os.environ.get("EVIDENCE_OCR_BIN", "evidence-ocr")
+    if image.mode not in ("RGB", "RGBA", "L"):
+        image = image.convert("RGBA")
+    cache_enabled = os.environ.get("EVIDENCE_OCR_CACHE", "1") != "0"
+    if cache_enabled:
+        key = (helper, image.mode, image.size, hashlib.sha256(image.tobytes()).digest())
+        with _cache_lock:
+            if key in _page_spans:
+                _page_spans.move_to_end(key)
+                return json.loads(_page_spans[key]), True
+
+    # Run outside the lock so independent requests can recognize different pages in parallel.
+    stream = io.BytesIO()
+    image.save(stream, format="PNG")
+    process = subprocess.run([helper], input=stream.getvalue(), capture_output=True, check=True, timeout=30)
+    spans = json.loads(process.stdout)
+    if cache_enabled and len(process.stdout) <= 256 * 1024:
+        with _cache_lock:
+            _page_spans[key] = process.stdout
+            _page_spans.move_to_end(key)
+            if len(_page_spans) > 16:
+                _page_spans.popitem(last=False)
+    return spans, False
+
+
 def answer(image, question):
     result = PipelineResult(None, abstained=True, pipeline="ocr_router")
     field = requested_field(question)
@@ -86,11 +120,8 @@ def answer(image, question):
         start = time.perf_counter()
         result.route.append(RouteStep("ocr"))
         try:
-            stream = io.BytesIO()
-            image.save(stream, format="PNG")
-            process = subprocess.run([os.environ.get("EVIDENCE_OCR_BIN", "evidence-ocr")],
-                                     input=stream.getvalue(), capture_output=True, check=True, timeout=30)
-            spans = json.loads(process.stdout)
+            spans, reused = recognize_page(image)
+            result.route[0].note = "Reused page OCR" if reused else "Recognized page locally"
             span = None
             response = None
             if field:
