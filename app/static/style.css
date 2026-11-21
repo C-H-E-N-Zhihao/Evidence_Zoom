@@ -88,3 +88,16 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 16px; pa
 .tour[hidden] { display: none; }
 .tour #tour-say { flex: 1; }
 .ans .note, .note { display: block; font-size: 12px; font-weight: 400; color: var(--muted); margin-top: 2px; }
+.claims-btn { margin-right: 14px; color: var(--ink); border: 1px solid var(--line); }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(520px, 92vw); background: var(--panel); border-left: 1px solid var(--line);
+          box-shadow: -8px 0 24px rgba(0,0,0,.25); overflow-y: auto; z-index: 20; padding: 0 18px 18px; }
+.drawer[hidden] { display: none; }
+.drawer-head { display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--panel);
+               padding: 14px 0 10px; border-bottom: 1px solid var(--line); margin-bottom: 10px; font-size: 16px; }
+.claim { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+.claim-title { font-weight: 700; margin-bottom: 4px; }
+.claim-kind { font: 600 11px ui-monospace, monospace; color: var(--muted); margin-left: 6px; }
+.claim p { margin: 4px 0; font-size: 13px; line-height: 1.45; }
+.claim-limits { color: var(--muted); }
+.claim-src { font-size: 11px; color: var(--muted); }
+.claims-about { font-size: 13px; color: var(--muted); }

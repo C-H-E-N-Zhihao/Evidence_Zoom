@@ -363,4 +363,30 @@ $("tour-btn").onclick = () => { tourStep = -1; $("tour").hidden = false; $("tour
 $("tour-next").onclick = tourGo;
 $("tour-exit").onclick = tourEnd;
 
+// ---- "What we measured": approved claims only, each with its limits and its receipt path ---------------
+$("claims-btn").onclick = async () => {
+  const body = $("drawer-body"); body.innerHTML = "";
+  $("drawer").hidden = false;
+  try {
+    const d = await (await fetch("/api/claims")).json();
+    if (!d.approved) {
+      body.textContent = "Measured results are pending release review" + (d.status ? ` (${d.status})` : "") + ".";
+      return;
+    }
+    const p = document.createElement("p"); p.className = "claims-about";
+    p.textContent = "Every figure below comes from a committed run; the path under each one is its receipt in the repository.";
+    body.append(p);
+    for (const c of d.claims) {
+      const card = document.createElement("div"); card.className = "claim";
+      const h = document.createElement("div"); h.className = "claim-title"; h.textContent = c.title;
+      const k = document.createElement("span"); k.className = "claim-kind"; k.textContent = c.kind || "";
+      const t = document.createElement("p"); t.textContent = c.text;
+      const l = document.createElement("p"); l.className = "claim-limits"; l.textContent = "Limits: " + (c.limits || "–");
+      const src = document.createElement("code"); src.className = "claim-src"; src.textContent = c.source || "";
+      h.append(" ", k); card.append(h, t, l, src); body.append(card);
+    }
+  } catch (e) { body.textContent = "Could not load the claims: " + e; }
+};
+$("drawer-close").onclick = () => { $("drawer").hidden = true; };
+
 init();

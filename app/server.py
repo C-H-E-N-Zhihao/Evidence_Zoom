@@ -106,6 +106,19 @@ def _register(path: Path, fixture: str | None = None) -> dict:
             "url": f"/api/images/{image_id}"}
 
 
+@app.get("/api/claims")
+def claims():
+    """'What we measured' drawer: docs/claims.json (copy by claude-guanyu, approved by the release reviewer).
+    Rows are served only when its status says approved; otherwise the drawer says they are pending review."""
+    f = Path(os.getenv("CLAIMS_FILE", str(ROOT.parent / "docs" / "claims.json")))  # override for UI tests only
+    if not f.exists():
+        return {"approved": False, "status": "missing", "claims": []}
+    d = json.loads(f.read_text())
+    ok = str(d.get("status", "")).lower().startswith("approved")
+    return {"approved": ok, "status": d.get("status"), "about": d.get("about") if ok else None,
+            "claims": d.get("claims", []) if ok else []}
+
+
 @app.get("/api/config")
 def config():
     pairs: dict[str, list] = {}

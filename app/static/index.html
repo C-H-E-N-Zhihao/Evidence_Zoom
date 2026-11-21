@@ -10,6 +10,7 @@
 <header>
   <div class="brand">Evidence Zoom <span class="tag">frugal multimodal QA</span></div>
   <button class="btn tour-btn" id="tour-btn" type="button">▶ Guided tour</button>
+  <button class="btn ghost claims-btn" id="claims-btn" type="button">What we measured</button>
   <div class="pipeline" id="pipeline">pipeline: –</div>
 </header>
 <div class="tour" id="tour" hidden>
@@ -63,6 +64,10 @@
   </section>
 </main>
 
+<aside class="drawer" id="drawer" hidden>
+  <div class="drawer-head"><b>What we measured</b><button class="btn ghost" id="drawer-close" type="button">Close</button></div>
+  <div id="drawer-body"></div>
+</aside>
 <script src="/static/app.js"></script>
 </body>
 </html>
