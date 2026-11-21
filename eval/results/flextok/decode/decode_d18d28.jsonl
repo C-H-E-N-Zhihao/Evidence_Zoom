@@ -1,0 +1,5 @@
+{"view": "page", "codec": "resize", "side": 256, "marked_rows": [[], [1], [2], [3], [4]], "blank_ok": true, "moved_correct": 4}
+{"view": "page", "codec": "resize", "side": 128, "marked_rows": [[], [1], [2], [3], [4]], "blank_ok": true, "moved_correct": 4}
+{"view": "page", "codec": "resize", "side": 64, "marked_rows": [[], [], [], [], []], "blank_ok": true, "moved_correct": 0}
+{"view": "page", "codec": "resize", "side": 32, "marked_rows": [[], [], [], [], []], "blank_ok": true, "moved_correct": 0}
+{"view": "page", "codec": "resize", "side": 16, "marked_rows": [[], [], [], [], []], "blank_ok": true, "moved_correct": 0}
