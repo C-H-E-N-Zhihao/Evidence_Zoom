@@ -28,6 +28,7 @@ python -m eval.run_eval --items eval/data/<set>/items.jsonl --pipelines mock    
 python -m eval.run_eval --items eval/data/<set>/items.jsonl \
     --pipelines full_image full_image_cached lowres512 gold_crop --limit 10 --max-cost 0.50
 python -m eval.plot_cost_curve eval/results/run_<timestamp>.json
+python -m eval.report eval/results/run_<timestamp>.json --out eval/results/REPORT.md   # Markdown table
 ```
 
 | Pipeline | What it is |

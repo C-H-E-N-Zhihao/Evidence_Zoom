@@ -3,3 +3,4 @@ results/*.png
 !results/billing_probe.json
 .env
 __pycache__/
+!results/REPORT*.md
