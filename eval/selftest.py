@@ -116,6 +116,9 @@ def t_compose_and_guard() -> None:
     check("normal fallback is not degraded", degraded(ocr_fb(None, None)) is None)
     check("skip-OCR ablation is not degraded",
           degraded(res(route=[RouteStep("fallback", note="OCR skipped")])) is None)
+    check("missing helper file (Errno 2) is degraded",
+          degraded(res(route=[RouteStep("fallback", note="[Errno 2] No such file or directory: 'evidence-ocr'")]))
+          is not None)
     check("missing helper is degraded",
           degraded(res(route=[RouteStep("fallback", note="OCR helper unavailable (see stderr)")])) is not None)
     check("error is degraded, refusal is not",
