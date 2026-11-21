@@ -1,6 +1,6 @@
 {
-  "about": "Approved claims for the app's 'What we measured' drawer. Source of truth: docs/NARRATIVE.md section 3. Author: claude-guanyu. Wording must be approved by the release reviewer (Andrew's agent) before the app shows it. All forms are synthetic unless a row says otherwise.",
-  "status": "approved by the release reviewer (Andrew's agent, b9a8ef9; andrew-release-review-133-139)",
+  "about": "Approved claims for the app's 'What we measured' drawer. Source of truth: docs/NARRATIVE.md section 3. Authors: claude-guanyu (first 9 rows), claude-zhihao (161 additions). Wording must be approved by the release reviewer (Andrew's agent) before the app shows it. All forms are synthetic unless a row says otherwise.",
+  "status": "approved by the release reviewer (Andrew's agent, b9a8ef9; andrew-release-review-133-139; additions andrew-review-161)",
   "claims": [
     {
       "id": "billed-cross-model",
@@ -69,10 +69,34 @@
     {
       "id": "spend",
       "title": "What all this cost",
-      "text": "All paid experiments together used $1.50 of the $10 API credit (OpenRouter key usage $1.4979 at the spending check in message 131).",
+      "text": "Approximate total through the worksheet runs: about $1.79 of the $10 API credit. That is the dated key reading of $1.4979 (message 131) plus $0.2955 of committed worksheet run receipts.",
       "kind": "measured",
-      "limits": "",
-      "source": "agent-messages/2026-11-21-131-claude-andrew-b-to-all.md"
+      "limits": "Approximate; excludes about $0.002 of worksheet smoke tests whose receipts are not committed. The key's dashboard is authoritative.",
+      "source": "agent-messages/2026-11-21-131-claude-andrew-b-to-all.md; eval/results/homework_*/ (meta.spent_usd of the five run JSONs)"
+    },
+    {
+      "id": "general-worksheets",
+      "title": "Beyond insurance forms: worksheets",
+      "text": "In worksheet mode, the model reads OCR text first and requests pixels when needed. On a first blind set of 96 synthetic worksheet questions, the frozen route scored 83/96 against 94/96 for the whole page. After revising the crop, on a second blind set of 96 questions it scored 96/96 for $0.0330 against 95/96 for $0.0475 (69.5 % of the API charge), sending no image for 44 of 48 text questions.",
+      "kind": "measured, billed, held-out",
+      "limits": "Generated worksheets; same Haiku model on both sides. The route and the data both changed between the two sets, so the difference does not isolate the crop fix, and one question does not show higher accuracy.",
+      "source": "eval/results/REPORT_homework_v2_heldout.md, eval/results/REPORT_homework_v3_heldout.md"
+    },
+    {
+      "id": "on-device",
+      "title": "No cloud call: runs on this laptop",
+      "text": "With local OCR plus Qwen2.5-VL-7B (4-bit, Ollama) on the tested M3 Pro laptop, the route scored 83/96 on the 12 configured forms at zero provider charge. 48 questions ended at OCR; the 48 model calls took a median of 8.7 s. All 36 selected regions covered the evidence; the overlay shows the region sent to the model, not a citation by the model.",
+      "kind": "measured, local laptop GPU",
+      "limits": "Development layout, one run, unfrozen code. Data stays on the laptop only with the default local endpoint. No claim that the model reliably cites its answers.",
+      "source": "eval/results/ondevice_qwen7b/"
+    },
+    {
+      "id": "pixel-tick-check",
+      "title": "A model-free second opinion on ticks",
+      "text": "For tick questions the app counts the ink inside the located boxes, with no model. On forms from a seed no one had seen, after a geometry fix: on clean scans it scored 72/72. Under the tested 3 % perspective warp it scored 24/24 on each of layouts 1 and 2 and declined layout 3. It also declined the tested blur, 5° tilt and 1280 px variants.",
+      "kind": "measured, $0",
+      "limits": "Clean synthetic scans of the configured layouts only. Not a verification of uploaded phone photos. Before the fix it added a phantom tick under that warp (12/24 wrong on layout 2).",
+      "source": "eval/results/tick_check_fresh/"
     }
   ]
 }
