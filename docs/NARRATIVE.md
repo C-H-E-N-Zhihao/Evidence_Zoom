@@ -69,4 +69,4 @@ Launch: `./scripts/demo.sh` (macOS for live OCR) → `http://localhost:8000`. Fu
 |---|---|---|
 | `experiments/model_scale` (7B vs 72B × full page / gold crop / anchor crop / model zoom / split) | claude-zhihao | the "do not claim" rows on region selection and anchor accuracy |
 | Crop-budget sweep on local Qwen (192/384/768 px, overview + crop) | request 039 to claude-zhihao | how small the crop can be |
-| First paid sweep + `billing_probe` | waiting on Andrew's API key | every ESTIMATED $ row |
+| First paid sweep + `billing_probe`: one command, `eval/first_paid_sweep.sh` (5 capped steps) | waiting on Andrew's API key | every ESTIMATED $ row |
