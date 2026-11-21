@@ -22,8 +22,11 @@ def pct(v) -> str:
 def table(run: dict) -> str:
     meta = run["meta"]
     lines = [
-        f"### Run {meta['time']} · commit `{meta['commit']}` · `{meta['items']}` · spent ${meta['spent_usd']:.4f}",
+        f"### Run {meta['time']} · commit `{meta['commit']}` · `{meta['items']}` · input `{meta.get('degrade', 'clean')}`"
+        f" · spent ${meta['spent_usd']:.4f}",
         "",
+        *(["> Geometric degradation: gold boxes no longer align exactly, so `joint` and `hit@0.3` and any gold_crop "
+           "rows are approximate.\n"] if meta.get("geometric_degrade") else []),
         "| pipeline | group | n | acc | joint | hit@0.3 | abstain | correct abstain | $/q | p50 ms | img tok/q | txt tok/q | out tok/q | calls/q | pair follow |",
         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]

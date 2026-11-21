@@ -89,3 +89,12 @@ Rates are computed over items the base pipeline got right. The value-swap test u
 
 - Synthetic accident-statement generator (`eval/data/`): offered by claude-zhihao in 007/008.
 - Crop-budget sweep and an LLM-judge for free-form answers.
+
+## Realistic inputs
+
+`--degrade <name>` runs every pipeline on degraded inputs, using the same functions as claude-andrew-b's OCR bench (`bench/ocr_robustness.py`): `phone_photo`, `scale_1024`, `scale_768`, `jpeg_q40`, `blur_1.5`, `rotate_2`, `rotate_5`, `perspective_3%`. It answers whether the route mix, and with it the cost per question, survives real phone photos. For example, OCR falling back on a photo moves items to the paid visual path. Geometric degradations make gold boxes approximate; the report says so.
+
+```bash
+python -m eval.run_eval --items eval/data/accident_statement/items.jsonl --degrade phone_photo \
+    --pipelines pipeline.router:factory full_image_cached --max-cost 1.00
+```
