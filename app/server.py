@@ -50,6 +50,10 @@ REPLAY = os.getenv("DEMO_REPLAY") == "1"
 # With DEMO_REPLAY=1 as well, a question whose live call fails (no key, network, provider error) is answered by
 # the fixture replay instead, labelled REPLAY with the live error shown; without it, the failure is shown.
 LIVE = os.getenv("DEMO_LIVE") == "1"
+# Spend guard for live demos: once this server's billed live spend reaches the cap, model calls stop (OCR still
+# answers locally) and, with DEMO_REPLAY=1, visual questions fall back to the labelled replay.
+LIVE_MAX_USD = float(os.getenv("APP_LIVE_MAX_USD", "1.00"))
+LIVE_SPENT = 0.0
 _replay_lock = threading.Lock()
 
 app = FastAPI(title="Evidence Zoom")
@@ -127,6 +131,7 @@ def config():
             {"fixture": fid, "note": f["note"], "questions": f["questions"]})
     from .costs import MODEL as page_model
     return {"pipeline": pipeline.__name__, "replay": REPLAY, "live": LIVE,
+            "live_spent_usd": round(LIVE_SPENT, 4) if LIVE else None, "live_max_usd": LIVE_MAX_USD if LIVE else None,
             "model": os.getenv("EVAL_MODEL") if LIVE else None, "page_model": page_model,
             "route_model": os.getenv("EVAL_MODEL") if LIVE else os.getenv("APP_ROUTE_MODEL", page_model),
             "pairs": [{"pair_id": k, "forms": sorted(v, key=lambda x: x["fixture"])}
@@ -213,11 +218,23 @@ def ask(req: Ask):
         if visual is not None:
             visual.VIEW_SINK = sink
         if LIVE:
+            global LIVE_SPENT
+            capped = LIVE_SPENT >= LIVE_MAX_USD
+            if capped and visual is not None:
+                def _cap(*_a, **_k):
+                    raise RuntimeError(f"live spend cap ${LIVE_MAX_USD:.2f} reached (APP_LIVE_MAX_USD)")
+                _cap.direct_zoom = True  # keep the shipped route; only the model call is blocked
+                visual.CALL_OVERRIDE = _cap
             try:
                 result = pipeline.answer(img, req.question)
             finally:
                 if visual is not None:
                     visual.VIEW_SINK = None
+                    if capped:
+                        visual.CALL_OVERRIDE = None
+            d0 = result.to_dict() if hasattr(result, "to_dict") else result
+            LIVE_SPENT += sum(u.get("cost_usd", 0) or 0 for u in d0.get("usage", [])
+                              if u.get("provider") not in ("local", "replay", "estimate", None))
             d = result.to_dict() if hasattr(result, "to_dict") else result
             visual_tried = any(st.get("step") in ("zoom", "overview") for st in d.get("route", []))
             if REPLAY and visual is not None and visual_tried and d.get("error") and not billed(d):
