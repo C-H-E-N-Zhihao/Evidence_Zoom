@@ -51,6 +51,15 @@ def parse_reply(text: str) -> tuple[Optional[str], bool, Optional[list[float]]]:
     return (None if ans is None else str(ans)), bool(d.get("abstain", False)), box
 
 
+def normalize_box(box: list[float], shown: Image.Image) -> list[float]:
+    """Some models (e.g. Qwen2.5-VL) answer in absolute pixels of the image they saw instead of 0-1.
+    Same rule as pipeline.visual.normalize_box: any coordinate > 1.5 means pixels of `shown`. Clipped to [0, 1]."""
+    if max(box) > 1.5:
+        W, H = shown.size
+        box = [box[0] / W, box[1] / H, box[2] / W, box[3] / H]
+    return [min(1.0, max(0.0, v)) for v in box]
+
+
 def _map_box(box: list[float], region: tuple[float, float, float, float]) -> list[float]:
     """Map a box normalized to a crop back to the original image. region = crop box, normalized."""
     rx0, ry0, rx1, ry1 = region
@@ -86,7 +95,7 @@ def _ask(
     res.answer, res.abstained = (None, True) if abstain else (ans, ans is None)
     res.route.append(RouteStep(step="abstain" if res.abstained else "answer"))
     if box:
-        res.evidence_boxes.append(EvidenceBox(box=_map_box(box, region), source="model_box"))
+        res.evidence_boxes.append(EvidenceBox(box=_map_box(normalize_box(box, img), region), source="model_box"))
     return res
 
 
@@ -183,8 +192,8 @@ def overview_plus_gold_crop(overview_px: int = 512, crop_px: int = 384, model: s
         ans, abstain, box = parse_reply(text)
         res.answer, res.abstained = (None, True) if abstain else (ans, ans is None)
         res.route.append(RouteStep(step="abstain" if res.abstained else "answer"))
-        if box:
-            res.evidence_boxes.append(EvidenceBox(box=box, source="zoom"))
+        if box:  # requested in whole-page coordinates; pixel answers are taken as overview pixels
+            res.evidence_boxes.append(EvidenceBox(box=normalize_box(box, ov), source="zoom"))
         return res
     return run
 
