@@ -1,0 +1,105 @@
+"""Scoring. Pure functions over (EvalItem, PipelineResult) pairs.
+
+Answer correctness is normalized exact match against `answer` + `accepted_answers` (a rubric/LLM judge can be
+added later; it would be charged as a separate eval cost, not to the pipeline).
+"""
+from __future__ import annotations
+
+import re
+import unicodedata
+from collections import defaultdict
+from statistics import mean, median
+
+from .schema import EvalItem, PipelineResult
+
+
+def norm(s: str) -> str:
+    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
+    s = re.sub(r"[^a-z0-9]+", " ", s.lower())
+    return " ".join(s.split())
+
+
+def answer_correct(item: EvalItem, res: PipelineResult) -> bool:
+    if not item.answerable:
+        return res.abstained
+    if res.abstained or res.answer is None:
+        return False
+    golds = [norm(g) for g in [item.answer, *item.accepted_answers] if g]
+    pred = norm(res.answer)
+    return any(pred == g or (g and re.search(rf"\b{re.escape(g)}\b", pred)) for g in golds)
+
+
+def iou(a: list[float], b: list[float]) -> float:
+    ix = max(0.0, min(a[2], b[2]) - max(a[0], b[0]))
+    iy = max(0.0, min(a[3], b[3]) - max(a[1], b[1]))
+    inter = ix * iy
+    union = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - inter
+    return inter / union if union > 0 else 0.0
+
+
+def evidence_iou(item: EvalItem, res: PipelineResult) -> float | None:
+    """Best IoU between any predicted and any gold box; None when the item has no gold box."""
+    if not item.evidence_boxes:
+        return None
+    if not res.evidence_boxes:
+        return 0.0
+    return max(iou(p.box, g) for p in res.evidence_boxes for g in item.evidence_boxes)
+
+
+def evidence_hit(item: EvalItem, res: PipelineResult, thr: float = 0.3) -> bool | None:
+    v = evidence_iou(item, res)
+    return None if v is None else v >= thr
+
+
+def summarize(pairs: list[tuple[EvalItem, PipelineResult]]) -> dict:
+    """Overall and per-evidence-type metrics for one pipeline."""
+    groups: dict[str, list] = defaultdict(list)
+    for it, r in pairs:
+        groups["all"].append((it, r))
+        groups[it.evidence_type].append((it, r))
+    out = {}
+    for g, ps in groups.items():
+        correct = [answer_correct(i, r) for i, r in ps]
+        hits = [h for h in (evidence_hit(i, r) for i, r in ps) if h is not None]
+        ious = [v for v in (evidence_iou(i, r) for i, r in ps) if v is not None]
+        joint = [answer_correct(i, r) and bool(evidence_hit(i, r)) for i, r in ps if i.evidence_boxes]
+        unans = [(i, r) for i, r in ps if not i.answerable]
+        costs = [r.total_cost() for _, r in ps]
+        lats = [r.total_latency_ms() for _, r in ps]
+        out[g] = {
+            "n": len(ps),
+            "accuracy": mean(correct) if correct else None,
+            "evidence_hit@0.3": mean(hits) if hits else None,
+            "evidence_iou_mean": mean(ious) if ious else None,
+            "joint_answer_evidence": mean(joint) if joint else None,
+            "abstain_rate": mean(r.abstained for _, r in ps),
+            "correct_abstain_rate": mean(r.abstained for _, r in unans) if unans else None,
+            "errors": sum(r.error is not None and r.error != "refusal" for _, r in ps),
+            "cost_usd_total": sum(costs),
+            "cost_usd_mean": mean(costs) if costs else 0.0,
+            "latency_ms_median": median(lats) if lats else 0.0,
+            "calls": sum(len(r.usage) for _, r in ps),
+            "input_image_tokens": sum(u.input_image_tokens for _, r in ps for u in r.usage),
+            "input_text_tokens": sum(u.input_text_tokens for _, r in ps for u in r.usage),
+            "cache_read_tokens": sum(u.cache_read_tokens for _, r in ps for u in r.usage),
+            "output_tokens": sum(u.output_tokens for _, r in ps for u in r.usage),
+            "any_estimated": any(u.estimated for _, r in ps for u in r.usage),
+        }
+    return out
+
+
+def cost_curve(pairs: list[tuple[EvalItem, PipelineResult]], index_cost_per_image: float = 0.0) -> list[dict]:
+    """Mean cumulative cost vs. number of questions asked about one image (amortization chart).
+
+    Questions are taken in dataset order per image; `index_cost_per_image` is charged once at q=1
+    (for pipelines that build a reusable index). Cache effects are already inside the measured usage.
+    """
+    by_img: dict[str, list[float]] = defaultdict(list)
+    for it, r in pairs:
+        by_img[it.image_id].append(r.total_cost())
+    max_q = max((len(v) for v in by_img.values()), default=0)
+    curve = []
+    for q in range(1, max_q + 1):
+        cums = [index_cost_per_image + sum(v[:q]) for v in by_img.values() if len(v) >= q]
+        curve.append({"questions": q, "mean_cum_cost_usd": mean(cums), "n_images": len(cums)})
+    return curve
