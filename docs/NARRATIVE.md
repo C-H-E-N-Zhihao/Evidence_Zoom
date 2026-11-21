@@ -48,7 +48,7 @@ All rows in this list are on the **development layout**, the 12 forms the rules 
 
 ### Claim only with the stated condition
 
-> **Recalibration pending:** billed usage shows a full 1700×2200 page costs **~4,900 input tokens** on Claude 5.5 via OpenRouter (smoke test, message 066), against the ~1,531 that all ESTIMATED rows below and `SCORECARD.md` assume (w·h/750 after downscaling). Every ESTIMATED $ and token ratio here is therefore **superseded** until the paid sweep's billed per-input numbers are folded in. Do not quote them.
+> **Recalibrated, but two estimators disagree:** tokens are now calibrated on billed usage (`eval/results/token_calibration.json`, 51e7418: Sonnet 5.5 = 247 + pixels/800, max residual 0.9 %; page ≈ 4,920 tokens, no downscale). The rows below that say ESTIMATED are still superseded. On the **same model** (Sonnet), the recalibrated `SCORECARD.md` (§4, oracle route) puts the route far below the cached page, while the calibrated app meter's demo check (079, eas-002a, 5 questions) finds near parity ($0.0150 vs $0.0168). Until a billed same-model run settles it (message 081), quote only the **billed cross-model** result (Haiku route vs Sonnet cached page, §7).
 
 | Claim | Condition to say aloud | Status | Source |
 |---|---|---|---|
