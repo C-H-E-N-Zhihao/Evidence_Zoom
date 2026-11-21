@@ -15,6 +15,9 @@ are always charged. A stage that is missing or raises is recorded in `route`/`er
 Eval harness:  python -m eval.run_eval --items ... --pipelines pipeline.router:factory
 App:           PIPELINE=pipeline.router uvicorn app.server:app
 Env: ROUTER_SKIP_OCR=1 disables the OCR stage (ablation: visual path alone).
+     ROUTER_ANCHOR=0 removes the OCR-anchored crop stage (pipeline.anchor) between OCR and the overview
+     (default on, except when an overview-only replay/test oracle is installed).
+     ROUTER_FALLBACK=page|overview: what runs when OCR and the anchor decline (default page; overview under oracles).
      ROUTER_REQUIRE_OCR=1 raises if the OCR helper is unavailable (use for paid runs: without it the
      OCR-answerable questions silently go to the paid visual path).
 
@@ -33,7 +36,7 @@ from pathlib import Path
 
 from eval.schema import PipelineResult, RouteStep
 
-NAME = "router@v1"
+NAME = "router@v2"  # v2 (message 062): full-page fallback by default; v1 = freeze-anchor-ocr-v1
 
 
 @lru_cache(maxsize=1)
@@ -78,7 +81,30 @@ def _is_fallback(r: PipelineResult) -> bool:
     return r.error is not None and r.error != "refusal"
 
 
-def answer(image, question: str) -> PipelineResult:
+def answer(image, question: str, anchor: bool | None = None, fallback: str | None = None) -> PipelineResult:
+    """anchor: also try the OCR-anchored crop (pipeline.anchor) first; default from ROUTER_ANCHOR (see below).
+    fallback: what runs when OCR and the anchor decline: "page" (one call on the whole page, default since
+    message 062: on an unseen layout the model-chosen overview zoom halves accuracy and invents missing fields)
+    or "overview" (overview -> model-chosen zoom, the v1 behaviour). Default from ROUTER_FALLBACK."""
+    if anchor is None:
+        # Default ON for real models (message 052: the anchor crop is the measured winner). Exception: a test
+        # oracle installed in pipeline.visual.CALL_OVERRIDE that only models the overview route (no
+        # `direct_zoom` attribute) keeps the v1 route. The fixture replay (demo, selftest, scorecard) declares
+        # direct_zoom, so it follows the shipped route.
+        vis = sys.modules.get("pipeline.visual")
+        ov = getattr(vis, "CALL_OVERRIDE", None) if vis is not None else None
+        oracle = ov is not None and not getattr(ov, "direct_zoom", False)  # direct-zoom replays follow the product
+        default = "0" if oracle else "1"
+        anchor = os.environ.get("ROUTER_ANCHOR", default) == "1"
+    if fallback is None:
+        # Same exception as the anchor: the replay/test oracles model the overview route.
+        vis = sys.modules.get("pipeline.visual")
+        ov = getattr(vis, "CALL_OVERRIDE", None) if vis is not None else None
+        oracle = ov is not None and not getattr(ov, "direct_zoom", False)  # direct-zoom replays follow the product
+        default_fb = "overview" if oracle else "page"
+        fallback = os.environ.get("ROUTER_FALLBACK", default_fb)
+    if fallback not in ("page", "overview"):
+        raise ValueError(f"ROUTER_FALLBACK must be 'page' or 'overview', not {fallback!r}")
     prior: PipelineResult | None = None
     notes: list[str] = []
 
@@ -104,6 +130,20 @@ def answer(image, question: str) -> PipelineResult:
         prior = PipelineResult(None, abstained=True, pipeline=NAME)
         prior.route.append(RouteStep("fallback", target="overview", note="; ".join(notes) or "OCR skipped"))
 
+    if anchor:  # OCR answer -> anchor crop (one zoom call, region from the layout) -> overview
+        anc, err = _stage("pipeline.anchor")
+        if anc is None:
+            notes.append(err)
+        else:
+            try:
+                prior = anc(image, question, prior=prior)
+            except Exception as e:
+                notes.append(f"pipeline.anchor raised {type(e).__name__}: {e}")
+            else:
+                if not _is_fallback(prior):
+                    prior.pipeline = NAME
+                    return prior
+
     visual, err = _stage("pipeline.visual")
     if visual is None:
         prior.answer, prior.abstained = None, True
@@ -111,7 +151,14 @@ def answer(image, question: str) -> PipelineResult:
         prior.pipeline = NAME
         return prior
     try:
-        result = visual(image, question, prior=prior)
+        if fallback == "page":  # one call on the whole page, same prompt/mapping as a zoom (pipeline.visual.zoom_answer)
+            from pipeline.visual import zoom_answer
+
+            prior.route.append(RouteStep("fallback", target="page", note="no OCR answer or anchor: full page"))
+            result = zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=prior,
+                                 look_for="the whole page", target="full page", name="page_fallback")
+        else:
+            result = visual(image, question, prior=prior)
     except Exception as e:
         prior.answer, prior.abstained = None, True
         prior.error = "; ".join(filter(None, [prior.error, *notes, f"pipeline.visual raised {type(e).__name__}: {e}"]))
@@ -119,6 +166,28 @@ def answer(image, question: str) -> PipelineResult:
         return prior
     result.pipeline = NAME
     return result
+
+
+def factory_v1():
+    """run_eval: `pipeline.router:factory_v1`: OCR -> anchor -> overview zoom (the frozen-tag behaviour)."""
+    from eval.pipelines.compose import from_answer_fn
+
+    return from_answer_fn(lambda image, question: answer(image, question, anchor=True, fallback="overview"),
+                          "router@v1")
+
+
+def factory_no_anchor():
+    """run_eval: `--pipelines pipeline.router:factory_no_anchor` (OCR -> overview, the pre-052 route)."""
+    from eval.pipelines.compose import from_answer_fn
+
+    return from_answer_fn(lambda image, question: answer(image, question, anchor=False), NAME + "-anchor")
+
+
+def factory_anchor():
+    """run_eval: `--pipelines pipeline.router:factory_anchor` (OCR -> anchor crop -> overview; = factory by default)."""
+    from eval.pipelines.compose import from_answer_fn
+
+    return from_answer_fn(lambda image, question: answer(image, question, anchor=True), NAME + "+anchor")
 
 
 def factory():

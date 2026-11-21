@@ -27,10 +27,29 @@ def table(run: dict) -> str:
         "",
         *(["> Geometric degradation: gold boxes no longer align exactly, so `joint` and `hit@0.3` and any gold_crop "
            "rows are approximate.\n"] if meta.get("geometric_degrade") else []),
+        *([f"Code: `pipeline/` tree `{meta['pipeline_tree']}`"
+           + (" = frozen tag `" + meta['freeze_tag'] + "`" if meta.get("pipeline_equals_freeze") else
+              " **≠ frozen tag `" + str(meta.get('freeze_tag')) + "`**")
+           + (" · **uncommitted changes in pipeline/**" if meta.get("pipeline_dirty") else "")
+           + (" · uncommitted changes in eval/" if meta.get("eval_dirty") else "") + "\n"]
+          if meta.get("pipeline_tree") else []),
+        *([f"Images: digest `{meta['images_digest']}` over {len(meta.get('images_sha256') or {})} files (compare with the set's images.sha256)\n"]
+          if meta.get("images_digest") else []),
         "| pipeline | group | n | acc | joint | hit@0.3 | abstain | correct abstain | $/q | p50 ms | in tok/q | of which image | out tok/q | calls/q | pair follow | zoomed | zoom covers gold | acc when covered | GPU s/q |",
         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for name, rep in run["report"].items():
+        s_all = rep["summary"].get("all") or {}
+        if "cached" in name and s_all.get("n", 0) > 1 and not s_all.get("cache_read_tokens"):
+            lines.insert(2, f"> **`{name}` is labelled cached, but no cache reads were billed:** treat it as the "
+                            "UNCACHED full page. Its row must not be quoted as the cached baseline (the OpenRouter "
+                            "backend does not send cache_control).\n")
+        if rep.get("degraded") and not rep.get("aborted"):
+            bad = [r["question_id"] for r in rep.get("results", [])
+                   if r.get("error") and r.get("error") != "refusal"][:5]
+            lines.insert(2, f"> `{name}`: {rep['degraded']} degraded result(s) (setup or component failure, not "
+                            f"the method){': ' + ', '.join(bad) if bad else ''}. Fix and re-run those before quoting "
+                            "the row as clean.\n")
         if rep.get("aborted") or not rep.get("complete", True):
             lines.insert(2, f"> **`{name}` is not a clean measurement:** "
                             f"{rep.get('aborted') or 'incomplete (budget cap)'}; degraded results: {rep.get('degraded', '?')}.\n")

@@ -3,3 +3,5 @@ __pycache__/
 app/uploads/
 .claude/
 .DS_Store
+.env
+.finish_sweep.log

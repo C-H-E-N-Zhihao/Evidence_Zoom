@@ -85,6 +85,13 @@ def t_pricing() -> None:
         check("CPU-local stays $0 under a GPU rate", cost_usd(c) == 0)
     finally:
         del os.environ["EVAL_GPU_USD_PER_HOUR"]
+    from .backends.openrouter_backend import _prepare, image_block as or_image
+
+    part = or_image(Image.new("RGB", (4, 4)), cache=True)
+    on, off = _prepare([part], True)[0], _prepare([part], False)[0]
+    check("openrouter cache mark -> cache_control only when enabled",
+          on.get("cache_control") == {"type": "ephemeral"} and "cache_control" not in off
+          and "_cache" not in on and "_cache" not in off)
     u = Usage(0, "openrouter", "unknown/model", input_text_tokens=10)
     check("unknown API model flagged estimated", cost_usd(u) == 0 and u.estimated)
 
@@ -109,6 +116,9 @@ def t_compose_and_guard() -> None:
     check("normal fallback is not degraded", degraded(ocr_fb(None, None)) is None)
     check("skip-OCR ablation is not degraded",
           degraded(res(route=[RouteStep("fallback", note="OCR skipped")])) is None)
+    check("missing helper file (Errno 2) is degraded",
+          degraded(res(route=[RouteStep("fallback", note="[Errno 2] No such file or directory: 'evidence-ocr'")]))
+          is not None)
     check("missing helper is degraded",
           degraded(res(route=[RouteStep("fallback", note="OCR helper unavailable (see stderr)")])) is not None)
     check("error is degraded, refusal is not",
@@ -146,10 +156,43 @@ def t_pairs_curve_report() -> None:
                     "geometric_degrade": True},
            "report": {"p": {"summary": summarize(pairs), "pair_follow_rate": None, "aborted": "boom",
                             "complete": False, "degraded": 3}}}
+    from .calibrate_tokens import fit
+
+    c0, k0 = fit([(1000.0, 300.0, "a"), (3000.0, 700.0, "b"), (5000.0, 1100.0, "c")])
+    check("token calibration fit recovers line", abs(c0 - 100) < 1e-6 and abs(k0 - 0.2) < 1e-9)
+    from .plot_frontier import pareto, short
+
+    check("pareto keeps cheap and accurate, drops dominated",
+          pareto([(1, .4), (2, .7), (3, .6), (0.5, .4)]) == {1, 3})
+    check("short label", short("gold_crop_px:384@local:Qwen/Qwen2.5-VL-7B-Instruct") == "gold_crop 384 (7B)")
+    from .plot_frontier import served_models
+
+    rep = {"results": [{"usage": [{"provider": "local", "model": "Apple Vision OCR (anchor)"},
+                                  {"provider": "local", "model": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ", "device": "gpu"}]},
+                       {"usage": [{"provider": "local", "model": "Qwen/Qwen2.5-VL-7B-Instruct"}]}]}
+    check("served models from usage (OCR excluded, old runs without device)", served_models(rep) == "72B+7B")
     md = report.table(run)
     check("report renders rows", "| `p` | all |" in md)
     check("report flags aborted run", "not a clean measurement" in md)
     check("report flags geometric degradation", "Geometric degradation" in md)
+    two = [(item(et="text"), res()), (item(et="text"), res())]
+    run2 = {"meta": {"time": "t", "commit": "c", "items": "x", "spent_usd": 0},
+            "report": {"full_image_cached@or:x": {"summary": summarize(two), "complete": True}}}
+    check("report flags 'cached' run with no cache reads", "no cache reads were billed" in report.table(run2))
+    run2["meta"].update(pipeline_tree="abc123", freeze_tag="freeze-x", pipeline_equals_freeze=False, pipeline_dirty=True)
+    md2 = report.table(run2)
+    check("report flags code that is not the freeze", "≠ frozen tag" in md2 and "uncommitted changes in pipeline/" in md2)
+    from .run_eval import code_provenance
+
+    check("code_provenance never raises and returns a dict", isinstance(code_provenance(), dict))
+    from .run_eval import image_checksums
+
+    with tempfile.TemporaryDirectory() as d:
+        Image.new("RGB", (8, 8), "white").save(Path(d) / "a.png")
+        ck = image_checksums([item(img="a")] and [EvalItem(question_id="q", image_id="a", image_path=str(Path(d) / "a.png"),
+                                                            question="?", answer="x")])
+        check("image checksums recorded per file plus digest",
+              len(ck["images_sha256"]) == 1 and len(ck["images_digest"]) == 16 and ck["images_sha256"]["a.png"])
 
 
 def t_geometry() -> None:

@@ -5,10 +5,13 @@
 
 1. **OCR first.** If the answer is printed text (a policy number, a registration), local OCR reads it.
    This costs $0 and needs no model call.
-2. **Look, then zoom.** If the answer needs pixels (which boxes are ticked, what the sketch shows), a vision
-   model first sees a small overview with a grid. It then asks for just the cells it needs, cut from the
-   original high-resolution page. Cells far apart on the same rows (a tick and its row number) are stitched
-   side by side, so the crop stays small but keeps its meaning.
+2. **Crop from the form's own layout.** If the answer needs pixels (which boxes are ticked, what the sketch
+   shows), the OCR'd layout of this form template (row numbers, column headers, section headings) picks the
+   region, with no model call. A vision model sees only that crop, cut from the original high-resolution
+   page. Regions far apart on the same rows (a tick and its row number) are stitched side by side, so the
+   crop stays small but keeps its meaning.
+   **If the layout is not recognised** (another template, another document type), the model gets the
+   **full page** instead: the frugal path only exists for configured templates.
 3. **Grounded answer.** The answer comes back with a box on the original page, so a human can check it.
 
 This branch runs **without any API key**. OCR is real. The vision model's replies are **replayed** from the
@@ -56,15 +59,16 @@ It runs six offline checks and ends with `ALL CHECKS PASSED`:
    You see the **LIVE OCR** badge, the policy number, a green box on it in the page, and the route
    `ocr → answer` at **$0**.
 3. Click **"Which circumstance boxes did driver B tick?"**
-   You see the **REPLAY** badge and the answer **8**. The route is `OCR not enough → overview → zoom → answer`.
-   Under the answer are the two images that would be sent to a model: the gridded **overview** (434×536 px)
-   and the **zoom mosaic**, with the row numbers stitched next to driver B's tick column. On the page, a pink
-   box marks the tick.
+   You see the **REPLAY** badge and the answer **8**. The route is `zoom anchor:ticks → answer`.
+   Under the answer is the one image that would be sent to a model: the **anchor crop** (about 147×883 px),
+   with the row numbers stitched next to driver B's tick column. On the page, a pink box marks the tick.
 4. Click **form b** and ask the tick question again. The answer changes to **7** and the box moves one row up.
    The line above the page now shows `a: 8 · b: 7`; switching back to form a keeps its conversation.
    The policy number is still read by OCR, because only the tick differs.
-5. Optional: type **"Is there a dog in the picture?"**. You get **NO ANSWER** and the reason. The demo never
-   invents an answer, and the cost meter still charges the overview call a live run would have paid.
+5. Optional: click **"What is driver A's driving licence number?"** (not on the form). The route is
+   `fallback page → zoom full page → abstain`: no anchor applies, so the full page would be sent, and the
+   replayed answer is "not on the form". Type **"Is there a dog in the picture?"** and you get **NO ANSWER**
+   with the reason: there is no stored answer to replay, so nothing is invented.
 
 The **Session cost** panel compares this route with sending the full page to the same model every time,
 with and without prompt caching. **All costs are estimates** from token arithmetic.
@@ -74,14 +78,14 @@ with and without prompt caching. **All costs are estimates** from token arithmet
 | | status |
 |---|---|
 | OCR answers and their boxes | **real**: Apple Vision on your machine |
-| routing decision, overview image, cell selection, mosaic crop, box mapping | **real** code path |
-| the vision model's two replies (which cells to zoom; the final answer and box) | **replayed** from the test form's stored answer (`pipeline/visual/replay.py`) |
+| routing decision, anchor selection, crop (or full page), box mapping | **real** code path |
+| the vision model's reply (the answer and its box) | **replayed** from the test form's stored answer (`pipeline/visual/replay.py`) |
 | token counts and $ | **estimated** (~width × height / 750 tokens per image; list prices in `eval/pricing.py`) |
 
-Measured so far: OCR answers 48 of the 96 test questions, all correctly, in about 0.6 s, with 0 wrong answers,
-also on degraded scans and photos. A first live run with a small open model (Qwen2.5-VL-7B on our GPU) showed
-that a good crop helps it (42% → 67% on the visual questions) but that it does not yet choose the crop well
-itself (`eval/results/REPORT_local_qwen7b_visual.md`). Cost figures are in `eval/results/SCORECARD.md`.
+Measured results, their limits and their provenance are in `docs/NARRATIVE.md` (the reviewed source for any
+number you quote). In short: on this one form template, OCR answers the printed fields locally and the
+template-anchored crop lets a small model answer the visual questions; on an unseen layout and on other
+document types the anchors find nothing and the page fallback applies.
 
 ---
 
@@ -90,9 +94,9 @@ itself (`eval/results/REPORT_local_qwen7b_visual.md`). Cost figures are in `eval
 | path | what |
 |---|---|
 | `app/` | web app (FastAPI + one HTML page): `server.py`, `static/` |
-| `pipeline/router.py` | OCR first, then the visual path |
+| `pipeline/router.py` | router@v2: OCR answer → anchored crop (`pipeline/anchor/`) → full-page fallback |
 | `pipeline/ocr/` | OCR route (Apple Vision helper + field lookup) |
-| `pipeline/visual/` | overview grid → mosaic zoom → grounded answer; `replay.py` = key-free stand-in for the model |
+| `pipeline/visual/` | crop stitching (`View`), `zoom_answer`, overview path (not the default); `replay.py` = key-free stand-in for the model |
 | `eval/` | evaluation harness, test forms (`eval/data/accident_statement/`), scorecard |
 | `scripts/demo.sh`, `scripts/test.sh` | run the demo, run all checks |
 | `README.md`, `agent-messages/` | team dashboard and coordination log (background, not needed to run the demo) |

@@ -397,9 +397,12 @@ def zoom_answer(
     if VIEW_SINK is not None:
         VIEW_SINK("zoom", view.image)
     try:
+        # A replay oracle that can answer a direct zoom (no overview first) declares `direct_zoom`; it gets the
+        # view's spans so it can place its gold box in the crop. Real backends never receive this argument.
+        extra = {"view_spans": (view.y.spans, view.x.spans)} if getattr(call_fn, "direct_zoom", False) else {}
         reply, usage, stop = call_fn([image_block(view.image), {"type": "text", "text": text}],
                                      step_index=len(res.route) - 1, system=system, model=model,
-                                     images_px=[[view.image.width, view.image.height]])
+                                     images_px=[[view.image.width, view.image.height]], **extra)
     except Exception as e:
         res.error, res.answer, res.abstained = f"{type(e).__name__}: {e}", None, True
         res.route.append(RouteStep(step="abstain", note="zoom call failed"))

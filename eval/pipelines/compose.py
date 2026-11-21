@@ -59,6 +59,27 @@ def cascade(first: Pipeline, then: Pipeline, name: str) -> Pipeline:
     return run
 
 
+def _ensure_ocr_helper() -> None:
+    """Calling pipeline.ocr directly (not via the router) skipped the router's helper build, so the first OCR call
+    of a run failed with "No such file or directory: 'evidence-ocr'" and that item silently went to the model
+    (model_scale/e2e, eas-001a-q1). Build or locate the helper up front; with ROUTER_REQUIRE_OCR=1, fail the run."""
+    import os
+    import sys
+
+    try:
+        from pipeline.router import ensure_ocr_bin
+    except Exception as e:  # router not importable: nothing to build with
+        print(f"[eval] cannot prepare OCR helper: {e}", file=sys.stderr)
+        return
+    if ensure_ocr_bin() is None:
+        msg = "OCR helper unavailable before the run (needs macOS + swiftc, or EVIDENCE_OCR_BIN)"
+        if os.environ.get("ROUTER_REQUIRE_OCR") == "1":
+            raise SystemExit(f"[eval] {msg}; ROUTER_REQUIRE_OCR=1, refusing to run")
+        print(f"[eval] WARNING: {msg}; OCR-stage items will fall back", file=sys.stderr)
+
+
 def resolve_fn(spec: str) -> Pipeline:
     mod, _, attr = spec.partition(":")
+    if mod == "pipeline.ocr" or mod.startswith("pipeline.ocr."):
+        _ensure_ocr_helper()
     return from_answer_fn(getattr(importlib.import_module(mod), attr), spec)

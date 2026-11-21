@@ -46,6 +46,8 @@ def _clear():
 
 
 def run():
+    import os
+    os.environ["ROUTER_FALLBACK"] = "overview"  # checks 1-13 cover the overview path; page fallback checked at the end
     real_ensure = router.ensure_ocr_bin
     router.ensure_ocr_bin = lambda: "stub"
     _install("pipeline.ocr", _ocr_exit); _install("pipeline.visual", _boom)
@@ -87,8 +89,64 @@ def run():
     except RuntimeError:
         pass
     del os.environ["ROUTER_REQUIRE_OCR"]
+
+    # anchor stage (ROUTER_ANCHOR / anchor=True): answers -> no overview; falls back -> overview continues
+    router.ensure_ocr_bin = lambda: "stub"
+
+    def _anchor_hit(image, question, prior=None):
+        prior.route += [RouteStep("zoom", target="anchor:ticks"), RouteStep("answer")]
+        prior.answer, prior.abstained = "8", False
+        return prior
+
+    def _anchor_miss(image, question, prior=None):
+        prior.route.append(RouteStep("fallback", target="overview", note="no OCR anchor"))
+        return prior
+
+    _install("pipeline.ocr", _ocr_fallback); _install("pipeline.visual", _visual); _install("pipeline.anchor", _anchor_hit)
+    r = router.answer(None, "q", anchor=True)
+    assert [s.step for s in r.route] == ["ocr", "fallback", "zoom", "answer"] and r.answer == "8", r.route
+    r = router.answer(None, "q")  # default on: anchor used
+    assert r.answer == "8", r.route
+    vis_mod = sys.modules["pipeline.visual"]
+    vis_mod.CALL_OVERRIDE = object()  # overview-only oracle: default off
+    r = router.answer(None, "q")
+    assert r.answer == "10, 16", r.route
+
+    class _Direct:  # direct-zoom replay: shipped route
+        direct_zoom = True
+    vis_mod.CALL_OVERRIDE = _Direct()
+    r = router.answer(None, "q")
+    assert r.answer == "8", r.route
+    vis_mod.CALL_OVERRIDE = None
+    r = router.answer(None, "q", anchor=False)
+    assert r.answer == "10, 16", r.route
+    _install("pipeline.anchor", _anchor_miss)
+    r = router.answer(None, "q", anchor=True)
+    assert [s.step for s in r.route] == ["ocr", "fallback", "fallback", "overview", "zoom", "answer"], r.route
+
+    # page fallback (router@v2 default): OCR and anchor decline -> one zoom_answer call on the whole page
+    del os.environ["ROUTER_FALLBACK"]
+    calls = []
+
+    def _zoom_answer(image, question, rows, cols, prior=None, **kw):
+        calls.append((rows, cols, kw.get("target")))
+        prior.route += [RouteStep("zoom", target=kw.get("target")), RouteStep("answer")]
+        prior.answer, prior.abstained = "page answer", False
+        return prior
+
+    vis = types.ModuleType("pipeline.visual"); vis.answer = _visual; vis.zoom_answer = _zoom_answer
+    sys.modules["pipeline.visual"] = vis
+    r = router.answer(None, "q")  # anchor miss (installed above) -> page
+    assert r.answer == "page answer" and calls[-1][:2] == ([(0.0, 1.0)], [(0.0, 1.0)]), (r.route, calls)
+    assert [s.step for s in r.route][-3:] == ["fallback", "zoom", "answer"] and r.route[-3].target == "page"
+    r = router.answer(None, "q", fallback="overview")
+    assert r.answer == "10, 16"
+    vis.CALL_OVERRIDE = object()  # an oracle installed -> overview (and no anchor) by default
+    r = router.answer(None, "q")
+    assert r.answer == "10, 16" and "anchor" not in str(r.route), r.route
+    sys.modules.pop("pipeline.anchor", None)
     router.ensure_ocr_bin = real_ensure; _clear()
-    print("router: 8 checks passed")
+    print("router: 17 checks passed")
 
 
 if __name__ == "__main__":

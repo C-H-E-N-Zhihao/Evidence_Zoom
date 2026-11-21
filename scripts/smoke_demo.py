@@ -4,7 +4,8 @@
 
 Checks the judge script in DEMO.md:
   1. policy number on fixture eas-002a      -> source LIVE OCR, correct value, evidence box on the value
-  2. "which boxes did driver B tick?" on a  -> REPLAY, 8, box on row 8, overview + mosaic images sent
+  2. "which boxes did driver B tick?" on a  -> REPLAY, 8, box on row 8, one image sent (anchor crop on macOS,
+                                               full page where the OCR helper is missing)
   3. same question on form b                -> REPLAY, 7 (the only difference between the two forms)
   4. a question with no fixture label       -> NO ANSWER (nothing invented)
 Exit code 0 if all pass. OCR needs macOS (Apple Vision); on other systems step 1 is reported as skipped.
@@ -74,8 +75,11 @@ def main() -> int:
     steps = [s["step"] for s in d["result"]["route"]]
     check("source is REPLAY", d["source"] == "replay", d["source"])
     check("answer 8", d["result"]["answer"] == "8", repr(d["result"]["answer"]))
-    check("route goes overview -> zoom -> answer", steps[-3:] == ["overview", "zoom", "answer"], str(steps))
-    check("overview and zoom images returned", [v["step"] for v in d["views"]] == ["overview", "zoom"])
+    zoom = next((s for s in d["result"]["route"] if s["step"] == "zoom"), {})
+    want = "anchor:ticks" if sys.platform == "darwin" else "full page"
+    check(f"route is one zoom ({want}) -> answer, no overview", steps[-2:] == ["zoom", "answer"]
+          and "overview" not in steps and (zoom.get("target") or "").startswith(want), str(d["result"]["route"]))
+    check("one image returned (the crop sent)", [v["step"] for v in d["views"]] == ["zoom"], str(d["views"]))
     box = d["result"]["evidence_boxes"][0]["box"] if d["result"]["evidence_boxes"] else None
     gold = FIXTURES["eas-002a"]["items"][_qkey(TICKS)].evidence_boxes[0]
     check("evidence box lands on B's tick 8", box is not None and abs(box[1] - gold[1]) < 0.005,

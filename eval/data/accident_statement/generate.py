@@ -140,6 +140,89 @@ def render(form: Form) -> Image.Image:
     return im
 
 
+def _font2(size: int):
+    for name in ("/System/Library/Fonts/Supplemental/Georgia.ttf",
+                 "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"):
+        try:
+            return ImageFont.truetype(name, size)
+        except OSError:
+            continue
+    return ImageFont.load_default()
+
+
+def render_v2(form: Form) -> Image.Image:
+    """HELD-OUT layout (generated after the OCR/anchor code was frozen at b42ece9): A4 page, serif font,
+    different field order and label wording, sketch before circumstances, different row spacing and box size.
+    Same evidence types and the same questions; gold boxes recorded while drawing."""
+    W2, H2 = 1654, 2339
+    global W, H
+    saved = (W, H)
+    W, H = W2, H2  # _n() normalizes by the module-level page size
+    try:
+        im = Image.new("RGB", (W2, H2), "white")
+        d = ImageDraw.Draw(im)
+        f_title, f, f_small = _font2(42), _font2(27), _font2(21)
+        bx = form.boxes
+        d.text((70, 50), "Joint Accident Report (demo form, layout 2)", fill="black", font=f_title)
+        d.text((70, 108), "Simplified stand-in for evaluation - not an official document", fill="#666", font=f_small)
+        for key, label, x, colour, v in (("A", "VEHICLE A", 70, BLUE, form.a), ("B", "VEHICLE B", 850, ORANGE, form.b)):
+            d.rectangle([x, 160, x + 734, 520], outline=colour, width=3)
+            bx[f"{key}.panel"] = _n(x, 160, x + 734, 520)
+            d.text((x + 18, 172), label, fill=colour, font=f)
+            for j, (name, k, val) in enumerate((("driver", "Driver", v.driver),
+                                                 ("insurer", "Insurer", v.insurer),
+                                                 ("registration", "Registration plate", v.registration),
+                                                 ("policy", "Policy number", v.policy))):
+                y = 236 + j * 66
+                d.text((x + 18, y), f"{k}:", fill="#333", font=f_small)
+                vx = x + 270
+                d.text((vx, y - 4), val, fill="black", font=f)
+                tw = d.textlength(val, font=f)
+                bx[f"{key}.{name}"] = _n(vx - 5, y - 8, vx + 5 + tw, y + 34)
+                d.line([vx - 5, y + 32, x + 715, y + 32], fill="#bbb", width=1)
+        # sketch first
+        sy = 570
+        d.text((70, sy), "13. SKETCH OF THE ACCIDENT AT THE TIME OF IMPACT", fill="black", font=f)
+        panel = [70, sy + 46, W2 - 70, sy + 46 + 470]
+        d.rectangle(panel, outline="black", width=2)
+        bx["sketch"] = _n(*panel)
+        cx = (panel[0] + panel[2]) // 2
+        ry = panel[1] + 170
+        d.rectangle([panel[0] + 30, ry, panel[2] - 30, ry + 150], fill="#e5e7eb")
+        for x in range(panel[0] + 50, panel[2] - 50, 110):
+            d.line([x, ry + 75, x + 55, ry + 75], fill="white", width=6)
+        behind, ahead = (("A", BLUE), ("B", ORANGE)) if form.rear_hitter == "A" else (("B", ORANGE), ("A", BLUE))
+        d.rectangle([cx + 40, ry + 90, cx + 230, ry + 138], outline=ahead[1], width=5)
+        d.text((cx + 122, ry + 96), ahead[0], fill=ahead[1], font=f)
+        d.rectangle([cx - 250, ry + 90, cx - 60, ry + 138], outline=behind[1], width=5)
+        d.text((cx - 168, ry + 96), behind[0], fill=behind[1], font=f)
+        d.polygon([(cx - 30, ry + 104), (cx + 30, ry + 114), (cx - 30, ry + 124)], fill="red")
+        bx["sketch.impact"] = _n(cx - 260, ry + 80, cx + 240, ry + 148)
+        d.text((panel[0] + 24, panel[3] - 44), "direction of travel  -->", fill="#555", font=f_small)
+        # circumstances after the sketch, different spacing and box size
+        top = panel[3] + 50
+        d.text((70, top), "12. CIRCUMSTANCES  (put a cross in each relevant box)", fill="black", font=f)
+        d.text((60, top + 44), "Vehicle A", fill=BLUE, font=f_small)
+        d.text((1450, top + 44), "Vehicle B", fill=ORANGE, font=f_small)
+        last_y = top
+        for n, text in enumerate(CIRCUMSTANCES, start=1):
+            y = top + 86 + (n - 1) * 44
+            last_y = y + 30
+            for key, x0, ticks, colour in (("A", 90, form.a.ticks, BLUE), ("B", 1480, form.b.ticks, ORANGE)):
+                d.rectangle([x0, y, x0 + 30, y + 30], outline="black", width=2)
+                bx[f"{key}.tick{n}"] = _n(x0 - 4, y - 4, x0 + 34, y + 34)
+                if n in ticks:
+                    d.line([x0 + 5, y + 15, x0 + 13, y + 26], fill=colour, width=4)
+                    d.line([x0 + 13, y + 26, x0 + 28, y + 3], fill=colour, width=4)
+            d.text((160, y + 3), f"{n:>2}.  {text}", fill="black", font=f_small)
+            bx[f"label{n}"] = _n(156, y, 156 + d.textlength(f"{n:>2}.", font=f_small) + 8, y + 30)
+        bx["A.tickcol"] = _n(80, top + 76, 130, last_y + 10)
+        bx["B.tickcol"] = _n(1470, top + 76, 1520, last_y + 10)
+        return im
+    finally:
+        W, H = saved
+
+
 def _vehicle(rng: random.Random, insurer: str, ticks: tuple[int, ...]) -> Vehicle:
     prefix = "".join(w[0] for w in insurer.split()[:2]).upper()
     return Vehicle(
@@ -227,18 +310,24 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=6, help="number of base forms (each gets a partner)")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--layout", choices=["v1", "v2"], default="v1",
+                    help="v2 = held-out layout (see render_v2); use a different --seed and --out-dir")
+    ap.add_argument("--out-dir", default=None, help="default: this folder (v1) or ../accident_statement_v2")
     a = ap.parse_args()
     rng = random.Random(a.seed)
-    (HERE / "images").mkdir(exist_ok=True)
+    out_dir = Path(a.out_dir) if a.out_dir else (HERE if a.layout == "v1" else HERE.parent / "accident_statement_v2")
+    renderer = render if a.layout == "v1" else render_v2
+    prefix = "eas" if a.layout == "v1" else "eas2"
+    (out_dir / "images").mkdir(parents=True, exist_ok=True)
     lines = []
     for i in range(1, a.n + 1):
-        base = make_form(rng, f"eas-{i:03d}a")
-        cf, what = counterfactual(rng, base, f"eas-{i:03d}b")
+        base = make_form(rng, f"{prefix}-{i:03d}a")
+        cf, what = counterfactual(rng, base, f"{prefix}-{i:03d}b")
         for form, note in ((base, None), (cf, f"counterfactual of {base.form_id}: {what}")):
-            render(form).save(HERE / "images" / f"{form.form_id}.png")
-            lines += items_for(form, f"eas-{i:03d}", note)
-    (HERE / "items.jsonl").write_text("\n".join(json.dumps(l) for l in lines) + "\n")
-    print(f"wrote {2 * a.n} images and {len(lines)} items to {HERE}")
+            renderer(form).save(out_dir / "images" / f"{form.form_id}.png")
+            lines += items_for(form, f"{prefix}-{i:03d}", note)
+    (out_dir / "items.jsonl").write_text("\n".join(json.dumps(l) for l in lines) + "\n")
+    print(f"wrote {2 * a.n} images and {len(lines)} items to {out_dir}")
 
 
 if __name__ == "__main__":

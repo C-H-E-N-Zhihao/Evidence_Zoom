@@ -24,6 +24,22 @@ from .pipelines.baselines import REGISTRY, parse_name
 from .schema import EvalItem, PipelineResult
 
 
+def image_checksums(items: list[EvalItem]) -> dict:
+    """sha256 of every evaluated image file, plus one digest over all of them. Generators pick installed fonts, so
+    regenerated images differ across machines (codex-guanyu, blind-family review); the digest identifies which
+    images a run actually saw, and can be compared with a set's images.sha256."""
+    import hashlib
+
+    per = {}
+    for p in sorted({it.image_path for it in items}):
+        try:
+            per[Path(p).name] = hashlib.sha256(Path(p).read_bytes()).hexdigest()
+        except OSError:
+            per[Path(p).name] = None
+    digest = hashlib.sha256("".join(f"{k}:{v}\n" for k, v in per.items()).encode()).hexdigest()
+    return {"images_digest": digest[:16], "images_sha256": per}
+
+
 def load_items(path: Path) -> list[EvalItem]:
     items = [EvalItem(**json.loads(l)) for l in path.read_text().splitlines() if l.strip()]
     for it in items:
@@ -98,9 +114,36 @@ def git_commit() -> str:
         return "unknown"
 
 
+FREEZE_TAG_PATTERN = "freeze-*"  # every published freeze (freeze-anchor-ocr-v1, freeze-router-v2, ...)
+
+
+def code_provenance() -> dict:
+    """What code actually ran: tree hash of pipeline/ at HEAD, whether pipeline/ or eval/ had uncommitted changes,
+    and which published freeze tag (if any) pipeline/ equals (held-out tests, release checklist B). Never raises.
+
+    `freeze_tag` is the matching tag, or the newest freeze tag when none matches (so the report can say
+    "≠ <newest freeze>"). `pipeline_equals_freeze` is True only for a clean match."""
+    def git(*args: str) -> str:
+        return subprocess.run(["git", *args], capture_output=True, text=True).stdout.strip()
+
+    try:
+        tree = git("rev-parse", "HEAD:pipeline")
+        tags = git("tag", "-l", FREEZE_TAG_PATTERN, "--sort=-creatordate").split()
+        trees = {t: git("rev-parse", f"{t}^{{commit}}:pipeline") for t in tags}
+        # eval/results/ holds run outputs and reports, not code: excluded from the dirty check
+        dirty = {"pipeline": bool(git("status", "--porcelain", "--", "pipeline")),
+                 "eval": bool(git("status", "--porcelain", "--", "eval", ":(exclude)eval/results"))}
+        match = next((t for t in tags if tree and trees[t] == tree), None)
+        return {"pipeline_tree": tree[:12], "pipeline_dirty": dirty["pipeline"], "eval_dirty": dirty["eval"],
+                "freeze_tag": match or (tags[0] if tags else None),
+                "pipeline_equals_freeze": bool(match) and not dirty["pipeline"]}
+    except Exception as e:
+        return {"provenance_error": f"{type(e).__name__}: {e}"}
+
+
 # Matched against fallback notes. Normal OCR fallbacks ("Visual inspection required") and the intended
 # ROUTER_SKIP_OCR ablation ("OCR skipped") do not match.
-_DEGRADED_MARKERS = ("unavailable", "raised", "not found", "credentials")
+_DEGRADED_MARKERS = ("unavailable", "raised", "not found", "credentials", "no such file")
 
 
 def degraded(r: PipelineResult) -> str | None:
@@ -191,6 +234,7 @@ def main() -> None:
     meta = {"commit": git_commit(), "items": a.items, "n_items": len(items), "pipelines": a.pipelines,
             "spent_usd": spent, "budget_hit": budget_hit, "max_error_rate": a.max_error_rate,
             "degrade": a.degrade, "geometric_degrade": a.degrade.startswith(("rotate", "perspective", "phone")),
+            **code_provenance(), **image_checksums(items),
             "time": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
     out = Path(a.out) / f"run_{time.strftime('%Y%m%d-%H%M%S')}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
