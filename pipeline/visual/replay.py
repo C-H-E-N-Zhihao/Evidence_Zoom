@@ -7,8 +7,8 @@ pipeline does around it (overview rendering, cell selection, mosaic crop, box ma
 page) is the real code path.
 
 Used by the offline self-test and by the app's key-free rehearsal (DEMO_REPLAY=1). Every Usage record
-it emits has provider="replay" and a note saying so. Token counts are ESTIMATES (~w*h/750) of what a
-model would be sent, priced as if served by `price_as` so the cost meter shows the would-be cost.
+it emits has provider="replay" and a note saying so. Token counts are ESTIMATES of what a
+model would be sent (~w*h/800, calibrated on billed usage: eval/results/token_calibration.json), priced as if served by `price_as` so the cost meter shows the would-be cost.
 """
 from __future__ import annotations
 
@@ -53,7 +53,7 @@ def oracle(item: EvalItem, size: tuple[int, int], grid=(8, 6), price_as: str = "
         if on_call is not None:
             on_call(content, state["calls"])
         u = Usage(step_index, "replay", price_as, input_text_tokens=len(system) // 4 + 40,
-                  input_image_tokens=max(1, round(w * h / 750)), output_tokens=40,
+                  input_image_tokens=max(1, round(w * h / 800)), output_tokens=40,
                   estimated=True, image_px=images_px, note=NOTE)
         u.cost_usd = cost_usd(u)
         if not item.answerable or not item.evidence_boxes:

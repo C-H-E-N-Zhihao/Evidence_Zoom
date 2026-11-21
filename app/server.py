@@ -180,7 +180,12 @@ def ask(req: Ask):
             # the fixture's gold labels. Questions without a fixture label fail loudly (no invented answers).
             from pipeline.visual import replay
             item = FIXTURES.get(meta["fixture"] or "", {}).get("items", {}).get(_qkey(req.question))
-            visual.CALL_OVERRIDE = replay.oracle(item, img.size) if item else replay.unavailable(req.question)
+            # Replayed calls are priced with the same model as the full-page baseline (a like-for-like meter);
+            # APP_ROUTE_MODEL=claude-haiku-5-5 shows the billed "cheap model on the crop" comparison instead.
+            from .costs import MODEL as _page_model
+            route_model = os.getenv("APP_ROUTE_MODEL", _page_model)
+            visual.CALL_OVERRIDE = (replay.oracle(item, img.size, price_as=route_model) if item
+                                    else replay.unavailable(req.question))
         try:
             result = pipeline.answer(img, req.question)
         finally:
@@ -198,14 +203,19 @@ def ask(req: Ask):
     meta["questions"] += 1
     providers = {u.get("provider") for u in result.get("usage", [])}
     if result.get("abstained") and result.get("error") and not (providers - {"local", None}):
-        # The visual stage failed before any model call (no key / no fixture). A real run would still pay
-        # the overview call, so charge its estimate; otherwise a failure would make the savings look better.
-        from .costs import MODEL, image_tokens, price
+        # The visual stage failed before any model call (no key / no fixture). A real run would still pay the
+        # call it attempted (router@v2: the anchor crop or the full page; v1: the overview), so charge its
+        # estimate; otherwise a failure would make the savings look better.
+        import re
+        from .costs import MODEL, TEXT_BASE_TOKENS, image_tokens, price
         from eval.schema import Usage
-        ov_w, ov_h = (512 * meta["w"] // max(meta["w"], meta["h"]), 512 * meta["h"] // max(meta["w"], meta["h"]))
-        u = Usage(len(result.get("route", [])), "estimate", MODEL, input_text_tokens=450,
-                  input_image_tokens=image_tokens(ov_w + 40, ov_h + 24), output_tokens=40, estimated=True,
-                  note="overview call a live run would pay; not served (no answer)")
+        tried = [st for st in result.get("route", []) if st.get("step") in ("zoom", "overview")]
+        m = re.search(r"(\d+)x(\d+)px", (tried[0].get("note") or "") if tried else "")
+        cw, ch = (int(m.group(1)), int(m.group(2))) if m else (meta["w"], meta["h"])
+        u = Usage(len(result.get("route", [])), "estimate", MODEL, input_text_tokens=TEXT_BASE_TOKENS,
+                  input_image_tokens=image_tokens(cw, ch), output_tokens=40, estimated=True,
+                  note=f"{tried[0]['step'] if tried else 'page'} call ({cw}x{ch}px) a live run would pay; "
+                       "not served (no answer)")
         price(u)
         result.setdefault("usage", []).append(u.__dict__)
     source = ("unavailable" if result.get("error") and result.get("abstained") else
