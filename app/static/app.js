@@ -252,7 +252,7 @@ function explain(data) {
       (t.includes("deskew") ? "; the tilted page was straightened first." : ".");
   }
   if (t === "full page" && r.route.some((st) => /text step off/.test(st.note || "")))
-    return `This on-device model does not reliably tell when OCR text is not enough (measured), so it was sent the whole page ` +
+    return `Small on-device models did not reliably tell when OCR text is not enough (measured on Qwen2.5-VL-7B), so this one was sent the whole page ` +
       `(${size}, ~${inTok} input tokens${est}); OCR still ran locally for the green boxes.`;
   if (t === "full page")
     return `No configured layout covers this question, so the whole page was sent (${size}, ~${inTok} input tokens${est}).` +

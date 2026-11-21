@@ -136,7 +136,7 @@ Billed results, Haiku on both arms:
 There is no replay for homework questions, so this needs `./scripts/demo-live.sh` or `./scripts/demo-local.sh`.
 
 With the on-device model (Qwen2.5-VL-7B), General mode skips the OCR-text step and sends the whole page; the answer says so.
-On the second worksheet set the 7B text step answered 44 of 48 visual questions from OCR text instead of asking for the image. It scored 53/96 that way, against 75/96 with the whole page (`REPORT_homework_v3_qwen7b.md`, development measurement, not reviewed).
+On the second worksheet set the 7B text step answered 44 of the 48 visual or mixed questions from OCR text instead of asking for the image. It scored 53/96 that way, against 75/96 with the whole page (`REPORT_homework_v3_qwen7b.md`, development measurement, not reviewed).
 
 ## Measured, billed (OpenRouter receipts; synthetic forms)
 
