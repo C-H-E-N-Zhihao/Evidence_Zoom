@@ -55,8 +55,12 @@ def _part(spec: str):
     """Cascade member: a harness name if it resolves, else an app-style answer function module:attr."""
     from .pipelines.compose import resolve_fn
 
+    if spec.startswith(("cascade:", "fn:")):  # nested chains: cascade:a|cascade:b|c
+        return get_pipeline(spec)
     base = spec.partition("@")[0]
     if base in REGISTRY or parse_name(base) is not None:
+        return get_pipeline(spec)
+    if spec.rpartition(":")[2].startswith("factory"):  # module:factory* -> a harness pipeline factory
         return get_pipeline(spec)
     return resolve_fn(spec)
 

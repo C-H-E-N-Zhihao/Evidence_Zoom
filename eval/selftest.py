@@ -105,6 +105,16 @@ def t_compose_and_guard() -> None:
     check("parametrized name", callable(get_pipeline("gold_crop_px:256")))
     check("name@model", callable(get_pipeline("full_image_cached@or:some/model")))
     check("cascade name", callable(get_pipeline("cascade:mock|mock")))
+    check("nested cascade name", callable(get_pipeline("cascade:mock|cascade:mock|mock")))
+    try:
+        import scipy  # noqa: F401  (checkbox_pixels needs numpy + scipy)
+
+        cb = get_pipeline("checkbox_pixels")
+        r = cb(item(qid="x"), Image.new("RGB", (800, 1000), "white"))
+        check("checkbox_pixels falls back on a blank page",
+              r.route[-1].step == "fallback" and r.usage[0].provider == "local" and degraded(r) is None)
+    except ImportError:
+        print("  skip checkbox_pixels (scipy not installed)")
 
 
 def t_pairs_curve_report() -> None:
