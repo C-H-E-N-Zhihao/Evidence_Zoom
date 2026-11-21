@@ -156,6 +156,10 @@ def t_pairs_curve_report() -> None:
                     "geometric_degrade": True},
            "report": {"p": {"summary": summarize(pairs), "pair_follow_rate": None, "aborted": "boom",
                             "complete": False, "degraded": 3}}}
+    from .calibrate_tokens import fit
+
+    c0, k0 = fit([(1000.0, 300.0, "a"), (3000.0, 700.0, "b"), (5000.0, 1100.0, "c")])
+    check("token calibration fit recovers line", abs(c0 - 100) < 1e-6 and abs(k0 - 0.2) < 1e-9)
     from .plot_frontier import pareto, short
 
     check("pareto keeps cheap and accurate, drops dominated",

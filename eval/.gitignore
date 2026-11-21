@@ -4,3 +4,4 @@ results/*.png
 .env
 __pycache__/
 !results/REPORT*.md
+!results/token_calibration.json
