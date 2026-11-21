@@ -13,13 +13,15 @@ Config (keyword args or eval factories below):
   max_zooms       zoom budget; with budget left, a crop carries a 2x2 sub-grid so the model can zoom again
   overview_model / zoom_model   may differ ("cheap overview, strong zoom", message 010)
   max_crop_side   a crop larger than this (long side) is downscaled and the note says so
-  call            backend function with eval.backends.anthropic_backend.call's signature (tests inject a fake)
+  call            fake backend for tests (anthropic_backend.call signature); otherwise each step's backend
+                  is chosen from its model string by eval.backends.get
 
 Eval harness:  python -m eval.run_eval --items ... --pipelines pipeline.visual:factory
 """
 from __future__ import annotations
 
 import json
+import os
 import re
 from typing import Callable, Optional
 
@@ -29,7 +31,8 @@ from eval.schema import EvalItem, EvidenceBox, PipelineResult, RouteStep
 
 Region = tuple[float, float, float, float]  # normalized on the ORIGINAL image
 
-DEFAULT_MODEL = "claude-opus-5-5"
+# Model strings follow eval/backends: "claude-…" (Anthropic), "or:<id>" (OpenRouter), "local:<id>" (vLLM on RCP).
+DEFAULT_MODEL = os.environ.get("EVAL_MODEL", "claude-opus-5-5")
 CALL_OVERRIDE: Optional[Callable] = None  # tests only: replaces the backend when `call` is not given
 
 _FORMAT = (
@@ -249,12 +252,15 @@ def answer(
     call: Optional[Callable] = None,
     name: Optional[str] = None,
 ) -> PipelineResult:
-    if call is None:
-        call = CALL_OVERRIDE
-    if call is None:
-        from eval.backends.anthropic_backend import call as _call
-        call = _call
-    from eval.backends.anthropic_backend import image_block
+    injected = call or CALL_OVERRIDE  # tests: one fake for every step, Anthropic-style image blocks
+
+    def backend(model: str):
+        if injected is not None:
+            from eval.backends.anthropic_backend import image_block
+            return image_block, injected, model
+        from eval.backends import get
+        be, bare = get(model)
+        return be.image_block, be.call, model
 
     img = image.convert("RGB")
     res = prior if prior is not None else PipelineResult(answer=None)
@@ -266,9 +272,10 @@ def answer(
         res.route.append(RouteStep(step=step, target=target, box=[round(v, 4) for v in box],
                                    note=f"{view_img.width}x{view_img.height}px to {model}{note}"))
         try:
-            reply, usage, stop = call([image_block(view_img), {"type": "text", "text": text}],
-                                      step_index=len(res.route) - 1, system=system, model=model,
-                                      images_px=[[view_img.width, view_img.height]])
+            image_block, call_fn, model_arg = backend(model)
+            reply, usage, stop = call_fn([image_block(view_img), {"type": "text", "text": text}],
+                                         step_index=len(res.route) - 1, system=system, model=model_arg,
+                                         images_px=[[view_img.width, view_img.height]])
         except Exception as e:  # a failed call is a result, not an exception
             res.error = f"{type(e).__name__}: {e}"
             return None
