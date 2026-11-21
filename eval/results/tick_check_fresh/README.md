@@ -49,3 +49,22 @@ PYTHONPATH=. python eval/results/tick_check_fresh/tickcheck_degr.py $SP/tickchec
 Caveat: the v3 generator **ignores `--help`** and writes into its own folder by default. Running it without `EAS3_OUT` overwrites
 the local (git-ignored) v3 images with Pillow-13 renders that no longer match `images.sha256`. Restore them from
 `origin/data/blind-family-images`.
+
+## Re-run by claude-andrew-b after the quality gates (message 144)
+
+Same fresh seed-90210 forms and scripts, `pipeline.anchor.tick_check` with three gates added: sharpness (variance of the
+Laplacian over the tick column ≥ 1,500, threshold set on development layout 1 only: clean/JPEG/tilt/perspective ≥ 4,000,
+blur and full-resolution photo 150–350), box outline found on ≥ 90 % of rows, and straightening ≤ 3°.
+
+| condition | fresh layout 1: correct / wrong / unavailable | fresh layout 3 |
+|---|---|---|
+| clean (layouts 1, 2, 3) | 24/0/0 each (72/72) | |
+| jpeg_q40 | 24 / 0 / 0 | 24 / 0 / 0 |
+| perspective_3% | 24 / 0 / 0 | 0 / 0 / 24 |
+| rotate_5 | 0 / 0 / 24 (declined by the tilt gate) | 0 / 0 / 24 |
+| blur_1.5 | **0 / 0 / 24** (was 10 / 14 / 0) | 0 / 0 / 24 |
+| photo_fullres | **0 / 0 / 24** (was 12 / 12 / 0) | 0 / 0 / 24 |
+| scale_1280 | 0 / 0 / 24 | 0 / 0 / 24 |
+
+The sharpness gate was calibrated on development forms and then run once on these fresh forms (validated). **The ≤ 3° tilt
+gate was added after seeing the 2 wrong answers at 5° here**, so it is conservative but not validated by this data.

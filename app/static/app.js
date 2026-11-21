@@ -291,12 +291,12 @@ function addA(data, i, ours) {
   // model-free second opinion on tick questions
   const ck = data.check;
   let ckEl = null;
-  if (ck && (ck.available || /resolution/.test(ck.reason || ""))) {
+  if (ck && (ck.available || /resolution|blurred|crisp|tilted/.test(ck.reason || ""))) {
     ckEl = document.createElement("div"); ckEl.className = "check";
     if (!ck.available) { ckEl.classList.add("muted"); ckEl.textContent = `Pixel check: not run (${ck.reason}).`; }
     else {
-      const verdict = ck.agrees === true ? "agrees ✓" : ck.agrees === false ? "disagrees: check this by eye" : "";
-      ckEl.textContent = `Pixel check (no model, ink inside the located boxes): ${ck.kind === "tick_row"
+      const verdict = ck.agrees === true ? "same as the answer" : ck.agrees === false ? "differs from the answer: check this by eye" : "";
+      ckEl.textContent = `Pixel check (clean scans only, no model; ink inside the located boxes): ${ck.kind === "tick_row"
         ? `box ${ck.row} for driver ${ck.side.toUpperCase()} looks ${ck.answer === "yes" ? "ticked" : "empty"}`
         : `driver ${ck.side.toUpperCase()}'s ticked boxes look like ${ck.answer}`}${verdict ? " · " + verdict : ""}`;
       if (ck.agrees === false) ckEl.classList.add("warn");

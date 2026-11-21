@@ -329,11 +329,35 @@ def factory_then_overview():
 # On a configured layout the anchor knows where each tick box is. Ink inside a box (outline excluded) says whether
 # it is ticked. Exploratory: correct on 96/96 tick questions of the four synthetic accident layouts at full scan
 # resolution (clean, JPEG q40, 2 and 5 degree tilt), but wrong at 1024 px and on simulated phone photos, so it only
-# runs when the page's long side is >= TICK_CHECK_MIN_PX and otherwise says it is unavailable (message 142).
+# runs when the page's long side is >= TICK_CHECK_MIN_PX and passes the quality gates below, and otherwise says it is
+# unavailable (messages 142, 143). Clean full-resolution scans: 96/96 development, 72/72 fresh seeds (claude-zhihao).
 TICK_CHECK_MIN_PX = 1500
+# Quality gates (message 143: blurred / photographed pages that keep >= 1500 px got through and were wrong):
+# - sharpness = variance of the Laplacian over the tick column; development layout 1: clean/JPEG/tilt/perspective
+#   >= 4,000, blur 1.5 and full-resolution photo 150-350. Gate at 1,500 (set on development forms only).
+# - the box outline must be found on >= 90 % of rows.
+TICK_CHECK_MIN_SHARPNESS = 1500.0
+# - pages straightened by more than 3 degrees are declined. Chosen AFTER claude-zhihao's fresh-seed run showed 2/24
+#   wrong at 5 degrees (development forms were 24/24), so this rule is conservative but not validated (message 144).
+TICK_CHECK_MAX_TILT_DEG = 3.0
+TICK_CHECK_MIN_OUTLINE_ROWS = 0.9
 
 
-def _ink_per_row(page, lay, side, shrink=0.28):
+def _column_sharpness(page, lay, side) -> float:
+    import numpy as np
+
+    g = np.asarray(page.convert("L"), dtype=np.float32)
+    h_img, w_img = g.shape
+    x0, x1 = lay.cols[side]
+    ks = sorted(lay.rows)
+    c = g[int(lay.rows[ks[0]][0] * h_img):int(lay.rows[ks[-1]][1] * h_img), int(x0 * w_img):int(x1 * w_img)]
+    if c.shape[0] < 3 or c.shape[1] < 3:
+        return 0.0
+    lap = c[1:-1, 1:-1] * 4 - c[:-2, 1:-1] - c[2:, 1:-1] - c[1:-1, :-2] - c[1:-1, 2:]
+    return float(lap.var())
+
+
+def _ink_per_row(page, lay, side, shrink=0.28, stats=None):
     import numpy as np
 
     g = np.asarray(page.convert("L"), dtype=np.float32)
@@ -351,6 +375,8 @@ def _ink_per_row(page, lay, side, shrink=0.28):
         ys, xs = np.where(dark.mean(1) > 0.35)[0], np.where(dark.mean(0) > 0.35)[0]
         if len(ys) >= 2 and len(xs) >= 2:
             by0, by1, bx0, bx1 = ys.min(), ys.max(), xs.min(), xs.max()
+            if stats is not None:
+                stats["outline"] = stats.get("outline", 0) + 1
         else:
             by0, by1, bx0, bx1 = 0, cell.shape[0] - 1, 0, cell.shape[1] - 1
         bh, bw = by1 - by0, bx1 - bx0
@@ -369,6 +395,8 @@ def tick_check(image, question: str) -> dict:
     if sel is None or sel.kind not in ("ticks", "tick_row"):
         return {"available": False, "reason": "not a tick question on a configured layout"}
     page = sel.image
+    if abs(sel.angle) > TICK_CHECK_MAX_TILT_DEG:
+        return {"available": False, "reason": f"page tilted by {abs(sel.angle):.1f}°: pixel check runs only on near-upright scans"}
     if max(page.size) < TICK_CHECK_MIN_PX:
         return {"available": False, "reason": f"page below {TICK_CHECK_MIN_PX} px: pixel check not reliable at this resolution"}
     spans, _ = ocr_spans(page)
@@ -381,7 +409,13 @@ def tick_check(image, question: str) -> dict:
     side = (who.group(1) or who.group(2)) if who else None
     if lay is None or side not in lay.cols:
         return {"available": False, "reason": "tick column not found"}
-    ink = _ink_per_row(page, lay, side)
+    sharp = _column_sharpness(page, lay, side)
+    if sharp < TICK_CHECK_MIN_SHARPNESS:
+        return {"available": False, "reason": "page too blurred for a reliable pixel check"}
+    stats: dict = {}
+    ink = _ink_per_row(page, lay, side, stats=stats)
+    if stats.get("outline", 0) < TICK_CHECK_MIN_OUTLINE_ROWS * len(lay.rows):
+        return {"available": False, "reason": "tick-box outlines not crisp enough for a reliable pixel check"}
     vals = sorted(ink.values())
     thr = max(0.08, vals[len(vals) // 2] * 3 + 0.04)
     ticked = sorted(n for n, v in ink.items() if v > thr)
