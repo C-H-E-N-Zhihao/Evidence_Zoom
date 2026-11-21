@@ -33,6 +33,8 @@ def table(run: dict) -> str:
            + (" · **uncommitted changes in pipeline/**" if meta.get("pipeline_dirty") else "")
            + (" · uncommitted changes in eval/" if meta.get("eval_dirty") else "") + "\n"]
           if meta.get("pipeline_tree") else []),
+        *([f"Images: digest `{meta['images_digest']}` over {len(meta.get('images_sha256') or {})} files (compare with the set's images.sha256)\n"]
+          if meta.get("images_digest") else []),
         "| pipeline | group | n | acc | joint | hit@0.3 | abstain | correct abstain | $/q | p50 ms | in tok/q | of which image | out tok/q | calls/q | pair follow | zoomed | zoom covers gold | acc when covered | GPU s/q |",
         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]

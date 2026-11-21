@@ -185,6 +185,14 @@ def t_pairs_curve_report() -> None:
     from .run_eval import code_provenance
 
     check("code_provenance never raises and returns a dict", isinstance(code_provenance(), dict))
+    from .run_eval import image_checksums
+
+    with tempfile.TemporaryDirectory() as d:
+        Image.new("RGB", (8, 8), "white").save(Path(d) / "a.png")
+        ck = image_checksums([item(img="a")] and [EvalItem(question_id="q", image_id="a", image_path=str(Path(d) / "a.png"),
+                                                            question="?", answer="x")])
+        check("image checksums recorded per file plus digest",
+              len(ck["images_sha256"]) == 1 and len(ck["images_digest"]) == 16 and ck["images_sha256"]["a.png"])
 
 
 def t_geometry() -> None:

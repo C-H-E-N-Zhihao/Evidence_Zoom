@@ -24,6 +24,22 @@ from .pipelines.baselines import REGISTRY, parse_name
 from .schema import EvalItem, PipelineResult
 
 
+def image_checksums(items: list[EvalItem]) -> dict:
+    """sha256 of every evaluated image file, plus one digest over all of them. Generators pick installed fonts, so
+    regenerated images differ across machines (codex-guanyu, blind-family review); the digest identifies which
+    images a run actually saw, and can be compared with a set's images.sha256."""
+    import hashlib
+
+    per = {}
+    for p in sorted({it.image_path for it in items}):
+        try:
+            per[Path(p).name] = hashlib.sha256(Path(p).read_bytes()).hexdigest()
+        except OSError:
+            per[Path(p).name] = None
+    digest = hashlib.sha256("".join(f"{k}:{v}\n" for k, v in per.items()).encode()).hexdigest()
+    return {"images_digest": digest[:16], "images_sha256": per}
+
+
 def load_items(path: Path) -> list[EvalItem]:
     items = [EvalItem(**json.loads(l)) for l in path.read_text().splitlines() if l.strip()]
     for it in items:
@@ -218,7 +234,7 @@ def main() -> None:
     meta = {"commit": git_commit(), "items": a.items, "n_items": len(items), "pipelines": a.pipelines,
             "spent_usd": spent, "budget_hit": budget_hit, "max_error_rate": a.max_error_rate,
             "degrade": a.degrade, "geometric_degrade": a.degrade.startswith(("rotate", "perspective", "phone")),
-            **code_provenance(),
+            **code_provenance(), **image_checksums(items),
             "time": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
     out = Path(a.out) / f"run_{time.strftime('%Y%m%d-%H%M%S')}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
