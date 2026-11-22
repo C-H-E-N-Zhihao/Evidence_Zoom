@@ -336,7 +336,8 @@ function addA(data, i, ours) {
       if (ck.agrees === false) ckEl.classList.add("warn");
     }
   }
-  const tnote = (result.route.find((st) => st.step === "answer" && /explanation: /.test(st.note || "")) || {}).note || "";
+  // the general route appends the tutoring explanation to its OCR-text step's note
+  const tnote = (result.route.find((st) => /explanation: /.test(st.note || "")) || {}).note || "";
   let tutor = null;
   if (tnote) {
     tutor = document.createElement("div"); tutor.className = "tutor";
@@ -345,7 +346,9 @@ function addA(data, i, ours) {
   const why = document.createElement("div"); why.className = "explain"; why.textContent = explain(data);
   d.append(head, ...(tutor ? [tutor] : []), ...(why.textContent ? [why] : []), ...(ckEl ? [ckEl] : []), route, cost);
   // live only: ask the same model with the whole page, and show both sides with real (billed) numbers
-  if (cfg.live && (source === "model" || source === "ocr")) {
+  const wholePage = result.route.some((st) => st.step === "zoom" && st.target === "full page") &&
+    !result.route.some((st) => st.step === "zoom" && st.target !== "full page");
+  if (cfg.live && (source === "model" || source === "ocr") && !wholePage) {  // nothing to compare if we sent the page
     const q = data.question || (d.previousElementSibling && d.previousElementSibling.textContent) || "";
     const btn = document.createElement("button"); btn.type = "button"; btn.className = "btn ghost cmp-btn";
     btn.textContent = "Compare: ask the whole page instead";
