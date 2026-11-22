@@ -1,4 +1,6 @@
 """Stub-based checks for pipeline/router.py (no OCR binary, no API).  Run: python -m pipeline.test_router"""
+import os
+os.environ.setdefault("ROUTER_PAGE_CROP", "0")  # stubs: test the routing, not the page crop (covered live)
 import sys
 import types
 

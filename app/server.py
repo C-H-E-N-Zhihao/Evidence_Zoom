@@ -277,13 +277,19 @@ def ask(req: Ask):
     # route: the claims router for configured claim forms, the general assistant (OCR text first) otherwise
     # worksheet mode (OCR text first) where it was measured to save cost (printed worksheets, REPORT_homework_v3_heldout);
     # "general" = any image: whole page, because text-first lost on real documents (REPORT_realdocs.md)
-    worksheet = req.mode == "worksheet" or (req.mode not in ("claims", "general") and (meta.get("fixture") or "").startswith("hw-"))
+    # One automatic route for every image (no picker): OCR -> configured-form crop -> the page cropped to its text
+    # area and downscaled (pipeline.router). The API still accepts mode="worksheet"/"general" for experiments.
+    worksheet = req.mode == "worksheet"
     general = worksheet or req.mode == "general"
     pipe = importlib.import_module("pipeline.general") if general else pipeline
     with _replay_lock:  # the visual module's hooks are process-global; one question at a time
         chosen = _use_model(req.model) if LIVE else None
         if visual is not None:
             visual.VIEW_SINK = sink
+        # small local models do not reliably ask for pixels when OCR text is not enough
+        # (REPORT_homework_v3_qwen7b.md): in general mode they get the whole page instead of the text step
+        kw = {"text_step": worksheet and not (chosen or "").startswith("local:")} if general else {}
+        fixture_item = FIXTURES.get(meta.get("fixture") or "", {}).get("items", {}).get(_qkey(req.question))
         if LIVE:
             global LIVE_SPENT
             capped = LIVE_SPENT >= LIVE_MAX_USD
@@ -292,9 +298,6 @@ def ask(req: Ask):
                     raise RuntimeError(f"live spend stop threshold ${LIVE_MAX_USD:.2f} reached (APP_LIVE_MAX_USD)")
                 _cap.direct_zoom = True  # keep the shipped route; only the model call is blocked
                 visual.CALL_OVERRIDE = _cap
-            # small local models do not reliably ask for pixels when OCR text is not enough
-            # (REPORT_homework_v3_qwen7b.md): in general mode they get the whole page instead of the text step
-            kw = {"text_step": worksheet and not (chosen or "").startswith("local:")} if general else {}
             try:
                 result = pipe.answer(img, req.question, **kw)
             finally:
@@ -307,26 +310,34 @@ def ask(req: Ask):
                               if u.get("provider") not in ("local", "replay", "estimate", None))
             d = result.to_dict() if hasattr(result, "to_dict") else result
             visual_tried = any(st.get("step") in ("zoom", "overview") for st in d.get("route", []))
-            if REPLAY and visual is not None and visual_tried and d.get("error") and not billed(d):
-                live_error = d.get("error")  # live call failed: fall back to the labelled replay below
+            err = d.get("error") or ""
+            if err and (chosen or "").startswith("local:") and ("Connection refused" in err or "URLError" in err):
+                err = ("on-device model not reachable (is Ollama running? start it with "
+                       "OLLAMA_CONTEXT_LENGTH=8192 ollama serve, or pick the cloud model)")
+                d["error"] = err
+            if REPLAY and visual is not None and visual_tried and err and not billed(d) and fixture_item:
+                live_error = err  # live call failed on a fixture question: fall back to the labelled replay below
                 views.clear()
                 visual.VIEW_SINK = sink
             else:
                 result = d
-        if (REPLAY and not LIVE or live_error) and visual is not None:
+                if err and not billed(d):
+                    live_error = err  # no replay for this question (e.g. an upload): show the failure, nothing invented
+        replay_now = (REPLAY and not LIVE) or (live_error and fixture_item)
+        if replay_now and visual is not None:
             # Key-free rehearsal: the real pipeline runs; only the vision-model calls are replayed from
             # the fixture's gold labels. Questions without a fixture label fail loudly (no invented answers).
             from pipeline.visual import replay
-            item = FIXTURES.get(meta["fixture"] or "", {}).get("items", {}).get(_qkey(req.question))
+            item = fixture_item
             # Replayed calls are priced with the same model as the full-page baseline (a like-for-like meter);
             # APP_ROUTE_MODEL=claude-haiku-5-5 shows the billed "cheap model on the crop" comparison instead.
             from .costs import MODEL as _page_model
             route_model = os.getenv("APP_ROUTE_MODEL", _page_model)
             visual.CALL_OVERRIDE = (replay.oracle(item, img.size, price_as=route_model) if item
                                     else replay.unavailable(req.question))
-        if not LIVE or live_error:
+        if not LIVE or (live_error and fixture_item):
             try:
-                result = pipe.answer(img, req.question)
+                result = pipe.answer(img, req.question, **kw)
             finally:
                 if visual is not None:
                     visual.CALL_OVERRIDE = None

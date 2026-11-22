@@ -186,7 +186,7 @@ async function askQ(q) {
   $("chat").append(wait); wait.scrollIntoView({ block: "end" });
   try {
     const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image_id: imageId, question: q, model: cfg.live ? cfg.model : null, mode: $("mode-pick").value || null }) });
+      body: JSON.stringify({ image_id: imageId, question: q, model: cfg.live ? cfg.model : null, mode: null }) });
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || r.status);
     data.question = q;
@@ -226,6 +226,7 @@ function explain(data) {
   const pageTok = (baseline.image_tokens || 0) + (baseline.text_tokens || 0);
   const est = r.usage.some((u) => u.estimated) ? " (estimated)" : "";
   const lab = (r.evidence_boxes || []).map((e) => e.label).find(Boolean);
+  if (r.error) return "";  // the failure is shown in the answer line; do not describe a route that did not answer
   if (source === "ocr") return `Read on this computer by OCR${lab ? ` from the printed line "${lab}"` : ""}: no model call, $0.`;
   const txt = r.route.find((st) => st.step === "native_text");
   if (txt && !zoom) {
@@ -258,8 +259,9 @@ function explain(data) {
     return `The router estimated that the whole image would use fewer or equal input tokens than the OCR-text request. ` +
       `It sent the whole page (${size}, ~${inTok} input tokens${est}). OCR ran locally.`;
   if (t === "full page" && r.route.some((st) => /text step off/.test(st.note || "")) && !data.on_device)
-    return `Any-image mode sends the whole page (${size}, ~${inTok} input tokens${est}): on real documents, reading the OCR text ` +
-      `first scored lower than the whole page overall in our tests. OCR still ran locally.`;
+    return `Any-image mode sends the whole page, downscaled to ${size} (~${inTok} input tokens${est} instead of ~${pageTok} ` +
+      `(estimated) at full size, ${pageTok ? Math.max(0, Math.round((1 - inTok / pageTok) * 100)) : 0}% fewer). On real scans this ` +
+      `size scored the same as full resolution; reading the OCR text first scored lower overall. OCR still ran locally.`;
   if (t === "full page" && r.route.some((st) => /text step off/.test(st.note || "")))
     return `Small on-device models did not reliably tell when OCR text is not enough (measured on Qwen2.5-VL-7B), so this one was sent the whole page ` +
       `(${size}, ~${inTok} input tokens${est}); OCR still ran locally for the green boxes.`;

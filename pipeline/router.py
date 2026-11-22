@@ -156,9 +156,23 @@ def answer(image, question: str, anchor: bool | None = None, fallback: str | Non
 
             prior.route.append(RouteStep("fallback", target="page", note="no OCR answer or anchor: full page"))
             model = os.environ.get("EVAL_MODEL") or getattr(_vis, "DEFAULT_MODEL", None)  # read at call time
-            result = _vis.zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=prior,
-                                      look_for="the whole page", target="full page", name="page_fallback",
-                                      **({"model": model} if model else {}))
+            if os.environ.get("ROUTER_PAGE_CROP", "1") == "1":
+                # the page as one image, cropped to the OCR text area and downscaled (pipeline.general._page_call:
+                # 1024 px long side for normal pages, short side >= 768 px; realdocs resolution frontier, approved)
+                from pipeline import general as _gen
+
+                lines = []
+                try:
+                    from pipeline.ocr import recognize_page
+
+                    lines = _gen._lines(recognize_page(image)[0])
+                except Exception:
+                    pass
+                result = _gen._page_call(image, question, prior, model or _vis.DEFAULT_MODEL, None, lines, "the whole page")
+            else:
+                result = _vis.zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=prior,
+                                          look_for="the whole page", target="full page", name="page_fallback",
+                                          **({"model": model} if model else {}))
         else:
             result = visual(image, question, prior=prior)
     except Exception as e:

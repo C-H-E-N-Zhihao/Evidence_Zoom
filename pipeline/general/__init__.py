@@ -27,15 +27,51 @@ MAX_LINES = 220
 # text (~chars/4) plus about TEXT_STEP_OVERHEAD input-equivalent tokens (system prompt ~400 + extra output ~120 tokens
 # priced ~5x input). If the image is cheaper, skip the text step and send the page.
 TEXT_STEP_OVERHEAD = 1000
-# Whole-page resolution (realdocs_v2 control, message 175/176): at a 1568 px long side DocVQA scans lose nothing
-# (ANLS .954 vs .951 at full size, 41% cheaper) but tall infographics do (.690 vs .761). Pages taller than 2:1 keep
-# up to 2400 px. Development rule (chosen after seeing realdocs_v2).
-PAGE_SIDE, TALL_PAGE_SIDE, TALL_ASPECT = 1568, 2400, 2.0
+# Whole-page resolution (realdocs_v2 resolution frontier, 9792e2c / ca24f86, approved): DocVQA scans keep full ANLS
+# down to a 1024 px long side (short side ~790 px) at about a third of the full-size cost, and drop at 768 px; tall
+# infographics lose detail as soon as they are shrunk. Rule: keep the short side >= MIN_SHORT (768 px) and the long side
+# >= MIN_LONG (1024 px), never upscale, cap at MAX_LONG (2400 px). A normal page goes to ~1024 px, a tall receipt keeps
+# enough width to read, an infographic stays near full size. (The rule is set from those runs; receipts are measured
+# separately.)
+MIN_SHORT, MIN_LONG, MAX_LONG = 768, 1024, 2400
 
 
 def _page_side(image) -> int:
     w, h = image.size
-    return TALL_PAGE_SIDE if max(w, h) / max(1, min(w, h)) > TALL_ASPECT else PAGE_SIDE
+    lo, hi = min(w, h), max(w, h)
+    want = max(MIN_LONG, round(MIN_SHORT * hi / max(1, lo)))
+    return int(min(hi, MAX_LONG, want))
+
+
+CONTENT_MARGIN = 0.03  # page fraction kept around the OCR text extent
+
+
+def _content_spans(image, lines):
+    """Rows/cols of the area that holds text (OCR line boxes plus a margin): a phone photo of a receipt is mostly
+    table or background, so downscaling the whole frame wastes pixels. Whole frame if OCR found nothing or the text
+    already fills most of it."""
+    if not lines:
+        return [(0.0, 1.0)], [(0.0, 1.0)]
+    x0 = max(0.0, min(s["box"][0] for s in lines) - CONTENT_MARGIN)
+    y0 = max(0.0, min(s["box"][1] for s in lines) - CONTENT_MARGIN)
+    x1 = min(1.0, max(s["box"][2] for s in lines) + CONTENT_MARGIN)
+    y1 = min(1.0, max(s["box"][3] for s in lines) + CONTENT_MARGIN)
+    if (x1 - x0) * (y1 - y0) > 0.85:
+        return [(0.0, 1.0)], [(0.0, 1.0)]
+    return [(y0, y1)], [(x0, x1)]
+
+
+def _page_call(image, question, res, model, call, lines, look_for="the evidence for the question"):
+    """The whole page as one image: cropped to the text area, then downscaled by _page_side."""
+    from pipeline.visual import zoom_answer
+
+    rows, cols = _content_spans(image, lines)
+    cw = round(image.width * (cols[0][1] - cols[0][0])); ch = round(image.height * (rows[0][1] - rows[0][0]))
+    side = _page_side(type("S", (), {"size": (cw, ch)})())
+    return zoom_answer(image, question, rows, cols, prior=res, model=model, look_for=look_for, target="full page",
+                       call=call, name="page", max_crop_side=side)
+
+
 PIXELS_PER_TOKEN = 800.0
 BAND_ABOVE, BAND_BELOW = 0.30, 0.30  # crop band around the named lines (page fractions). Drawings sit above their
 # labels (axis labels, legends, keys) as often as below their question text: homework_v2 held-out, 8264c05.
@@ -140,14 +176,10 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
             res.route.append(RouteStep("fallback", target="image",
                                        note=f"small image: whole page (~{img_tok:.0f} tok) is cheaper than its OCR text "
                                             f"(~{txt_tok:.0f} tok)"))
-            return zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=res, model=model,
-                               look_for="the evidence for the question", target="full page", call=call, name="page",
-                               max_crop_side=_page_side(image))
+            return _page_call(image, question, res, model, call, lines)
     if lines and not text_step:
         res.route.append(RouteStep("fallback", target="image", note="whole page (text step off)"))
-        return zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=res, model=model,
-                           look_for="the evidence for the question", target="full page", call=call, name="page",
-                               max_crop_side=_page_side(image))
+        return _page_call(image, question, res, model, call, lines)
     if lines:
         # 2. text-only call
         text = "\n".join(f"[L{i + 1}] {s['text'].strip()}" for i, s in enumerate(lines))
@@ -211,9 +243,7 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
     # 4. the band was not enough: one more look, at the whole page (a band can miss a drawing far from its labels)
     if res.abstained and not res.error and rows != [(0.0, 1.0)]:
         res.route.append(RouteStep("fallback", target="image", note="band crop was not enough; one look at the whole page"))
-        res = zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=res, model=model,
-                          look_for=look_for or "the evidence for the question", target="full page", call=call,
-                          name="page", max_crop_side=_page_side(image))
+        res = _page_call(image, question, res, model, call, lines, look_for or "the evidence for the question")
     return res
 
 

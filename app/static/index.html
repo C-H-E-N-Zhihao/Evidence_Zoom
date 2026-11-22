@@ -9,12 +9,6 @@
 <body>
 <header>
   <div class="brand">Evidence Zoom <span class="tag">frugal multimodal QA</span></div>
-  <select id="mode-pick" class="model-pick" title="Which route answers. Text first was cheaper on printed worksheets but scored lower overall on real documents. Auto: worksheets text first, other images to the claim router (whole page when no template matches).">
-    <option value="">Auto (claim form / worksheet)</option>
-    <option value="claims">Claim form router</option>
-    <option value="worksheet">Worksheet: OCR text first</option>
-    <option value="general">Any image: whole page</option>
-  </select>
   <select id="model-pick" class="model-pick" hidden title="Model used for questions that need pixels"></select>
   <button class="btn tour-btn" id="tour-btn" type="button">▶ Guided tour</button>
   <button class="btn ghost claims-btn" id="claims-btn" type="button">What we measured</button>
