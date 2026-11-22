@@ -143,10 +143,10 @@ Billed results, Haiku on both arms:
 
 **The OCR-checked ladder** (default on; approved in `andrew-review-ladder`). The model first sees a smaller page (about 768 px). The answer is accepted only if it appears in the page's local OCR text; otherwise the page is sent again at ≥ 1568 px.
 - **DocVQA scans** (100 questions, Haiku):
-  - 96 correct, the same as the original full page;
+  - 96 correct, the same as the original full page (a separately prompted baseline);
   - ANLS 0.920 vs 0.931;
   - about 1,574 vs 4,587 provider tokens per correct answer, 44% of the charge.
-- **Real receipts** (CORD, 241 questions), against the fixed-size page: the same 179 answered correctly and 60 handed to a human. The answers matched the reference wording more closely (ANLS 0.970 vs 0.924), for 1,380 vs 1,218 tokens per correct answer.
+- **Real receipts** (CORD, 241 questions), against the fixed-size page: the same 179 answered correctly and 60 correctly flagged for human review. The answers matched the reference wording more closely (ANLS 0.970 vs 0.924), for 1,380 vs 1,218 tokens per correct answer.
 - **Limits:** always name the baseline. The 768/1568 pairing was chosen on a different DocVQA sample. One run each.
 
 Uploads and homework questions have no replay, so they need `./scripts/demo-live.sh` or `./scripts/demo-local.sh` (Ollama: `OLLAMA_CONTEXT_LENGTH=8192 ollama serve`).
