@@ -210,7 +210,8 @@ def _in_ocr(answer, lines) -> bool:
     if not a:
         return False
     text = re.sub(r"[^a-z0-9]", "", _norm(" ".join(s["text"] for s in lines)))
-    if a in text:
+    mostly_number = bool(re.search(r"\d", str(answer))) and len(re.sub(r"[^a-z]", "", _norm(str(answer)))) <= 4
+    if not mostly_number and a in text:  # words and codes: substring of the OCR text
         return True
     # "CHF 9.84" / "$1,322.87" / "9.84 EUR": the model adds a currency or unit the page prints apart. Accept when every
     # number in the answer is printed (digits compared without separators) and the answer is mostly that number.
