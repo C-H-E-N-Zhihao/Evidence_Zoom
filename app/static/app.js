@@ -299,9 +299,12 @@ function addA(data, i, ours) {
     const from = document.createElement("div"); from.className = "note";
     const general = data.pipeline === "pipeline.general";
     const lines = (result.evidence_boxes || []).filter((e) => e.source === "ocr" && e.label).length;
-    from.textContent = general
-      ? (lines ? `cites ${lines} OCR line${lines > 1 ? "s" : ""} (green boxes)` : "read from the image; box not verified")
+    const located = (result.evidence_boxes || []).some((e) => e.source === "ocr") &&
+      result.route.some((st) => /found in the OCR text|answer located by OCR/.test(st.note || ""));
+    from.textContent = located ? "✓ found in the page text (green box)"
+      : general ? (lines ? `cites ${lines} OCR line${lines > 1 ? "s" : ""} (green boxes)` : "")
       : (lab ? `from the line labelled "${lab}"` : "");
+    if (located) from.classList.add("ok");
     if (from.textContent) head.append(from);
   }
   if (source === "model" && data.model) {

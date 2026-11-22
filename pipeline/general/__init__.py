@@ -198,6 +198,10 @@ def _page_call(image, question, res, model, call, lines, look_for="the evidence 
         if res.error:
             return res
         if not res.abstained and _in_ocr(res.answer, lines):
+            hits = _locate(res.answer, lines)
+            if hits:  # a located citation: the OCR line(s) where the accepted answer is printed
+                res.evidence_boxes = [EvidenceBox([round(v, 4) for v in h["box"]], source="ocr",
+                                                  label=h["text"].strip()[:60]) for h in hits]
             res.route.append(RouteStep("answer", note="low-resolution answer found in the OCR text: accepted"))
             return res
         res.route.append(RouteStep("fallback", target="image",
