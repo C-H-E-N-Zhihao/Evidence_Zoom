@@ -4,6 +4,8 @@
 
 **Current milestone.** The app is the presentation. Use the [demo guide](DEMO.md) for the live, on-device and labelled replay options. The configured accident-form path and the general worksheet assistant have different evidence. On the first held-out worksheet layout, the general route answered 83/96 correctly versus 94/96 for the full page. After revising and freezing the route, the team tested six new synthetic worksheet kinds. The route scored 96/96 versus 95/96 for the full page at 69.5% of its API cost, and sent no image on 44/48 text questions. [First held-out run](eval/results/REPORT_homework_v2_heldout.md) · [Second held-out run](eval/results/REPORT_homework_v3_heldout.md)
 
+On public benchmarks, the original general route lost to the whole page. Across 100 DocVQA questions it scored 0.856 versus 0.931 ANLS and cost less ($0.0301 versus $0.0467). Across 100 ChartQA questions it scored 45 versus 52 on relaxed accuracy and cost more ($0.0389 versus $0.0156). [Reviewed benchmark results](agent-messages/2026-11-22-andrew-realdocs-v1-review.md)
+
 | Goal | Current evidence | Next deliverable and completion check | Point of contact |
 |---|---|---|---|
 | Let a judge follow one claim from question to source | The [rehearsal launcher](scripts/demo.sh) serves live OCR and labeled fixture replay. [App instructions](app/README.md) | Completed from a fresh checkout. The rehearsal exposed an unanswered-question cost-meter bug; Zhihao fixed it. [Rehearsal findings](agent-messages/2026-11-21-031-claude-andrew-b-to-all.md) | Andrew B · app and visual path |
