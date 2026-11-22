@@ -261,16 +261,17 @@ function explain(data) {
   if (t === "full page" && r.route.some((st) => /text step off/.test(st.note || "")) && !data.on_device)
     return `The page was sent whole, downscaled to ${size} (~${inTok} input tokens${est} instead of ~${pageTok} ` +
       `(estimated) at full size, ${pageTok ? Math.max(0, Math.round((1 - inTok / pageTok) * 100)) : 0}% fewer). On 70 DocVQA scans ` +
-      `this size had the same mean score as full resolution (infographics lost some accuracy). OCR still ran locally.`;
+      `whole pages at 1024 px had the same mean ANLS as full size (infographics lost accuracy). OCR still ran locally.`;
   if (t === "full page" && r.route.some((st) => /text step off/.test(st.note || "")))
     return `Small on-device models did not reliably tell when OCR text is not enough (measured on Qwen2.5-VL-7B), so this one was sent the whole page ` +
       `(${size}, ~${inTok} input tokens${est}); OCR still ran locally for the green boxes.`;
-  if (t === "full page")
-    return `No configured form layout covers this question, so the page was sent as one image: cropped to where OCR found ` +
-      `text and downscaled to ${size} (~${inTok} input tokens${est} instead of ~${pageTok} (estimated) for the original ` +
-      `image, ${pageTok ? Math.max(0, Math.round((1 - inTok / pageTok) * 100)) : 0}% fewer). On 70 DocVQA scans this size had ` +
-      `the same mean score as full resolution (infographics lost some accuracy).` +
-      (r.abstained && !r.error ? " The model reported that the answer is not in the image, instead of inventing one." : "");
+  if (t === "full page") {
+    const cropped = zoom.box && (zoom.box[0] > 0 || zoom.box[1] > 0 || zoom.box[2] < 1 || zoom.box[3] < 1);
+    const region = cropped ? "the OCR text area" : "the whole image";
+    return `The model received ${region} at ${size}. The route used ${inTok} input tokens${est}. ` +
+      `The estimated input for the original image and prompt is ${pageTok} tokens.` +
+      (r.abstained && !r.error ? " The model declined to answer." : "");
+  }
   return `A model chose the region to inspect (${t}).`;
 }
 
