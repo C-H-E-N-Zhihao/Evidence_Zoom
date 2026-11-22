@@ -226,6 +226,7 @@ function explain(data) {
   const pageTok = (baseline.image_tokens || 0) + (baseline.text_tokens || 0);
   const est = r.usage.some((u) => u.estimated) ? " (estimated)" : "";
   const lab = (r.evidence_boxes || []).map((e) => e.label).find(Boolean);
+  if (data.answer_cache) return "Same image and same question as earlier in this session: answered from the answer cache, 0 model tokens.";
   if (r.error) return "";  // the failure is shown in the answer line; do not describe a route that did not answer
   if (source === "ocr") return `Read on this computer by OCR${lab ? ` from the printed line "${lab}"` : ""}: no model call, $0.`;
   const txt = r.route.find((st) => st.step === "native_text");
@@ -254,6 +255,13 @@ function explain(data) {
       `~${inTok} input tokens${est} instead of ~${pageTok} (estimated) for the whole page, ${pct}% fewer` +
       (t.includes("deskew") ? "; the tilted page was straightened first." : ".");
   }
+  if (r.route.some((st) => /low-resolution answer found in the OCR text/.test(st.note || "")))
+    return `Asked on a small version of the page first (${size}, ~${inTok} input tokens${est} instead of ~${pageTok} ` +
+      `(estimated) for the original image). The answer is printed on the page (checked against the local OCR text), ` +
+      `so no larger image was sent.`;
+  if (r.route.some((st) => /^ladder: answer not in the OCR text/.test(st.note || "")))
+    return `Asked on a small version first; that answer is not printed on the page (local OCR check), so the page was ` +
+      `asked again at higher resolution (~${inTok} input tokens${est} in total, original image ~${pageTok} (estimated)).`;
   const small = r.route.find((st) => /^small image/.test(st.note || ""));
   if (t === "full page" && small)
     return `The router estimated that the whole image would use fewer or equal input tokens than the OCR-text request. ` +
@@ -283,7 +291,8 @@ function addA(data, i, ours) {
   const src = document.createElement("span"); src.className = `src ${source}`; src.textContent = label; src.title = tip;
   const txt = document.createElement("span");
   txt.textContent = result.abstained
-    ? (result.error ? "No answer: " + result.error : "Cannot answer from the available evidence.")
+    ? (result.error ? "No answer: " + result.error + " → passed to a human agent."
+      : "I can't answer this from the image, so I'm passing it to a human agent.")
     : result.answer;
   head.append(src, txt);
   // which printed line answered (message 124): the OCR'd field label, or an explicit "not verified" for model answers
@@ -317,7 +326,8 @@ function addA(data, i, ours) {
     c.textContent = s.step === "fallback"
       ? (/text step off/.test(s.note || "") ? "whole page" : /^small image/.test(s.note || "") ? "small image"
         : /band crop was not enough/.test(s.note || "") ? "band not enough"
-        : /no OCR answer or anchor/.test(s.note || "") ? "no form layout: page" : "OCR not enough")
+        : /no OCR answer or anchor/.test(s.note || "") ? "no form layout: page"
+        : /^ladder:/.test(s.note || "") ? "not on page: higher res" : "OCR not enough")
       : s.target ? `${s.step} ${s.target.length > 18 ? s.target.slice(0, 18) + "…" : s.target}` : s.step;
     c.title = [s.target, s.note].filter(Boolean).join(" · ");
     route.append(c);

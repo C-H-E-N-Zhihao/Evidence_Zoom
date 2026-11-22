@@ -124,7 +124,9 @@ def _register(path: Path, fixture: str | None = None) -> dict:
     with Image.open(path) as im:
         w, h = im.size
     image_id = uuid.uuid4().hex[:12]
-    IMAGES[image_id] = {"path": path, "w": w, "h": h, "questions": 0, "fixture": fixture}
+    import hashlib
+    sha = hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    IMAGES[image_id] = {"path": path, "w": w, "h": h, "questions": 0, "fixture": fixture, "sha": sha}
     return {"image_id": image_id, "width": w, "height": h, "fixture": fixture,
             "url": f"/api/images/{image_id}"}
 
@@ -249,8 +251,36 @@ def compare(req: Ask):
             "cost_usd": cost, "input_tokens": tok, "latency_ms": ms, "model": model, "image_px": [img.width, img.height]}
 
 
+# Answer cache: a customer-service bot sees the same image and question again (re-sent screenshots, repeated
+# questions). Same image bytes + same normalized question + same model -> the stored answer, 0 model tokens.
+ANSWER_CACHE: dict = {}
+ANSWER_CACHE_ON = os.getenv("APP_ANSWER_CACHE", "1") == "1"
+
+
 @app.post("/api/ask")
 def ask(req: Ask):
+    meta = IMAGES.get(req.image_id)
+    key = None
+    if ANSWER_CACHE_ON and meta is not None:
+        key = (meta.get("sha"), " ".join(re.findall(r"[a-z0-9]+", req.question.lower())), req.model, req.mode)
+        hit = ANSWER_CACHE.get(key)
+        if hit is not None:
+            import copy
+            out = copy.deepcopy(hit)
+            out["answer_cache"] = True
+            out["result"]["usage"] = []  # nothing was sent to a model this time
+            out["views"] = []
+            meta["questions"] += 1
+            out["question_index"] = meta["questions"] - 1
+            return out
+    out = _ask(req)
+    r = out.get("result") or {}
+    if key is not None and not r.get("error") and not out.get("live_error") and out.get("source") in ("model", "ocr"):
+        ANSWER_CACHE[key] = out
+    return out
+
+
+def _ask(req: Ask):
     meta = IMAGES.get(req.image_id)
     if meta is None:
         raise HTTPException(404, "unknown image_id")
