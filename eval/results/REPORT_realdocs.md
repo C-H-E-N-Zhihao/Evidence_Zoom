@@ -47,5 +47,5 @@ The app's whole-page call caps the long side at 1568 px; the evaluated whole-pag
 
 - **Scans:** full accuracy down to 1024 px, at about a third of the full-size cost. Accuracy drops only at 768 px.
 - **Infographics:** they lose with every step down.
-- **Predictions (177):** DocVQA 1024 within 0.03 and 768 drops by more than 0.05: met. InfographicVQA 768 below 0.60: met. 1024 px at most 50% of the 1568 px cost: missed narrowly (55%).
+- **Predictions (177):** DocVQA 1024 within 0.03 and 768 drops by more than 0.05: met. InfographicVQA 768 below 0.60: met. 1024 px at most 50% of the 1568 px cost: missed. Over all 140 questions it was 72% ($0.0284 vs $0.0393): 56% on scans, 89% on infographics. Infographic cost barely falls with size, and at 768 px it was slightly higher than at 1024 px, because their long pages are already narrow and output tokens dominate.
 - **App:** stays at 1568 px (2400 px for pages taller than 2:1). The margin is free in accuracy and costs about $0.0001 per question.
