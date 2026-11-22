@@ -158,6 +158,15 @@ def summarize(pairs: list[tuple[EvalItem, PipelineResult]]) -> dict:
         zoomed = [(i, r) for i, r in ps if any(s.step == "zoom" for s in r.route)]
         costs = [r.total_cost() for _, r in ps]
         lats = [r.total_latency_ms() for _, r in ps]
+        # 190 (token-saving bot): cloud = API calls (device None, provider not "local"); local = OCR/self-hosted only
+        is_cloud = lambda u: u.device is None and u.provider != "local"
+        tok = lambda u: u.input_image_tokens + u.input_text_tokens + u.cache_read_tokens + u.cache_write_tokens + u.output_tokens
+        cloud = [[u for u in r.usage if is_cloud(u)] for _, r in ps]
+        cloud_tok = sum(tok(u) for us in cloud for u in us)
+        local_tok = sum(tok(u) for _, r in ps for u in r.usage if not is_cloud(u))
+        n_correct = sum(correct)
+        # codex b5c9037: per-correct denominators count correct ANSWERS only (a correct abstention is a handoff, not an answer)
+        n_ans = sum(1 for (_, r), ok in zip(ps, correct) if ok and not r.abstained)
         out[g] = {
             "n": len(ps),
             "accuracy": mean(correct) if correct else None,
@@ -185,6 +194,18 @@ def summarize(pairs: list[tuple[EvalItem, PipelineResult]]) -> dict:
             "output_tokens": sum(u.output_tokens for _, r in ps for u in r.usage),
             "gpu_seconds": sum(u.latency_ms for _, r in ps for u in r.usage if u.device == "gpu") / 1000,
             "any_estimated": any(u.estimated for _, r in ps for u in r.usage),
+            # 190 counts (codex token-score): every outcome counted, nothing hidden
+            "correct": n_correct,
+            "correct_answered": n_ans,
+            "answered_locally": sum(1 for (_, r), us in zip(ps, cloud) if not us and not r.abstained),
+            "cloud_escalations": sum(1 for us in cloud if us),
+            "handoffs": sum(r.abstained for _, r in ps),  # abstain = hand off to a human
+            "handoffs_on_answerable": sum(r.abstained for i, r in ps if i.answerable),
+            "wrong_answers": sum(1 for (i, r), ok in zip(ps, correct) if not ok and not r.abstained),
+            "cloud_tokens_total": cloud_tok,  # input image + text + cache reads + cache writes + output; see input/output fields above
+            "local_tokens_total": local_tok,
+            "cloud_tokens_per_correct": cloud_tok / n_ans if n_ans else None,
+            "cost_usd_per_correct": sum(costs) / n_ans if n_ans else None,
         }
     return out
 
