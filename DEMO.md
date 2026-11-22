@@ -196,7 +196,7 @@ Why the app does not use text-first any more: small open models answered visual 
   original page 93/96 for $0.052 (Haiku on both sides).
 - Five unconfigured layouts, 416 questions: all went to a full-page call; Haiku 401 through the router, 397 from
   the original page. The cost difference there comes from the page resolution, not routing.
-- Total API spend: through the resolution tests we can account for about $2.26 of the $10 credit: the $1.4979 key reading (message 131) plus committed worksheet ($0.2955), handwriting ($0.0512) and real-document ($0.4142) run charges. The provider dashboard gives the live balance.
+- Total API spend: through the final evaluation runs, the key reading and committed run receipts account for about $3.35 of the $10 API credit. The provider dashboard gives the live balance. (`eval/results/SPEND_SINCE_3f3de01.md`; approved in `andrew-review-262-268`)
 
 Sources and limits: `docs/NARRATIVE.md` §3. The app's session meter is a per-question **estimate**; the figures
 above are receipts.
