@@ -111,7 +111,7 @@ function showPairSummary() {
     .filter(([, v]) => "a" in v && "b" in v)
     .map(([q, v]) => `${q.replace(/ Answer .*$/, "")}  a: ${v.a ?? "—"} · b: ${v.b ?? "—"}`);
   note.hidden = false;
-  note.textContent = `Showing form ${side} of pair ${pair.pair_id}. ` +
+  note.textContent = `Showing version ${side.toUpperCase()}. ` +
     (rows.length ? rows.join("  |  ") : "Ask the same question on version A and version B to compare.");
 }
 
