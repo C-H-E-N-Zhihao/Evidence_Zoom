@@ -139,3 +139,19 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 18px; pa
          background: color-mix(in srgb, var(--accent) 8%, transparent); white-space: pre-wrap; }
 
 .note.ok { color: var(--ok); font-weight: 600; }
+
+/* phones */
+@media (max-width: 700px) {
+  header { flex-wrap: wrap; padding: 10px 14px; gap: 8px; }
+  .brand { width: 100%; }
+  .tag { display: none; }
+  .model-pick { flex: 1; min-width: 0; }
+  .banner { display: none; }
+  main { padding: 10px; gap: 10px; grid-template-columns: minmax(0, 1fr); }
+  .viewer { min-height: 360px; }
+  .side { min-height: 520px; }
+  .toolbar { flex-wrap: wrap; }
+  #pair { max-width: 100%; flex: 1; min-width: 0; }
+  .legend { flex-wrap: wrap; gap: 8px 14px; }
+  .saving-big b { font-size: 28px; }
+}
