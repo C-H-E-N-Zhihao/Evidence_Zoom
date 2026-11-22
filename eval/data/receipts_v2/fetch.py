@@ -109,7 +109,7 @@ def main():
     rng = random.Random(SEED)
     (HERE / "images").mkdir(parents=True, exist_ok=True)
     total = rows(0)["num_rows_total"]
-    offs = rng.sample(range(total), min(total, N * 2))  # CORD test has only 100 rows
+    offs = rng.sample(range(total), min(total, N * 2))  # CORD test and validation have 100 rows each
     out, got, ukind = [], 0, 0
     sizes = []
     for off in offs:
@@ -137,7 +137,7 @@ def main():
         if isinstance(menu, dict):
             menu = [menu]
         first = (menu or [None])[0] or {}
-        note0 = f"CORD-v2 test row {off}; original size {orig[0]}x{orig[1]}; stored {img.width}x{img.height}"
+        note0 = f"CORD-v2 {SPLIT} row {off}; original size {orig[0]}x{orig[1]}; stored {img.width}x{img.height}"
         qs = []
         tp = s(tot.get("total_price"))
         if tp:
@@ -157,13 +157,13 @@ def main():
         for k, (q, a, boxes, fld) in enumerate(qs):
             out.append({"question_id": f"rv-{off}-q{k}", "image_id": iid, "image_path": f"images/{iid}.png", "question": q,
                         "answer": a, "answerable": True, "evidence_type": "text", "evidence_boxes": boxes,
-                        "accepted_answers": variants(a), "pair_id": None, "source": f"cord-v2:test:{off}",
+                        "accepted_answers": variants(a), "pair_id": None, "source": f"cord-v2:{SPLIT}:{off}",
                         "notes": f"{note0}; gold field {fld}" + ("; box from CORD valid_line quads" if boxes else "")})
         uq = UNANSWERABLE[ukind % len(UNANSWERABLE)]
         ukind += 1
         out.append({"question_id": f"rv-{off}-q{len(qs)}", "image_id": iid, "image_path": f"images/{iid}.png", "question": uq,
                     "answer": None, "answerable": False, "evidence_type": "text", "evidence_boxes": [],
-                    "accepted_answers": [], "pair_id": None, "source": f"cord-v2:test:{off}",
+                    "accepted_answers": [], "pair_id": None, "source": f"cord-v2:{SPLIT}:{off}",
                     "notes": f"{note0}; unanswerable (field never annotated in CORD)"})
         got += 1
         print(got, off, len(qs) + 1)
