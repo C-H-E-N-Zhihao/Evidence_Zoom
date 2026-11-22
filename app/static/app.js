@@ -363,11 +363,14 @@ function addA(data, i, ours) {
   // the headline for a customer: what this answer cost in model tokens, against sending the original image
   const pageTok = (baseline.image_tokens || 0) + (baseline.text_tokens || 0);
   const pill = document.createElement("div"); pill.className = "pill";
-  if (data.answer_cache) pill.innerHTML = "<b>0 tokens</b> · same question as before, answered from the cache";
-  else if (!inTok) pill.innerHTML = "<b>0 model tokens</b> · read on this computer by OCR";
+  if (data.answer_cache) pill.innerHTML = "<b>0 input tokens</b> · same question as before, answered from the cache";
+  else if (source === "ocr" && !inTok) pill.innerHTML = "<b>0 model tokens</b> · read on this computer by OCR";
+  else if (!inTok) pill.innerHTML = "<b>0 input tokens</b> · no model answer";
   else {
-    const p = pageTok ? Math.max(0, Math.round((1 - inTok / pageTok) * 100)) : 0;
-    pill.innerHTML = `<b>${inTok.toLocaleString()} tokens</b> · ${p}% fewer than the original image (~${pageTok.toLocaleString()}, est.)`;
+    const p = pageTok ? Math.round((1 - inTok / pageTok) * 100) : 0;
+    pill.innerHTML = `<b>${inTok.toLocaleString()} input tokens</b> · ` + (p >= 0
+      ? `${p}% fewer than the original image (~${pageTok.toLocaleString()}, est.)`
+      : `${-p}% more than the original image (~${pageTok.toLocaleString()}, est.)`);
   }
   if (result.abstained) pill.classList.add("muted");
   const how = document.createElement("details"); how.className = "how";
@@ -431,10 +434,12 @@ function inputTokens(r) {
     (u.cache_read_tokens || 0) + (u.cache_write_tokens || 0), 0);
 }
 function updateSaving() {
-  const pct = sess.full ? Math.max(0, Math.round((1 - sess.ours / sess.full) * 100)) : null;
-  $("sv-pct").textContent = pct === null ? "–" : `${pct}%`;
-  $("sv-ours").textContent = `${sess.ours.toLocaleString()} tokens`;
-  $("sv-full").textContent = `${sess.full.toLocaleString()} tokens`;
+  const pct = sess.full ? Math.round((1 - sess.ours / sess.full) * 100) : null;
+  $("sv-pct").textContent = pct === null ? "–" : `${Math.abs(pct)}%`;
+  $("sv-label").textContent = pct !== null && pct < 0 ? "more input tokens than sending the original images"
+    : "fewer input tokens than sending the original images";
+  $("sv-ours").textContent = `${sess.ours.toLocaleString()} input tokens`;
+  $("sv-full").textContent = `${sess.full.toLocaleString()} input tokens`;
   $("sv-foot").textContent = sess.n ? `${sess.n} question${sess.n > 1 ? "s" : ""} this session · cached image tokens counted` +
     " in full here (the provider bills them at ~10%)" : "Upload a photo or pick a sample, then ask a question.";
 }
