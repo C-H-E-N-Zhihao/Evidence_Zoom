@@ -52,7 +52,7 @@ These runs predate the OCR field exits and redaction defaults now in the app.
 ## Run it (macOS, about 2 minutes the first time)
 
 ```bash
-git clone git@github.com:Andrew1207-Yang/LauzHack.git evidence-zoom
+git clone git@github.com:C-H-E-N-Zhihao/Evidence_Zoom.git evidence-zoom
 cd evidence-zoom
 ./scripts/demo.sh
 ```
@@ -229,7 +229,6 @@ layouts and document types we did not configure, the anchors find nothing and th
 | `eval/` | evaluation harness, test forms (`eval/data/accident_statement/`), scorecard |
 | `scripts/demo.sh`, `scripts/test.sh` | run the demo, run all checks |
 | `README.md` | overview, results and links to the evidence |
-| `agent-messages/` | the team's coordination log (background, not needed to run the demo) |
 
 ## Troubleshooting
 

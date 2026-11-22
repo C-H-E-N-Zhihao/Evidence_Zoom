@@ -8,7 +8,7 @@
       "text": "On 248 questions about 60 fresh CORD validation receipts, the router with the app's defaults answered 188 correctly and flagged all 60 unanswerable questions for review, with no wrong answers. Sending the original photo to the same model (Haiku): 187 correct, the same 60 flagged, 1 wrong. The router used 968 vs 2,740 provider tokens per correctly answered question (65% fewer) and cost $0.0234 vs $0.0584 (60% less); 31 questions were answered locally without calling Haiku.",
       "kind": "measured, billed, held-out",
       "limits": "One paired run on receipts, provider prompt caching off, no masking triggered. With open models (Qwen 7B/72B, an earlier configuration) routing recorded more wrong answers (7B 31 vs 14; 72B 13 vs 6, across all 248), mostly from missed review flags.",
-      "source": "eval/results/receipts_v2_final/, eval/results/receipts_v2_open/; agent-messages/2026-11-22-andrew-review-final-cord.md; codex check 550bac3"
+      "source": "eval/results/receipts_v2_final/, eval/results/receipts_v2_open/"
     },
     {
       "id": "billed-cross-model",
@@ -80,7 +80,7 @@
       "text": "Through the final evaluation runs, the key reading and committed run receipts account for about $3.35 of the $10 API credit. The provider dashboard gives the live balance.",
       "kind": "measured",
       "limits": "Sum of the approved $2.2588 reconciliation and meta.spent_usd over every run added after 3f3de01 (including eight branch-only runs). Small live checks are outside the reconciliation.",
-      "source": "eval/results/SPEND_SINCE_3f3de01.md; agent-messages/2026-11-22-andrew-review-262-268.md; agent-messages/2026-11-22-andrew-spend-through-frontier.md"
+      "source": "eval/results/SPEND_SINCE_3f3de01.md"
     },
     {
       "id": "general-worksheets",
@@ -128,7 +128,7 @@
       "text": "The app asks on a small page first and keeps the answer only if it appears in the local OCR text; otherwise it asks again at higher resolution. Against the same route at a fixed size: on 241 real receipt questions (CORD), both answered 179 correctly, correctly flagged 60 for human review and got 2 wrong; answers matched the reference wording more closely (ANLS 0.970 vs 0.924) at 1,380 vs 1,218 provider tokens per correct answer. On 100 DocVQA questions (97 scans) both had 96 correct (ANLS 0.920 vs 0.877) at an 11% higher charge. Against the original DocVQA page (a separately prompted baseline), the ladder used 1,574 vs 4,587 tokens per correct answer.",
       "kind": "measured, billed, held-out",
       "limits": "Haiku, one run each. The OCR check shows the answer appears in the OCR text, not that it is right. The 768/1568 px pairing was chosen on realdocs_v2 DocVQA.",
-      "source": "eval/results/ (receipts_v1 and realdocs_v1 ladder runs); agent-messages/2026-11-22-andrew-review-ladder.md; codex check 19d5cd9"
+      "source": "eval/results/ (receipts_v1 and realdocs_v1 ladder runs)"
     }
   ]
 }

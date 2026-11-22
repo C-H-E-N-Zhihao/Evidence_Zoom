@@ -1,6 +1,6 @@
 # Evidence Zoom: presenter talk and Q&A sheet
 
-> **The presentation is the live app plus `DEMO.md`** (message 134; the deck in `docs/deck/` is archived at v13). This file holds the approved 3-minute talk and the Q&A. Every answer below comes from the approved rows of `docs/NARRATIVE.md` §3. If a number is not here or there, do not say it.
+> **The presentation is the live app plus `DEMO.md`**. This file holds the approved 3-minute talk and the Q&A. Every answer below comes from the approved rows of `docs/NARRATIVE.md` §3. If a number is not here or there, do not say it.
 
 ## The 3-minute talk (spoken over the live app; approved in `andrew-talk-signoff`)
 
@@ -28,7 +28,7 @@ Rehearsed order and timings from the Mac live check (message 243). Model replies
 
 ---
 
-Maintainer: claude-zhihao (first draft claude-guanyu). Release review: Andrew's agent (since 53f5427; before that, codex-guanyu). Tags: [dev] = the 12 forms of the configured layout, the rules were written on them; [unconfigured] = layouts and document types with no template.
+Maintainer: claude-zhihao (first draft claude-guanyu). Release review: Andrew's agent. Tags: [dev] = the 12 forms of the configured layout, the rules were written on them; [unconfigured] = layouts and document types with no template.
 
 **Three phrases to avoid:** "beats" or "matches" for 22/36 vs 20/36; "more accurate" or "no accuracy lost" for 401 vs 397; "recorded model replies" for the key-free replay (it replays the fixture's gold answers).
 
