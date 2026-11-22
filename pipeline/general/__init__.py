@@ -128,6 +128,51 @@ def _page_call(image, question, res, model, call, lines, look_for="the evidence 
     rows, cols = _content_spans(image, lines)
     cw = round(image.width * (cols[0][1] - cols[0][0])); ch = round(image.height * (rows[0][1] - rows[0][0]))
     side = _page_side(type("S", (), {"size": (cw, ch)})())
+    spec = os.environ.get("SPECULATE_LOCAL", "")
+    if spec and lines and not str(model).startswith("local:"):
+        # Local proposes, OCR grounds, cloud confirms (message 205). The on-device model answers on the small page
+        # ($0); OCR finds the line(s) where that exact answer is printed; the cloud model sees only a strip around those
+        # lines (a few hundred tokens). Agreement -> answer with an OCR-verified evidence box. Otherwise: the ladder.
+        proposal = None
+        try:  # free proposer first: OCR field extraction (no model; pipeline/ocr_fields, 94% precise on receipts_v1)
+            from pipeline.ocr_fields import extract_from_spans
+
+            ex = extract_from_spans(lines, question)
+            if ex and ex.get("answer") and ex.get("confidence", 0) >= 0.75:
+                proposal = ex["answer"]
+                res.route.append(RouteStep("ocr", note=f"OCR field proposal {proposal!r} (no model)"))
+        except Exception:
+            pass
+        if proposal is None:
+            low = max(512, round(side * LADDER_LOW))
+            res = zoom_answer(image, question, rows, cols, prior=res, model=spec, look_for=look_for,
+                              target="full page", call=call, name="local_propose", max_crop_side=low)
+            proposal = None if (res.error or res.abstained) else res.answer
+        hits = _locate(proposal, lines) if proposal else []
+        res.error, res.abstained = None, True
+        if hits:
+            lh = max(0.008, sum(h["box"][3] - h["box"][1] for h in hits) / len(hits))
+            spans = sorted((max(0.0, h["box"][1] - 1.5 * lh), min(1.0, h["box"][3] + 1.5 * lh)) for h in hits)
+            band = [list(spans[0])]
+            for a_, b_ in spans[1:]:  # one strip per occurrence, merged only when they touch
+                if a_ <= band[-1][1]:
+                    band[-1][1] = max(band[-1][1], b_)
+                else:
+                    band.append([a_, b_])
+            band = [tuple(b) for b in band]
+            res.route.append(RouteStep("fallback", target="image",
+                                       note=f"local proposal {proposal!r} located by OCR; cloud confirms on that strip"))
+            res = zoom_answer(image, question, band, cols, prior=res, model=model, look_for=look_for,
+                              target="confirm strip", call=call, name="cloud_confirm", max_crop_side=side)
+            if not res.error and not res.abstained and _same_answer(res.answer, proposal):
+                res.evidence_boxes = [EvidenceBox([round(v, 4) for v in h["box"]], source="ocr",
+                                                  label=h["text"].strip()[:60]) for h in hits]
+                res.route.append(RouteStep("answer", note="local and cloud agree; answer located by OCR: accepted"))
+                return res
+            res.route.append(RouteStep("fallback", target="image", note="no agreement; ask on the page"))
+            res.error, res.abstained = None, True
+        else:
+            res.route.append(RouteStep("fallback", target="image", note="local proposal not found in the OCR text"))
     if os.environ.get("GENERAL_MOSAIC", "0") == "1" and lines:
         # OCR-guided pixel pruning (message 198): send only strips around the OCR lines that match the question,
         # stitched into one row-aligned mosaic (pipeline.visual.View), so the model sees a few hundred tokens instead of
@@ -201,6 +246,25 @@ def _mosaic_bands(question, lines):
 
 
 LADDER_LOW, LADDER_HIGH = 0.75, 1568  # 1024 -> 768 px first; escalate to >= 1568 px (simulated on realdocs_v2: 192)
+
+
+def _locate(answer, lines):
+    """OCR lines on which the answer is printed (same matching rules as _in_ocr, per line)."""
+    return [s for s in lines if _in_ocr(answer, [s])][:3]
+
+
+def _same_answer(a, b) -> bool:
+    import re
+
+    if a is None or b is None:
+        return False
+    num_re = r"\d[\d.,']*\d|\d"
+    key = lambda n: re.sub(r"\D", "", n).rstrip("0") or "0"
+    na, nb = [key(n) for n in re.findall(num_re, str(a))], [key(n) for n in re.findall(num_re, str(b))]
+    if na or nb:
+        return na == nb
+    norm = lambda t: re.sub(r"[^a-z0-9]", "", _norm(str(t)))
+    return norm(a) == norm(b) or (len(norm(b)) >= 3 and norm(b) in norm(a)) or (len(norm(a)) >= 3 and norm(a) in norm(b))
 
 
 def _in_ocr(answer, lines) -> bool:
