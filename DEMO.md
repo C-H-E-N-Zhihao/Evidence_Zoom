@@ -120,9 +120,9 @@ The story: a customer sends a photo and asks a question, the way they would ask 
    - "What the model saw" shows the small cropped page; the image outside the region sent is dimmed.
 2. **Ask "How much VAT was paid in total?"** The image is read from the provider's prompt cache. If the receipt shows a card number or phone number, the card says it was masked before sending.
 3. **Ask something the receipt cannot answer** ("What is the customer's loyalty number?").
-   - The small page already shows it is not there, so no larger image is sent: "Human review needed".
+   - On the small page the model reports that it is not there, so no larger image is sent: "Human review needed".
    - **Create ticket for a human agent** prepares a copyable ticket: the question, what was tried, the tokens spent and the nearest page text.
-4. **Switch the model** (top right) to the on-device Qwen and ask again: the same route at $0, and the image never leaves the laptop.
+4. **Switch the model** (top right) to the on-device Qwen and ask again: the same route at $0; with the default local endpoint the image never leaves the laptop.
 5. **Pick a sample claim form** ("Accident claim form #2") and ask the policy number, then which boxes driver B ticked.
    - The policy number is read by OCR: 0 model tokens.
    - The ticks are answered from a ~150-pixel-wide crop of B's tick column, picked by the form's own layout.
@@ -131,10 +131,10 @@ The story: a customer sends a photo and asks a question, the way they would ask 
 
 ## What is new here
 
-- **OCR as a free verifier.** A small image is asked first. Its answer is accepted only if that string is in the page's own OCR text; otherwise a sharper image is sent. Coarse-to-fine resolution with a model-free stopping rule, through a hosted API.
+- **OCR as a free check.** A small image is asked first. Its answer is accepted only if that string is in the page's own OCR text (a check that it is printed, not that it is right); otherwise a sharper image is sent. Coarse-to-fine resolution with a model-free stopping rule, through a hosted API.
 - **Layout-anchored crops without a model.** On a configured form, OCR finds the printed anchors (row numbers, labels) and the crop is cut from them: no model chooses where to look.
 - **Zero-token exits.** Printed fields, and common receipt fields with a consistency check, are answered by OCR alone.
-- **Honest accounting.** Every number names its baseline. Large-image cost is capped at what the provider was measured to bill. The negative results are kept in the repo:
+- **Honest accounting.** Each result names its baseline. Large-image cost is capped at what the provider was measured to bill. The negative results are kept in the repo:
   - text-first on real documents;
   - pointing with Qwen boxes;
   - re-typesetting;
