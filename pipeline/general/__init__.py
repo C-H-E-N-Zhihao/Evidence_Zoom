@@ -128,6 +128,21 @@ def _page_call(image, question, res, model, call, lines, look_for="the evidence 
     rows, cols = _content_spans(image, lines)
     cw = round(image.width * (cols[0][1] - cols[0][0])); ch = round(image.height * (rows[0][1] - rows[0][0]))
     side = _page_side(type("S", (), {"size": (cw, ch)})())
+    if os.environ.get("GENERAL_MOSAIC", "0") == "1" and lines:
+        # OCR-guided pixel pruning (message 198): send only strips around the OCR lines that match the question,
+        # stitched into one row-aligned mosaic (pipeline.visual.View), so the model sees a few hundred tokens instead of
+        # the page. Accept only if the answer is printed in the OCR text; otherwise continue to the page ladder.
+        bands = _mosaic_bands(question, lines)
+        if bands:
+            res = zoom_answer(image, question, bands, cols, prior=res, model=model, look_for=look_for,
+                              target="question strips", call=call, name="mosaic", max_crop_side=side)
+            if res.error:
+                return res
+            if not res.abstained and _in_ocr(res.answer, lines):
+                res.route.append(RouteStep("answer", note="strip answer found in the OCR text: accepted"))
+                return res
+            res.route.append(RouteStep("fallback", target="image",
+                                       note="strips: answer not in the OCR text; ask on the page"))
     if os.environ.get("GENERAL_LADDER", "0") == "1" and lines:
         # OCR-verified resolution ladder (message 192): ask on a smaller page first; accept the answer only if it is
         # printed in the OCR text (a model-free check that catches low-resolution misreads); otherwise ask again at a
@@ -145,6 +160,44 @@ def _page_call(image, question, res, model, call, lines, look_for="the evidence 
         side = max(side, LADDER_HIGH)
     return zoom_answer(image, question, rows, cols, prior=res, model=model, look_for=look_for, target="full page",
                        call=call, name="page", max_crop_side=side)
+
+
+MOSAIC_LINES, MOSAIC_PAD = 4, 1.2  # up to 4 matched lines, each padded by 1.2 line heights above and below
+
+
+def _mosaic_bands(question, lines):
+    """Row bands (page fractions) around the OCR lines that best match the question words (+ synonyms), merged
+    when they overlap. None if nothing matches."""
+    import re
+
+    words = [w for w in re.findall(r"[a-z0-9]+", _norm(question)) if len(w) >= 3 and w not in _STOP]
+    terms = set(words)
+    for w in words:
+        terms |= set(SYN.get(w, "").split())
+    if not terms:
+        return None
+    scored = []
+    for s in lines:
+        toks = set(re.findall(r"[a-z0-9]+", _norm(s["text"])))
+        hit = sum(1 for t in terms if t in toks or (len(t) >= 5 and any(t in k for k in toks)))
+        hit += sum(1 for w in words if w in toks)
+        if hit:
+            scored.append((hit, s))
+    if not scored:
+        return None
+    scored.sort(key=lambda x: -x[0])
+    spans = []
+    for _, s in scored[:MOSAIC_LINES]:
+        lh = max(0.008, s["box"][3] - s["box"][1])
+        spans.append((max(0.0, s["box"][1] - MOSAIC_PAD * lh), min(1.0, s["box"][3] + MOSAIC_PAD * lh)))
+    spans.sort()
+    merged = [list(spans[0])]
+    for a, b in spans[1:]:
+        if a <= merged[-1][1]:
+            merged[-1][1] = max(merged[-1][1], b)
+        else:
+            merged.append([a, b])
+    return [tuple(m) for m in merged]
 
 
 LADDER_LOW, LADDER_HIGH = 0.75, 1568  # 1024 -> 768 px first; escalate to >= 1568 px (simulated on realdocs_v2: 192)

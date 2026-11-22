@@ -262,7 +262,7 @@ def ask(req: Ask):
     meta = IMAGES.get(req.image_id)
     key = None
     if ANSWER_CACHE_ON and meta is not None:
-        key = (meta.get("sha"), " ".join(re.findall(r"[a-z0-9]+", req.question.lower())), req.model, req.mode)
+        key = (meta.get("sha"), req.question.strip(), req.model, req.mode)  # exact question (codex answer-cache note)
         hit = ANSWER_CACHE.get(key)
         if hit is not None:
             import copy
