@@ -115,7 +115,7 @@ with and without prompt caching. **All costs are estimates** from token arithmet
 
 ## Beyond claim forms: the general assistant (live only)
 
-**One automatic route for every image (no picker).** OCR runs locally first. If it recognises a configured claim-form layout, the router answers printed fields from OCR ($0) or sends the model only the located region. For anything else (receipts, uploads, worksheets), it sends the page as one image, cropped to where OCR found text and downscaled: short side ≥ 768 px, long side ≥ 1024 px, cap 2400 px. On real scans that size scored the same as full resolution at about a third of the cost (`REPORT_realdocs.md`, resolution frontier).
+**One automatic route for every image (no picker).** OCR runs locally first. If it recognises a configured claim-form layout, the router answers printed fields from OCR ($0) or sends the model only the located region. For anything else (receipts, uploads, worksheets), it sends the page as one image, cropped to where OCR found text and downscaled: short side ≥ 768 px, long side ≥ 1024 px, cap 2400 px. On 70 DocVQA scans, the whole page at 1024 px had the same mean score as full size, at about a third of the cost (`REPORT_realdocs.md`, resolution frontier). Infographics lost accuracy when downscaled. The OCR-area crop and this size rule were set from that test but not measured themselves; receipts_v1 tests them.
 Example: a 4284×5712 phone photo of a receipt is sent as a 710×2400 crop. Qwen2.5-VL-7B on the laptop read the total and the VAT correctly, and Haiku used ~2.5k input tokens against ~30.6k estimated for the original photo (one receipt, development check).
 
 Live script (about 30 s; Haiku billed, or Qwen on the laptop at $0):
@@ -136,7 +136,7 @@ Billed results, Haiku on both arms:
 
 Uploads and homework questions have no replay, so they need `./scripts/demo-live.sh` or `./scripts/demo-local.sh` (Ollama: `OLLAMA_CONTEXT_LENGTH=8192 ollama serve`).
 
-Why the app does not use text-first any more: small open models answered visual questions from OCR text instead of asking for the image (Qwen 7B 53/96 vs 75/96 with the page, `REPORT_homework_v3_qwen7b.md`). On real documents text-first scored lower overall (`REPORT_realdocs.md`). The cropped, downscaled page avoids both.
+Why the app does not use text-first any more: small open models answered visual questions from OCR text instead of asking for the image (Qwen 7B 53/96 vs 75/96 with the page, `REPORT_homework_v3_qwen7b.md`). On real documents text-first scored lower overall (`REPORT_realdocs.md`). The cropped, downscaled page is meant to avoid both; receipts_v1 tests it.
 
 ## Measured, billed (OpenRouter receipts; synthetic forms)
 

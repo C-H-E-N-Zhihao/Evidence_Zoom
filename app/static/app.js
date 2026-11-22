@@ -259,17 +259,17 @@ function explain(data) {
     return `The router estimated that the whole image would use fewer or equal input tokens than the OCR-text request. ` +
       `It sent the whole page (${size}, ~${inTok} input tokens${est}). OCR ran locally.`;
   if (t === "full page" && r.route.some((st) => /text step off/.test(st.note || "")) && !data.on_device)
-    return `Any-image mode sends the whole page, downscaled to ${size} (~${inTok} input tokens${est} instead of ~${pageTok} ` +
-      `(estimated) at full size, ${pageTok ? Math.max(0, Math.round((1 - inTok / pageTok) * 100)) : 0}% fewer). On real scans this ` +
-      `size scored the same as full resolution; reading the OCR text first scored lower overall. OCR still ran locally.`;
+    return `The page was sent whole, downscaled to ${size} (~${inTok} input tokens${est} instead of ~${pageTok} ` +
+      `(estimated) at full size, ${pageTok ? Math.max(0, Math.round((1 - inTok / pageTok) * 100)) : 0}% fewer). On 70 DocVQA scans ` +
+      `this size had the same mean score as full resolution (infographics lost some accuracy). OCR still ran locally.`;
   if (t === "full page" && r.route.some((st) => /text step off/.test(st.note || "")))
     return `Small on-device models did not reliably tell when OCR text is not enough (measured on Qwen2.5-VL-7B), so this one was sent the whole page ` +
       `(${size}, ~${inTok} input tokens${est}); OCR still ran locally for the green boxes.`;
   if (t === "full page")
     return `No configured form layout covers this question, so the page was sent as one image: cropped to where OCR found ` +
       `text and downscaled to ${size} (~${inTok} input tokens${est} instead of ~${pageTok} (estimated) for the original ` +
-      `image, ${pageTok ? Math.max(0, Math.round((1 - inTok / pageTok) * 100)) : 0}% fewer). On real scans this size scored ` +
-      `the same as full resolution.` +
+      `image, ${pageTok ? Math.max(0, Math.round((1 - inTok / pageTok) * 100)) : 0}% fewer). On 70 DocVQA scans this size had ` +
+      `the same mean score as full resolution (infographics lost some accuracy).` +
       (r.abstained && !r.error ? " The model reported that the answer is not in the image, instead of inventing one." : "");
   return `A model chose the region to inspect (${t}).`;
 }
