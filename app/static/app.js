@@ -56,10 +56,11 @@ async function init() {
     const what = (p.forms.find((f) => f.note && f.note.includes("counterfactual")) || {}).note || "";
     const diff = p.pair_id.startsWith("hw-") ? "the circled option and the chart differ" :
       what.includes("tick") ? "B's ticks differ" : what.includes("sketch") ? "the sketch differs" : "";
-    const layout = p.pair_id.startsWith("hw-") ? "homework (general assistant) · " :
-      p.pair_id.startsWith("eas3b") ? "layout 3 (configured template) · " :
-      p.pair_id.startsWith("eas2") ? "layout 2 · " : p.pair_id.startsWith("eas-") ? "layout 1 · " : "";
-    o.textContent = p.pair_id === "demo" ? "demo form" : `${layout}${p.pair_id}${diff ? " · pair: " + diff : ""}`;
+    const num = (p.pair_id.match(/(\d+)$/) || [])[1];
+    const kind = p.pair_id.startsWith("hw-") ? "Homework sheet" :
+      p.pair_id.startsWith("eas3b") ? "Accident claim form, style 3" :
+      p.pair_id.startsWith("eas2") ? "Accident claim form, style 2" : p.pair_id.startsWith("eas-") ? "Accident claim form" : "Sample";
+    o.textContent = p.pair_id === "demo" ? "Demo form" : `${kind} #${num ? +num : ""}${diff ? " (two versions: " + diff + ")" : ""}`;
     $("pair").append(o);
   }
 }
@@ -111,7 +112,7 @@ function showPairSummary() {
     .map(([q, v]) => `${q.replace(/ Answer .*$/, "")}  a: ${v.a ?? "—"} · b: ${v.b ?? "—"}`);
   note.hidden = false;
   note.textContent = `Showing form ${side} of pair ${pair.pair_id}. ` +
-    (rows.length ? rows.join("  |  ") : "Ask the same question on form a and form b to compare.");
+    (rows.length ? rows.join("  |  ") : "Ask the same question on version A and version B to compare.");
 }
 
 $("pair").onchange = () => {
