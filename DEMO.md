@@ -1,18 +1,24 @@
 # Evidence Zoom: demo guide
 
-**What it is.** A claims handler asks questions about an accident-statement form. The app answers and
-**points to the evidence on the page**, while spending as little model compute as possible:
+**What it is.** A customer-service assistant that answers questions about whatever image a customer sends (a
+receipt, a document, a form, a screenshot) while spending as few model tokens as possible. It answers and **shows
+the evidence on the image** (the OCR box it read, or the region the model was sent), or **passes the question to a
+human agent** when it cannot answer.
+One automatic route, cheapest step first:
 
-1. **OCR first.** If the answer is printed text (a policy number, a registration), local OCR reads it.
-   This costs $0 and needs no model call.
-2. **Crop from the form's own layout.** If the answer needs pixels (which boxes are ticked, what the sketch
-   shows), the OCR'd layout of this form template (row numbers, column headers, section headings) picks the
-   region, with no model call. A vision model sees only that crop, cut from the original high-resolution
-   page. Regions far apart on the same rows (a tick and its row number) are stitched side by side, so the
-   crop stays small but keeps its meaning.
-   **If the layout is not recognised** (another template, another document type), the model gets the
-   **full page** instead: the frugal path only exists for configured templates.
-3. **Grounded answer.** The answer comes back with a box on the original page, so a human can check it.
+1. **OCR on the device ($0).** Local OCR reads the image first, with no model call.
+2. **Configured form layouts: send only the region.** For a layout we configured (the demo's example is an
+   accident-statement claim form), printed fields are answered from OCR directly. For questions that need pixels
+   (which boxes are ticked, what the sketch shows), the form's own OCR'd layout picks the region, with no model
+   call. The vision model sees only that crop, cut from the original high-resolution page. Regions far apart
+   on the same rows (a tick and its row number) are stitched side by side.
+3. **Any other image: a smaller page.** The page is cropped to where OCR found text and downscaled before one
+   model call. This is where most customer images go. There is no region selection, so savings come from the
+   image size only (see the general section below for what was measured).
+4. **Repeated questions are free.** The same image, question and model returns the stored answer (0 tokens).
+5. **Checkable answer or handoff.** The answer comes with a box on the original image (the OCR line it read, or
+   the region sent to the model; not a citation by the model), so a person can check it. If the model reports the
+   answer is not in the image, the bot says so and hands off to a human, instead of inventing one.
 
 By default the demo runs **without any API key**. OCR is real. The vision model's replies are **replayed** from the
 answers stored with each test form, and every replayed answer is labelled as such. A labelled **live mode** also
