@@ -319,7 +319,8 @@ function addA(data, i, ours) {
   }
   const route = document.createElement("div"); route.className = "route";
   // consecutive fallbacks (OCR declined, no form layout) read as one step
-  const steps = result.route.filter((s, k, a) => !(s.step === "fallback" && a[k + 1] && a[k + 1].step === "fallback"));
+  const steps = result.route.filter((s, k, a) => !((s.step === "fallback" || s.step === "answer") && a[k + 1] &&
+    a[k + 1].step === s.step));
   steps.forEach((s, k) => {
     if (k) route.insertAdjacentHTML("beforeend", '<span class="arrow">→</span>');
     const c = document.createElement("span"); c.className = `chip ${s.step}`;
