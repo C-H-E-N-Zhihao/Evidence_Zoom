@@ -141,6 +141,14 @@ Billed results, Haiku on both arms:
 - Say: "on new worksheet types, the route matched the whole page at about 70% of the cost, and an earlier version lost (83 vs 94)".
 - Do not say: "more accurate than the whole page" (one question is not evidence) or "the fix explains the difference" (the fix and the dataset both changed between the two runs).
 
+**The OCR-checked ladder** (default on; approved in `andrew-review-ladder`). The model first sees a smaller page (about 768 px). The answer is accepted only if it appears in the page's local OCR text; otherwise the page is sent again at ≥ 1568 px.
+- **DocVQA scans** (100 questions, Haiku):
+  - 96 correct, the same as the original full page;
+  - ANLS 0.920 vs 0.931;
+  - about 1,574 vs 4,587 provider tokens per correct answer, 44% of the charge.
+- **Real receipts** (CORD, 241 questions), against the fixed-size page: the same 179 answered correctly and 60 handed to a human. The answers matched the reference wording more closely (ANLS 0.970 vs 0.924), for 1,380 vs 1,218 tokens per correct answer.
+- **Limits:** always name the baseline. The 768/1568 pairing was chosen on a different DocVQA sample. One run each.
+
 Uploads and homework questions have no replay, so they need `./scripts/demo-live.sh` or `./scripts/demo-local.sh` (Ollama: `OLLAMA_CONTEXT_LENGTH=8192 ollama serve`).
 
 Why the app does not use text-first any more: small open models answered visual questions from OCR text instead of asking for the image (Qwen 7B 53/96 vs 75/96 with the page, `REPORT_homework_v3_qwen7b.md`). On real documents text-first scored lower overall (`REPORT_realdocs.md`). The cropped, downscaled page is meant to avoid both; receipts_v1 tests it.
