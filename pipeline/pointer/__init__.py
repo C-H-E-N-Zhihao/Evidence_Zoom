@@ -107,6 +107,13 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
             fb = _file_box(qid or CURRENT_QID)
             if fb:
                 box = fb
+        elif src == "boxfile":  # precomputed boxes, e.g. from the GRPO-finetuned 7B pointer (message 229)
+            global _BOXES
+            if _BOXES is None:
+                _BOXES = json.load(open(os.environ["POINTER_BOXES"]))
+            b = _BOXES.get(qid or CURRENT_QID)
+            if b and len(b) == 4 and b[2] > b[0] and b[3] > b[1]:
+                box = [max(0.0, float(b[0])), max(0.0, float(b[1])), min(1.0, float(b[2])), min(1.0, float(b[3]))]
         else:
             res.route.append(RouteStep("pointer", target=POINTER_MODEL, note="asking for a bounding box"))
             box, raw = _qwen_box(image, question, rows, cols, res)
@@ -114,7 +121,7 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
     except Exception as e:
         raw = f"{type(e).__name__}: {e}"
     ms = (time.perf_counter() - t1) * 1000
-    if src == "file":
+    if src in ("file", "boxfile"):
         res.usage.append(Usage(len(res.route) - 1, "local", "pointer grid", latency_ms=ms))
     ptr_note = f"pointer {src} {ms:.0f}ms box={[round(v, 3) for v in box] if box else None}"
     res.route.append(RouteStep("pointer", target=src, box=None, note=ptr_note + ("" if box else f" | no box: {raw[:80]}")))
@@ -152,7 +159,7 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
     # 3. zoom on the (padded) region, mapped back to the full image
     if box:
         # file grids cover the whole image; Qwen boxes are relative to the text-area crop it was shown
-        X0, X1, Y0, Y1 = (0.0, 1.0, 0.0, 1.0) if src == "file" else (cols[0][0], cols[0][1], rows[0][0], rows[0][1])
+        X0, X1, Y0, Y1 = (0.0, 1.0, 0.0, 1.0) if src in ("file", "boxfile") else (cols[0][0], cols[0][1], rows[0][0], rows[0][1])
         bw, bh = box[2] - box[0], box[3] - box[1]
         x0, x1 = max(0.0, box[0] - PAD * bw), min(1.0, box[2] + PAD * bw)
         y0, y1 = max(0.0, box[1] - PAD * bh), min(1.0, box[3] + PAD * bh)
