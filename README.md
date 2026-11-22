@@ -14,14 +14,16 @@ Open **http://localhost:8000** and start the guided tour. This launch uses local
 
 ## What we measured
 
-- **Configured accident form.** The routed Haiku and cached whole-page Sonnet each scored 96/96 on synthetic development forms, for $0.0098 and $0.2425 respectively. With Sonnet on both sides, both again scored 96/96, and routing cost $0.1620 versus $0.2425. Local OCR answered 48 questions without an API call. [Billed run](eval/results/paid_20261121-162336/REPORT.md) · [Same-model comparison](eval/results/REPORT_same_model_sonnet.md)
+- **Configured accident form.** The routed Haiku and cached whole-page Sonnet each scored 96/96 on synthetic development forms, for $0.0098 and $0.2425 respectively. With Sonnet on both sides, both again scored 96/96, and routing cost $0.1620 versus $0.2425. The saving came from the 48 questions answered by local OCR. On visual questions alone, the cached Sonnet page was cheaper. [Billed run](eval/results/paid_20261121-162336/REPORT.md) · [Same-model comparison](eval/results/REPORT_same_model_sonnet.md)
 - **Second configured form.** On 12 new synthetic forms, the frozen route scored 96/96 for $0.0100 versus 93/96 for $0.0520 with whole-page Haiku. The team tuned the template engine on that layout before the freeze. [Run receipts](eval/results/v3b_haiku/)
-- **Public document benchmarks.** A revised experimental OCR-text-first route scored 178/210 versus 184/210 for the whole page on the same substring metric. At 1024 px, whole-page Haiku matched the full-size mean ANLS of 0.951 on 70 DocVQA questions at about one-third of the API charge. InfographicVQA scores fell with each reduction in resolution. [Real-document report](eval/results/REPORT_realdocs.md)
-- **Earlier worksheet experiments.** The first held-out set scored 83/96 versus 94/96 for the whole page. A revised route on a second synthetic set scored 96/96 versus 95/96 at 69.5% of the whole-page API charge, sending no image on 44 of 48 text questions. These runs used a separate text-first route from the current app. [First held-out run](eval/results/REPORT_homework_v2_heldout.md) · [Second held-out run](eval/results/REPORT_homework_v3_heldout.md)
+- **Public document benchmarks.** A revised experimental OCR-text-first route scored 178/210 versus 184/210 for the whole page on the same substring metric. At 1024 px, whole-page Haiku had the same mean ANLS as full size (0.951) on 70 DocVQA questions at about one-third of the API charge. InfographicVQA scores fell with each reduction in resolution. [Real-document report](eval/results/REPORT_realdocs.md)
+- **Unconfigured layouts.** All 416 questions on five synthetic layouts used the evaluated router’s whole-page fallback. Haiku scored 401/416 through the router and 397/416 on the original page. A plain downscaled page scored 398/416 at a lower charge than the routed fallback. [Unconfigured runs](agent-messages/2026-11-21-106-claude-andrew-b-to-all.md)
 
-Claims evaluations use synthetic accident forms. Crop overlays show what image region the model received. The fixed-resolution comparisons measured whole pages. They establish a baseline for evaluating the app’s OCR-area crop.
+The template savings were measured on configured synthetic forms. The app uses Apple Vision OCR on macOS. Crop overlays show the image region sent to the model. The fixed-resolution tests measured whole pages, and evaluation of the current OCR-area crop is in progress.
 
 ## Team dashboard
+
+**Earlier worksheet experiments.** The first held-out set scored 83/96 versus 94/96 for the whole page. A revised route on a second synthetic set scored 96/96 versus 95/96 at 69.5% of the whole-page API charge, sending no image on 44 of 48 text questions. These runs used a separate text-first route from the current app. [First held-out run](eval/results/REPORT_homework_v2_heldout.md) · [Second held-out run](eval/results/REPORT_homework_v3_heldout.md)
 
 | Goal | Current evidence | Next deliverable and completion check | Point of contact |
 |---|---|---|---|
