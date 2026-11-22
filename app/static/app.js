@@ -257,10 +257,10 @@ function explain(data) {
   }
   if (r.route.some((st) => /low-resolution answer found in the OCR text/.test(st.note || "")))
     return `Asked on a small version of the page first (${size}, ~${inTok} input tokens${est} instead of ~${pageTok} ` +
-      `(estimated) for the original image). The answer is printed on the page (checked against the local OCR text), ` +
+      `(estimated) for the original image). The answer appears in the page's local OCR text, ` +
       `so no larger image was sent.`;
   if (r.route.some((st) => /^ladder: answer not in the OCR text/.test(st.note || "")))
-    return `Asked on a small version first; that answer is not printed on the page (local OCR check), so the page was ` +
+    return `Asked on a small version first; that answer was not found in the local OCR text, so the page was ` +
       `asked again at higher resolution (~${inTok} input tokens${est} in total, original image ~${pageTok} (estimated)).`;
   const small = r.route.find((st) => /^small image/.test(st.note || ""));
   if (t === "full page" && small)
@@ -327,7 +327,7 @@ function addA(data, i, ours) {
       ? (/text step off/.test(s.note || "") ? "whole page" : /^small image/.test(s.note || "") ? "small image"
         : /band crop was not enough/.test(s.note || "") ? "band not enough"
         : /no OCR answer or anchor/.test(s.note || "") ? "no form layout: page"
-        : /^ladder:/.test(s.note || "") ? "not on page: higher res" : "OCR not enough")
+        : /^ladder:/.test(s.note || "") ? "not in OCR text: higher res" : "OCR not enough")
       : s.target ? `${s.step} ${s.target.length > 18 ? s.target.slice(0, 18) + "…" : s.target}` : s.step;
     c.title = [s.target, s.note].filter(Boolean).join(" · ");
     route.append(c);
