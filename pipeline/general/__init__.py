@@ -331,7 +331,7 @@ def _mosaic_bands(question, lines):
     return [tuple(m) for m in merged]
 
 
-LADDER_LOW, LADDER_HIGH = 0.75, 1568  # 1024 -> 768 px first; escalate to >= 1568 px (simulated on realdocs_v2: 192)
+LADDER_LOW, LADDER_HIGH = float(os.environ.get("LADDER_LOW_FRAC", "0.75")), 1568  # 1024 -> 768 px first; escalate to >= 1568 px (simulated on realdocs_v2: 192)
 
 
 def _locate(answer, lines):

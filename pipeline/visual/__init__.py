@@ -45,6 +45,11 @@ _FORMAT = (
     "Set abstain to true (answer null) if the image cannot contain the answer. Keep answers short."
 )
 
+_FORMAT_NOBOX = (
+    'Reply with ONE JSON object and nothing else: {"answer": string or null, "abstain": boolean}. '
+    "Set abstain to true (answer null) if the image cannot contain the answer. Keep answers short."
+)
+
 SYSTEM_OVERVIEW = (
     "You see a DOWNSCALED overview of a document or photo with a faint grid. Row labels R1, R2, ... "
     "are in the left margin and column labels C1, C2, ... in the top margin; cell R<row>C<col> is "
@@ -390,6 +395,10 @@ def zoom_answer(
     res.pipeline = (f"{prior.pipeline}+" if prior is not None and prior.pipeline else "") + name
     view = View(image.convert("RGB"), row_spans, col_spans, max_side=max_crop_side)
     system = SYSTEM_ZOOM.replace("{grid_note}", _NO_GRID_NOTE + (_MOSAIC_NOTE if view.mosaic else ""))
+    if os.environ.get("ZOOM_NO_BOX") == "1" and target == "full page":
+        # page path: evidence boxes come from the OCR lines, so the model's box is not needed; a shorter reply saves
+        # output tokens (priced ~5x input). Measured before shipping (message 223).
+        system = system.replace(_FORMAT, _FORMAT_NOBOX)
     text = f"Question: {question}\nWhat to inspect: {look_for or 'the evidence for the question'}"
     res.route.append(RouteStep(step="zoom", target=target, box=[round(v, 4) for v in view.bounds],
                                note=f"{view.image.width}x{view.image.height}px to {model}"
