@@ -255,6 +255,34 @@ def t_run_eval_mock() -> None:
             check("mock accuracy 1 and complete", rep["summary"]["all"]["accuracy"] == 1 and rep["complete"])
 
 
+def t_merge_shards() -> None:
+    print("merge_shards over two mock shards (temp dir)")
+    import subprocess
+    from .merge_shards import merge
+
+    with tempfile.TemporaryDirectory() as d:
+        for im in ("p", "p2"):
+            Image.new("RGB", (100, 100), "white").save(Path(d) / f"{im}.png")
+        rows = [dict(question_id=f"q{i}", image_id=im, image_path=f"{im}.png", question="?", answer=str(i),
+                     evidence_boxes=[[0.1, 0.1, 0.2, 0.2]]) for i, im in enumerate(("p", "p", "p2"))]
+        (Path(d) / "items.jsonl").write_text("\n".join(json.dumps(r) for r in rows))
+        runs = []
+        for s, part in enumerate((rows[:2], rows[2:])):  # split by image, as scripts/shard_eval.sh does
+            (Path(d) / f"s{s}.jsonl").write_text("\n".join(json.dumps(r) for r in part))
+            subprocess.run([sys.executable, "-m", "eval.run_eval", "--items", str(Path(d) / f"s{s}.jsonl"),
+                            "--pipelines", "mock", "--out", str(Path(d) / f"out{s}")], capture_output=True, text=True)
+            runs += [str(f) for f in (Path(d) / f"out{s}").glob("run_*.json")]
+        check("merge: two shard runs written", len(runs) == 2, str(runs))
+        if len(runs) == 2:
+            m = merge(str(Path(d) / "items.jsonl"), runs)["report"]["mock"]
+            check("merge: union re-scored, complete", m["summary"]["all"]["n"] == 3 and m["complete"]
+                  and m["summary"]["all"]["accuracy"] == 1 and not m["missing"])
+            part = merge(str(Path(d) / "items.jsonl"), runs[:1])["report"]["mock"]
+            check("merge: a missing shard is reported, not hidden", not part["complete"] and part["missing"] == ["q2"])
+            dup = merge(str(Path(d) / "items.jsonl"), [runs[0], runs[0]])["report"]["mock"]
+            check("merge: duplicates reported", sorted(dup["duplicates"]) == ["q0", "q1"] and not dup["complete"])
+
+
 def t_token_score() -> None:
     ocr = Usage(0, "local", "Apple Vision OCR")
     gpu = Usage(1, "local", "qwen", input_image_tokens=500, output_tokens=5, device="gpu")
@@ -294,7 +322,7 @@ def t_grid_coverage() -> None:
 
 def main() -> None:
     for t in (t_metrics, t_pricing, t_compose_and_guard, t_pairs_curve_report, t_geometry, t_run_eval_mock,
-              t_grid_coverage, t_token_score):
+              t_grid_coverage, t_token_score, t_merge_shards):
         try:
             t()
         except Exception as e:  # a crash in a group is a failure of that group

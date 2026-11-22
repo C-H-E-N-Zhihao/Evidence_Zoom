@@ -211,6 +211,8 @@ def main() -> None:
                     budget_hit = True
                     break
                 r = pipe(it, img)
+                r.question_id = r.question_id or it.question_id  # merge_shards joins results to items by these
+                r.image_id = r.image_id or it.image_id
                 spent += r.total_cost()
                 pairs.append((it, r))
                 bad = degraded(r)
