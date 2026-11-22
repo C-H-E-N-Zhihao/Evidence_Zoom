@@ -143,7 +143,7 @@ def _page_call(image, question, res, model, call, lines, look_for="the evidence 
                 return res
             res.route.append(RouteStep("fallback", target="image",
                                        note="strips: answer not in the OCR text; ask on the page"))
-    if os.environ.get("GENERAL_LADDER", "0") == "1" and lines:
+    if os.environ.get("GENERAL_LADDER", "1") == "1" and lines:
         # OCR-verified resolution ladder (message 192): ask on a smaller page first; accept the answer only if it is
         # printed in the OCR text (a model-free check that catches low-resolution misreads); otherwise ask again at a
         # higher resolution. Answers that are not printed strings (yes/no, computed) always escalate.
