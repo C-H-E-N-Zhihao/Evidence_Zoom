@@ -28,7 +28,7 @@ A customer sends a support bot a photo (a receipt, a claim form) and asks a ques
 
 ## Why it fits AXA
 
-- **Recurring forms.** The European Accident Statement is [harmonised across Europe](https://www.evz.de/en/travelling-motor-vehicles/motor-vehicles/car-accident-in-europe), one layout in every language. Configure a layout once: printed fields are read by OCR for $0, and ticks come from a small crop.
+- **Recurring forms.** The European Accident Statement is [harmonised across Europe](https://www.evz.de/en/travelling-motor-vehicles/motor-vehicles/car-accident-in-europe): the same layout in each language version. Configure a layout once: printed fields are read by OCR for $0, and ticks come from a small crop *(tested on synthetic renders of accident-statement layouts; real filled-in forms not yet)*.
 - **Customer photos.** Receipts and documents get a small page checked against OCR instead of the full photo (held-out receipts above).
 - **In-house option.** On-device mode runs the same route with an open 7B model on a laptop: 83/96 on the development forms, no provider charge.
 
