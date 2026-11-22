@@ -77,6 +77,7 @@ def _qwen_box(image, question, rows, cols, res):
 
 def answer(image, question: str, prior: Optional[PipelineResult] = None, model: Optional[str] = None,
            qid: Optional[str] = None) -> PipelineResult:
+    global _GRIDS
     from pipeline.general import _content_spans, _in_ocr, _lines, _page_call
     from pipeline.ocr import recognize_page
     from pipeline.router import ensure_ocr_bin
@@ -129,6 +130,14 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
 
     # 3a. line mode (message 224): the head's heat ranks the OCR lines; crop whole lines (full text width), so the
     # crop never cuts through digits. Grids from run.py infer cover the WHOLE image (resized to 448x448).
+    if src == "boxfile" and os.environ.get("POINTER_MODE") == "lines" and lines and box:
+        # snap a tight pointer box (e.g. GRPO-7B) to whole OCR lines: build a pseudo-grid that is hot inside the box
+        bx = box
+        g = [1.0 if (bx[0] - 0.02 <= (c + 0.5) / GRID <= bx[2] + 0.02 and bx[1] - 0.02 <= (r + 0.5) / GRID <= bx[3] + 0.02)
+             else -1.0 for r in range(GRID) for c in range(GRID)]
+        _GRIDS = _GRIDS or {}
+        _GRIDS[qid or CURRENT_QID] = g
+        src = "file"
     if src == "file" and os.environ.get("POINTER_MODE") == "lines" and lines:
         g = _GRIDS.get(qid or CURRENT_QID) if _GRIDS else None
         if g and len(g) == GRID * GRID:
@@ -138,6 +147,8 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
                 cells = [g[r * GRID + c] for r in range(r0, r1 + 1) for c in range(c0, c1 + 1)]
                 return max(cells) if cells else -1e9
             ranked = sorted(lines, key=lambda s: -heat(s["box"]))[:LINE_TOPK]
+            if set(g) <= {1.0, -1.0}:  # snapped box: only the lines the box touches
+                ranked = [x for x in ranked if heat(x["box"]) > 0] or ranked[:1]
             lh = max(0.008, sum(s["box"][3] - s["box"][1] for s in ranked) / len(ranked))
             spans = sorted((max(0.0, s["box"][1] - LINE_PAD * lh), min(1.0, s["box"][3] + LINE_PAD * lh)) for s in ranked)
             band = [list(spans[0])]
