@@ -12,9 +12,10 @@ One automatic route, cheapest step first:
    (which boxes are ticked, what the sketch shows), the form's own OCR'd layout picks the region, with no model
    call. The vision model sees only that crop, cut from the original high-resolution page. Regions far apart
    on the same rows (a tick and its row number) are stitched side by side.
-3. **Any other image: a smaller page.** The page is cropped to where OCR found text and downscaled before one
-   model call. This is where most customer images go. There is no region selection, so savings come from the
-   image size only (see the general section below for what was measured).
+3. **Any other image: a small page first.** The page is cropped to where OCR found text and asked at a small
+   size (768 px). If the answer is found in the local OCR text, that is the reply. Otherwise the page is asked
+   again at a higher resolution (≥ 1568 px). This is where most customer images go. There is no region selection,
+   so savings come from the image size only (see the general section below for what was measured).
 4. **Repeated questions are free.** The same image, question and model returns the stored answer (0 tokens).
 5. **Checkable answer or handoff.** The answer comes with a box on the original image (the OCR line it read, or
    the region sent to the model; not a citation by the model), so a person can check it. If the model reports the
