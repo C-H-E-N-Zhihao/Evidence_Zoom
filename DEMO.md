@@ -21,7 +21,7 @@ One automatic route, cheapest step first:
    so savings come from the image size only (see the general section below for what was measured).
 5. **Personal data masked on the page path.** Before the page image is sent, lines that local OCR reads as card,
    IBAN, email, phone or AHV numbers are blacked out unless the question asks for that field (pattern-based, not a
-   guarantee; configured-form crops are not masked). A redaction re-run on CORD receipts changed 0 of 241 answers (no personal data was detected on that set, so this shows no harm, not coverage).
+   guarantee; configured-form crops are not masked). A redaction re-run on 241 CORD receipt questions triggered masking on none and flipped no answer between correct and incorrect (9 answer strings differed run to run); it does not test a case where masking activates.
 6. **Repeated questions are free.** The same image, question and model returns the stored answer (0 tokens).
 7. **Checkable answer or handoff.** The answer comes with a box on the original image (the OCR line it read, or
    the region sent to the model; not a citation by the model), so a person can check it. If the model reports the
