@@ -98,19 +98,21 @@ Present the tick questions on-device; the sketch question is answered better by 
 
 **Switching models live:** when Ollama is running, `./scripts/demo-live.sh` also offers the on-device model in a picker
 (top right); each answer names the model that produced it ("answered by … · cloud API / on this laptop"), and
-**Compare: ask the whole page instead** under a live answer sends the same question with the whole page to the same
-model and shows both costs, token counts and times side by side (real calls; counts toward the spend threshold).
+**Compare: send the original, unmasked image** (under "How this was answered" on a live answer) sends the same question
+with the whole page to the same model and shows both costs, token counts and times side by side (real calls; counts
+toward the spend threshold).
 **Avoid empty tick lists live:** on forms where driver B ticked nothing (eas-004, eas3b-002), Haiku tends to decline
 and the on-device Qwen once listed all 17 boxes. Use pairs where B ticked something (eas-002, eas3b-003: the tour's pairs).
 
 ## Presenting: the guided tour
 
 Click **▶ Guided tour** (top bar). Each **Next ▶** performs one step of the judge script below (pick the form, ask,
-switch to form b, then layout 3) and shows one sentence to say. Every answer also gets a plain-language line under
-it ("Read on this computer by OCR from the printed line …", or "The form's own layout located … ; the model was sent
-only that crop: ~N tokens instead of ~M for the whole page"). **What we measured** (top bar) opens the approved
-results, each with its limits and the path of its receipt in the repository. It stays empty until the release
-reviewer approves `docs/claims.json`.
+switch to form b, then layout 3) and shows one sentence to say. Each answer shows its path (Read locally → crop or
+small page → OCR check → answer or review) and its tokens against the original image; **How this was answered**
+under it unfolds the plain-language explanation, the route and the cost. **How it works** (top bar) opens a diagram
+of the four steps that lights up step by step and can start the guided tour. **What we measured** (top bar) opens
+the approved results, each with its baseline, limits and the path of its receipt in the repository; the held-out
+receipts result comes first.
 
 ## The two-minute judge script (live: `./scripts/demo-live.sh`)
 
@@ -144,7 +146,7 @@ The story: a customer sends a photo and asks a question, the way they would ask 
 
 ## The key-free walkthrough (replay, no API key: `./scripts/demo.sh`)
 
-1. In the **Samples** menu, choose **Accident claim form #2 (two versions: B's ticks differ)**.
+1. In the **Pick a sample…** menu, choose **Accident claim form #2 (two versions: B's ticks differ)**.
    Version A opens. Version B is the same form with one of driver B's ticks moved.
 2. Click the suggestion **"What is vehicle A's insurance policy number?"**
    You see the **LIVE OCR** badge, the policy number, a green box on it in the page, and the route
