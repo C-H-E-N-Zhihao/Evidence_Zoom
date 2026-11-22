@@ -16,16 +16,7 @@ A customer sends a support bot a photo (a receipt, a claim form) and asks a ques
 
 ## How it works
 
-<img src="docs/img/how-it-works.png" width="860" alt="Read locally, send less, check against OCR, answer or flag for review">
-
-| Step | What happens | Model? |
-|---|---|---|
-| **1 · Read locally** | OCR on this computer. Some printed fields are answered here. | no · $0 |
-| **2 · Send less** | A known form's layout picks the crop. Anything else gets a small page (768 px). | vision model |
-| **3 · Check** | Small page: is the answer in the OCR text? If not, a sharper page (≥ 1568 px). | no · $0 |
-| **4 · Answer, or flag it** | The evidence is drawn on the image (the OCR line it read, or the region sent). Otherwise: flagged for human review, with a ticket. | no |
-
-Vision model: Claude Haiku in the cloud, or Qwen2.5-VL 7B on the laptop (on-device mode, nothing leaves the machine with the default local endpoint).
+<img src="docs/img/how-it-works.svg" width="860" alt="Read locally (OCR, $0), send less (crop or small page to the vision model), check against OCR ($0), answer or flag for review">
 
 ## Results
 
@@ -34,14 +25,6 @@ Vision model: Claude Haiku in the cloud, or Qwen2.5-VL 7B on the laptop (on-devi
 **Held out:** on 248 questions about 60 fresh CORD receipt photos, the app with its shipped defaults answered **188** correctly against 187 for the original photo, with **0** wrong answers against 1, and both flagged all 60 unanswerable questions for review. It used **968 vs 2,740 tokens per correct answer (65% fewer)**, and 31 questions were answered without any model call. Haiku, one paired run.
 
 **Where it does not help:** with open models (Qwen 7B/72B, an earlier configuration) routing recorded more wrong answers (31 vs 14; 13 vs 6), mostly missed review flags. On layouts we never configured there is no region selection, and a plain downscaled page was slightly cheaper than our route.
-
-<table><tr>
-<td width="50%"><img src="docs/img/receipt.png" alt="Receipt: answer found in the OCR text, tokens against the original photo"></td>
-<td width="50%"><img src="docs/img/claim-form.png" alt="Claim form: driver B's ticks read from a small crop picked by the layout"></td>
-</tr><tr>
-<td>Any photo: a small page first, accepted only if the answer is in the local OCR text.</td>
-<td>A configured form: the layout picks the crop; printed fields cost 0 model tokens.</td>
-</tr></table>
 
 ## Why it fits AXA
 
