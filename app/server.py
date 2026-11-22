@@ -197,7 +197,19 @@ async def upload(file: UploadFile = File(...)):
         raise HTTPException(400, "not an image")
     path = UPLOADS / f"{uuid.uuid4().hex}{suffix}"
     path.write_bytes(data)
-    return _register(path)
+    reg = _register(path)
+
+    def _warm():  # OCR in the background while the customer types: the first answer skips the OCR wait (cached)
+        try:
+            from pipeline.ocr import recognize_page
+
+            with Image.open(path) as im:
+                recognize_page(im.convert("RGB"))
+        except Exception:
+            pass
+    import threading
+    threading.Thread(target=_warm, daemon=True).start()
+    return reg
 
 
 @app.post("/api/images/sample")
