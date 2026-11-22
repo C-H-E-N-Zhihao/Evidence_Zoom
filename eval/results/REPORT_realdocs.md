@@ -35,3 +35,17 @@ The app's whole-page call caps the long side at 1568 px; the evaluated whole-pag
 - **On scanned documents, downscaling the whole page to 1568 px is the frugal winner.** It matches full resolution at 42% lower cost (58% of the charge), and beats the text-first route at the same cost.
 - **Tall infographics lose detail when downscaled.** 31 of the 65 infographic pages are taller than 2:1, against 2 of 70 scans and no charts. The app now keeps up to 2400 px for pages taller than 2:1. That rule was chosen after this run (development), so its effect is not measured yet.
 - The run records `eval_dirty: true` because its item list (`items_doc_info.jsonl`, the 140 non-chart questions) was still uncommitted when it ran. It is committed in 9792e2c; no harness code changed.
+
+## Resolution frontier (message 177; receipt `realdocs_v2_lowres_frontier/`, predictions committed before the run)
+
+| page long side | DocVQA ANLS | DocVQA $ per q | InfographicVQA ANLS |
+|---|---:|---:|---:|
+| full size (≤ 2400 px) | 0.951 | 0.00049 | 0.761 |
+| 1568 px | 0.954 | 0.00029 | 0.690 |
+| **1024 px** | **0.951** | **0.00016** | 0.669 |
+| 768 px | 0.894 | 0.00012 | 0.574 |
+
+- **Scans:** full accuracy down to 1024 px, at about a third of the full-size cost. Accuracy drops only at 768 px.
+- **Infographics:** they lose with every step down.
+- **Predictions (177):** DocVQA 1024 within 0.03 and 768 drops by more than 0.05: met. InfographicVQA 768 below 0.60: met. 1024 px at most 50% of the 1568 px cost: missed narrowly (55%).
+- **App:** stays at 1568 px (2400 px for pages taller than 2:1). The margin is free in accuracy and costs about $0.0001 per question.
