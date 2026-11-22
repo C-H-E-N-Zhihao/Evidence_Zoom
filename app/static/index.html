@@ -10,9 +10,11 @@
 <body>
 <header>
   <div class="brand"><span class="logo">◎</span> Evidence Zoom
-    <span class="tag">Ask about any image. Send the model fewer pixels.</span></div>
+    <span class="tag">Ask about any image. We send the model as little of the image as we can.</span></div>
+  <span class="live-chip" id="live-chip" hidden></span>
   <select id="model-pick" class="model-pick" hidden title="Model used for questions that need pixels"></select>
-  <button class="btn tour-btn" id="tour-btn" type="button">▶ Guided tour</button>
+  <button class="btn how-btn" id="how-btn" type="button">How it works</button>
+  <button class="btn ghost tour-btn" id="tour-btn" type="button">▶ Guided tour</button>
   <button class="btn ghost claims-btn" id="claims-btn" type="button">What we measured</button>
   <div class="pipeline" id="pipeline">pipeline: –</div>
 </header>
@@ -26,7 +28,7 @@
 <main>
   <section class="viewer">
     <div class="toolbar">
-      <select id="pair" title="Gold-labelled sample images"><option value="">Samples…</option></select>
+      <select id="pair" title="Gold-labelled sample images"><option value="">Pick a sample…</option></select>
       <div class="seg" id="ab" hidden>
         <button data-k="a" class="on">version A</button><button data-k="b">version B</button>
       </div>
@@ -35,33 +37,51 @@
     </div>
     <div class="formnote" id="formnote" hidden></div>
     <div class="stage" id="stage">
-      <label class="empty drop" id="empty">
-        <span class="drop-icon">⬆</span>
-        <b>Drop a photo here</b>
-        <span>receipt, document, screenshot, form… or pick a sample above</span>
-        <input type="file" accept="image/*" hidden id="file2">
-        <span class="how3">
-          <span><i>1</i><b>Read locally</b>OCR on this computer, free</span>
-          <span><i>2</i><b>Send less</b>the smallest image that answers, checked against the OCR text</span>
-          <span><i>3</i><b>Hand off</b>to a person when unsure, with a ready ticket</span>
-        </span>
-      </label>
+      <div class="empty" id="empty">
+        <label class="drop">
+          <span class="drop-icon">⬆</span>
+          <b>Drop a photo, or pick a sample</b>
+          <span>receipt · document · claim form · screenshot</span>
+          <input type="file" accept="image/*" hidden id="file2">
+        </label>
+        <div class="flow-mini" aria-label="How a question is answered">
+          <span class="fm"><i>1</i>Read locally<small>OCR · $0</small></span><span class="fm-arrow">→</span>
+          <span class="fm"><i>2</i>Send less<small>crop or small page</small></span><span class="fm-arrow">→</span>
+          <span class="fm"><i>3</i>Check<small>is it printed?</small></span><span class="fm-arrow">→</span>
+          <span class="fm"><i>4</i>Answer<small>or flag for review</small></span>
+        </div>
+        <div class="hero-result" id="hero-result">
+          <div class="hr-kicker">Held-out test · 60 fresh receipt photos · 248 questions · Haiku</div>
+          <div class="hr-big"><b>65%</b><span>fewer tokens per correct answer<br>than sending the original photo</span></div>
+          <div class="vs">
+            <div class="cmp-row"><span>Evidence Zoom</span><div class="cbar"><i class="ours" style="width:35.3%"></i></div><b>968</b></div>
+            <div class="cmp-row"><span>Original photo</span><div class="cbar"><i class="base" style="width:100%"></i></div><b>2,740</b></div>
+          </div>
+          <div class="hr-stats">
+            <span><b>188</b> vs 187 correct</span><span><b>0</b> vs 1 wrong</span><span><b>60/60</b> unanswerable flagged</span>
+          </div>
+          <button class="linkish" id="hero-more" type="button">What we measured, with limits →</button>
+        </div>
+      </div>
       <img id="img" alt="">
       <canvas id="overlay"></canvas>
     </div>
     <div class="legend">
-      <span><i class="sw ocr"></i>OCR evidence</span>
+      <span><i class="sw ocr"></i>OCR line it read</span>
       <span><i class="sw zoomcell"></i>region sent to the model</span>
       <span><i class="sw zoom"></i>box the model pointed to</span>
     </div>
   </section>
 
   <section class="side">
-    <div class="saving" id="saving">
+    <div class="saving idle" id="saving">
+      <div class="saving-top"><span class="saving-k">This session</span><span class="est light">estimated</span></div>
       <div class="saving-big"><b id="sv-pct">–</b><span id="sv-label">fewer input tokens than sending the original images</span></div>
-      <div class="saving-row"><span>Sent to the model</span><b id="sv-ours">0</b></div>
-      <div class="saving-row"><span>Sending the original images (est.)</span><b id="sv-full">0</b></div>
-      <div class="saving-foot" id="sv-foot">Upload a photo or pick a sample, then ask a question.</div>
+      <div class="vs">
+        <div class="cmp-row"><span>Sent</span><div class="cbar"><i class="ours" id="sv-bar-ours" style="width:0%"></i></div><b id="sv-ours">0</b></div>
+        <div class="cmp-row"><span>Original images</span><div class="cbar"><i class="base" id="sv-bar-full" style="width:0%"></i></div><b id="sv-full">0</b></div>
+      </div>
+      <div class="saving-foot" id="sv-foot">Ask a question to start the count.</div>
     </div>
     <details class="meter" id="meter">
       <summary class="meter-title">Cost detail <span class="est">estimated</span></summary>
@@ -82,6 +102,45 @@
     </form>
   </section>
 </main>
+
+<div class="modal" id="how" hidden role="dialog" aria-labelledby="how-title">
+  <div class="modal-card">
+    <div class="modal-head">
+      <b id="how-title">How Evidence Zoom answers a question</b>
+      <button class="btn ghost" id="how-close" type="button">Close</button>
+    </div>
+    <p class="how-lead">Cheapest step first. A step only calls the model when the steps before it couldn't answer.</p>
+    <div class="flow" id="flow">
+      <div class="node" data-n="0"><div class="n-ico">📷</div><b>Photo + question</b><span>receipt, form, document</span></div>
+      <div class="edge"></div>
+      <div class="node" data-n="1"><div class="n-ico">🔎</div><b>Read locally</b><span>OCR on this computer. A printed field is answered here.</span><em class="tag-free">no model · $0</em></div>
+      <div class="edge"></div>
+      <div class="node" data-n="2"><div class="n-ico">✂️</div><b>Send less</b><span>Known form: its layout picks the crop. Anything else: a small page (768 px).</span><em class="tag-model">vision model</em></div>
+      <div class="edge"></div>
+      <div class="node" data-n="3"><div class="n-ico">✓</div><b>Check</b><span>Is the answer printed on the page? If not, send a sharper page (≥ 1568 px).</span><em class="tag-free">no model · $0</em></div>
+      <div class="edge"></div>
+      <div class="node" data-n="4"><div class="n-ico">💬</div><b>Answer, or flag it</b><span>The answer with its evidence on the image, or flagged for human review with a ticket.</span><em class="tag-human">flagged for review</em></div>
+    </div>
+    <div class="how-models">Vision model: <b>Claude Haiku</b> in the cloud, or <b>Qwen2.5-VL 7B</b> on this laptop (switch top right).</div>
+    <div class="how-meter">
+      <div class="hm-title">What that saves, measured on 248 held-out receipt questions</div>
+      <div class="vs">
+        <div class="cmp-row"><span>Evidence Zoom</span><div class="cbar"><i class="ours" id="hm-ours" style="width:35.3%"></i></div><b>968</b></div>
+        <div class="cmp-row"><span>Original photo</span><div class="cbar"><i class="base" style="width:100%"></i></div><b>2,740</b></div>
+      </div>
+      <div class="hm-foot">tokens per correct answer · same model (Haiku) · 188 vs 187 correct · 0 vs 1 wrong · one paired run</div>
+    </div>
+    <div class="how-use">
+      <div><i>1</i>Pick a sample or drop a photo</div>
+      <div><i>2</i>Ask, or tap a suggested question</div>
+      <div><i>3</i>Check the box drawn on the image</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="how-play" type="button">▶ Replay the animation</button>
+      <button class="btn" id="how-demo" type="button">Run the guided demo ▶</button>
+    </div>
+  </div>
+</div>
 
 <aside class="drawer" id="drawer" hidden>
   <div class="drawer-head"><b>What we measured</b><button class="btn ghost" id="drawer-close" type="button">Close</button></div>

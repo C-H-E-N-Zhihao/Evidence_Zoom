@@ -39,16 +39,14 @@ async function init() {
     pick.onchange = () => { cfg.model = pick.value; cfg.on_device = !!(cfg.models.find((m) => m.id === pick.value) || {}).on_device; };
   }
   if (cfg.live) {
-    $("banner").hidden = false;
-    const m = (cfg.models || []).map((x) => x.on_device ? "on this laptop ($0, the image never leaves it)" : "cloud").join(" or ");
-    $("banner").innerHTML = `<span class='src ocr'>LIVE</span> OCR runs free on this computer · the model sees a smaller ` +
-      `image: a crop on known forms, a small checked page otherwise · switch cloud ↔ on-device top right`;
+    $("live-chip").hidden = false;
+    $("live-chip").textContent = "LIVE";
+    $("live-chip").title = "OCR runs on this computer; questions that need pixels go to the selected vision model";
   } else if (cfg.replay) {
     $("banner").hidden = false;
-    $("banner").innerHTML = "<b>Key-free rehearsal.</b> <span class='src ocr'>LIVE OCR</span> answers are real " +
-      "(local OCR, $0). <span class='src replay'>REPLAY</span> answers replay the fixture's gold labels through the real " +
-      "router (OCR → template-anchored crop → full-page fallback) and box-mapping code, to show <i>which pixels</i> a model " +
-      "would be sent. They are not model output, and their costs are estimates.";
+    $("banner").innerHTML = "<b>Key-free rehearsal.</b> <span class='src ocr'>LIVE OCR</span> answers are real (local OCR, $0). " +
+      "<span class='src replay'>REPLAY</span> answers replay the sample's stored gold labels through the real router to show " +
+      "<i>which pixels</i> a model would be sent: not model output; costs are estimates.";
   }
   for (const p of cfg.pairs) {
     const o = document.createElement("option");
@@ -353,7 +351,7 @@ function addA(data, i, ours) {
     if (!ck.available) { ckEl.classList.add("muted"); ckEl.textContent = `Pixel check: not run (${ck.reason}).`; }
     else {
       const verdict = ck.agrees === true ? "same as the answer" : ck.agrees === false ? "differs from the answer: check this by eye" : "";
-      ckEl.textContent = `Pixel check (clean scans only, no model; ink inside the located boxes): ${ck.kind === "tick_row"
+      ckEl.textContent = `Pixel check (no model, clean scans only): ${ck.kind === "tick_row"
         ? `box ${ck.row} for driver ${ck.side.toUpperCase()} looks ${ck.answer === "yes" ? "ticked" : "empty"}`
         : `driver ${ck.side.toUpperCase()}'s ticked boxes look like ${ck.answer}`}${verdict ? " · " + verdict : ""}`;
       if (ck.agrees === false) ckEl.classList.add("warn");
@@ -380,6 +378,8 @@ function addA(data, i, ours) {
       : `${-p}% more than the original image (~${pageTok.toLocaleString()}, est.)`);
   }
   if (result.abstained) pill.classList.add("muted");
+  const tok = tokenBars(data.answer_cache ? 0 : inTok, pageTok, pill);
+  const stepper = pathSteps(data);
   const red = result.route.find((st) => /^redacted before sending: /.test(st.note || ""));
   let redEl = null;
   if (red) {
@@ -389,7 +389,7 @@ function addA(data, i, ours) {
   const how = document.createElement("details"); how.className = "how";
   const sum = document.createElement("summary"); sum.textContent = "How this was answered";
   how.append(sum, ...(why.textContent ? [why] : []), route, cost);
-  d.append(head, pill, ...(redEl ? [redEl] : []), ...(tutor ? [tutor] : []), ...(ckEl ? [ckEl] : []));
+  d.append(head, stepper, tok, ...(redEl ? [redEl] : []), ...(tutor ? [tutor] : []), ...(ckEl ? [ckEl] : []));
   // live only: ask the same model with the whole page, and show both sides with real (billed) numbers
   const wholePage = result.route.some((st) => st.step === "zoom" && st.target === "full page") &&
     !result.route.some((st) => st.step === "zoom" && st.target !== "full page");
@@ -456,6 +456,53 @@ function addA(data, i, ours) {
   d.dataset.i = i;
   $("chat").append(d); d.scrollIntoView({ block: "end" });
 }
+// Token comparison: what we sent against sending the original image (same estimate as the pill).
+function tokenBars(inTok, pageTok, pill) {
+  const box = document.createElement("div"); box.className = "tok";
+  if (pageTok > 0) {
+    const max = Math.max(inTok, pageTok, 1);
+    const row = (label, v, cls) => `<div class="cmp-row"><span>${label}</span><div class="cbar"><i class="${cls}" ` +
+      `style="width:0%" data-w="${(v / max) * 100}"></i></div><b>${v.toLocaleString()}</b></div>`;
+    box.innerHTML = `<div class="vs">${row("Sent", inTok, "ours")}${row("Original image", pageTok, "base")}</div>`;
+    requestAnimationFrame(() => requestAnimationFrame(() =>
+      box.querySelectorAll("i[data-w]").forEach((el) => { el.style.width = `${Math.max(+el.dataset.w, inTok ? 1.5 : 0)}%`; })));
+  }
+  const foot = document.createElement("div"); foot.className = "tok-delta";
+  pill.classList.add("pill-in");
+  foot.append(pill);
+  box.append(foot);
+  return box;
+}
+// The path this answer took through the route, cheapest step first (what ran, what answered).
+function pathSteps(data) {
+  const r = data.result, route = r.route || [];
+  const zooms = route.filter((st) => st.step === "zoom");
+  const notes = route.map((st) => st.note || "").join(" | ");
+  const px = (z) => { const m = /(\d+)x(\d+)px/.exec((z && z.note) || ""); return m ? `${m[1]}×${m[2]} px` : ""; };
+  const steps = [];
+  const ocrHit = data.source === "ocr";
+  steps.push(["Read locally", ocrHit ? "answered · $0" : "OCR · $0", ocrHit ? "free" : "pass"]);
+  if (data.answer_cache) steps.push(["Answer cache", "0 tokens", "free"]);
+  else if (!ocrHit) {
+    const anchor = zooms.find((z) => (z.target || "").startsWith("anchor:"));
+    if (anchor) steps.push(["Layout crop", px(anchor) || "region", "hit"]);
+    else if (zooms.length) steps.push([zooms[0].target === "full page" && zooms.length === 1 && !/small image|ladder|low-resolution/.test(notes)
+      ? "Page" : "Small page", px(zooms[0]) || "image", "hit"]);
+    if (/found in the OCR text|answer located by OCR/.test(notes)) steps.push(["OCR check", "✓ printed on page", "free"]);
+    else if (/ladder: answer not in the OCR text/.test(notes)) steps.push(["OCR check", "not printed", "miss"]);
+    if (!anchor && zooms.length > 1) steps.push(["Sharper page", px(zooms[zooms.length - 1]) || "image", "hit"]);
+  }
+  steps.push(r.abstained ? ["Human review", "flagged · ticket", "handoff"] : ["Answer", "+ evidence box", "ok"]);
+  const box = document.createElement("div"); box.className = "steps";
+  steps.forEach(([t, sub, cls], k) => {
+    if (k) { const e = document.createElement("span"); e.className = "st-edge"; box.append(e); }
+    const el = document.createElement("div"); el.className = `st ${cls}`;
+    const b = document.createElement("b"); b.textContent = t;
+    const sm = document.createElement("small"); sm.textContent = sub;
+    el.append(b, sm); box.append(el);
+  });
+  return box;
+}
 function select(i) {
   active = i;
   document.querySelectorAll(".msg-a").forEach((el) => el.classList.toggle("active", +el.dataset.i === i));
@@ -468,15 +515,18 @@ function inputTokens(r) {
 }
 function fmtTok(n) { return n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : `${Math.round(n)}`; }
 function updateSaving() {
+  $("saving").classList.toggle("idle", !sess.n);
   const pct = sess.full ? Math.round((1 - sess.ours / sess.full) * 100) : null;
   $("sv-pct").textContent = pct === null ? "–" : `${Math.abs(pct)}%`;
   $("sv-label").textContent = pct !== null && pct < 0 ? "more input tokens than sending the original images"
     : "fewer input tokens than sending the original images";
-  $("sv-ours").textContent = `${sess.ours.toLocaleString()} input tokens`;
-  $("sv-full").textContent = `${sess.full.toLocaleString()} input tokens`;
-  $("sv-foot").textContent = sess.n ? `At this rate, 1,000 customer questions ≈ ${fmtTok(sess.ours / sess.n * 1000)} input ` +
-    `tokens instead of ${fmtTok(sess.full / sess.n * 1000)} · ${sess.n} question${sess.n > 1 ? "s" : ""} so far · cached ` +
-    "image tokens counted in full (billed at ~10%)" : "Upload a photo or pick a sample, then ask a question.";
+  $("sv-ours").textContent = sess.ours.toLocaleString();
+  $("sv-full").textContent = sess.full.toLocaleString();
+  const mx = Math.max(sess.ours, sess.full, 1);
+  $("sv-bar-ours").style.width = `${Math.max((sess.ours / mx) * 100, sess.ours ? 1.5 : 0)}%`;
+  $("sv-bar-full").style.width = `${(sess.full / mx) * 100}%`;
+  $("sv-foot").textContent = sess.n ? `input tokens · ${sess.n} question${sess.n > 1 ? "s" : ""} · at this rate 1,000 ` +
+    `questions ≈ ${fmtTok(sess.ours / sess.n * 1000)} instead of ${fmtTok(sess.full / sess.n * 1000)}` : "Ask a question to start the count.";
 }
 
 function updateMeter() {
@@ -542,19 +592,19 @@ function draw() {
 
 // ---- guided tour: the judge script, one click per step (works key-free; badges stay honest) -------------
 const TOUR = [
-  { say: "A standard European accident statement. Printed fields are read on this computer by OCR, for $0.",
+  { say: "A claim form. Printed fields are read by OCR on this computer: $0, no model.",
     pair: "eas-002", side: "a", q: "What is vehicle A's insurance policy number?" },
-  { say: "Ticks need pixels. The form's layout locates driver B's tick column, so a model sees a small crop, not the page.",
+  { say: "Ticks need pixels. The form's layout picks driver B's tick column: the model sees only that crop.",
     q: "Which circumstance boxes did driver B tick? Answer with the box numbers." },
-  { say: "Form b is identical except one of B's ticks moved. The answer changes and the box moves with it.",
+  { say: "Version B: one tick moved. The answer changes and the box moves with it.",
     side: "b", q: "Which circumstance boxes did driver B tick? Answer with the box numbers." },
-  { say: "A question the form cannot answer: one page call, and the system says so instead of inventing a value.",
+  { say: "Not on the form: the app says so and flags it for review. Nothing invented.",
     q: "What is driver A's driving licence number?" },
-  { say: "A differently designed form (layout 3). A short configured template reads it: printed fields locally again.",
+  { say: "A different layout. A 10-line template reads it: printed fields by OCR again.",
     pair: "eas3b-003", side: "a", q: "What is vehicle A's insurance policy number?" },
-  { say: "…and the template finds B's tick column on this layout too.",
+  { say: "…and the template finds B's tick column here too.",
     q: "Which circumstance boxes did driver B tick? Answer with the box numbers." },
-  { say: "The savings card, top right: tokens sent to the model against sending the original images. Now upload any photo and ask. That’s the tour." },
+  { say: "The savings card: tokens sent against the original images. Now try your own photo." },
 ];
 let tourStep = -1;
 async function tourGo() {
@@ -592,9 +642,13 @@ $("claims-btn").onclick = async () => {
       body.textContent = "Measured results are pending release review" + (d.status ? ` (${d.status})` : "") + ".";
       return;
     }
+    body.append(resultsVisual());
+    const all = document.createElement("details"); all.className = "res-all";
+    const sm = document.createElement("summary"); sm.textContent = `Every approved result, with its limits and receipt (${d.claims.length})`;
+    all.append(sm); body.append(all);
     const p = document.createElement("p"); p.className = "claims-about";
     p.textContent = "Every figure below comes from a committed run; the path under each one is its receipt in the repository.";
-    body.append(p);
+    all.append(p);
     for (const c of d.claims) {
       const card = document.createElement("div"); card.className = "claim";
       const h = document.createElement("div"); h.className = "claim-title"; h.textContent = c.title;
@@ -602,10 +656,85 @@ $("claims-btn").onclick = async () => {
       const t = document.createElement("p"); t.textContent = c.text;
       const l = document.createElement("p"); l.className = "claim-limits"; l.textContent = "Limits: " + (c.limits || "–");
       const src = document.createElement("code"); src.className = "claim-src"; src.textContent = c.source || "";
-      h.append(" ", k); card.append(h, t, l, src); body.append(card);
+      h.append(" ", k); card.append(h, t, l, src); all.append(card);
     }
   } catch (e) { body.textContent = "Could not load the claims: " + e; }
 };
 $("drawer-close").onclick = () => { $("drawer").hidden = true; };
+
+// Approved figures (README "What we measured", DEMO tokens table, andrew-review-final-cord / -214-216 / -ladder).
+const RESULTS = [
+  { lead: true, title: "Fresh receipt photos (held out)", sample: "248 questions · 60 CORD validation receipts · Haiku · one paired run",
+    delta: "−65%", unit: "tokens per correct answer",
+    rows: [["Evidence Zoom", 968, "ours"], ["Original photo", 2740, "base"]],
+    foot: "188 vs 187 correct · 0 vs 1 wrong · all 60 unanswerable questions flagged for review by both" },
+  { title: "Configured claim form (synthetic)", sample: "96 questions · Sonnet on both sides",
+    unit: "tokens per correct answer", rows: [["Evidence Zoom", 774, "ours"], ["Cached whole page", 5696, "base"]],
+    foot: "84 correct each, plus 12 correct deferrals · 48 questions answered by OCR alone" },
+  { title: "Second configured layout (synthetic)", sample: "96 questions · Haiku",
+    unit: "tokens per correct answer", rows: [["Evidence Zoom", 841, "ours"], ["Original page", 5946, "base"]],
+    foot: "84 vs 81 correct" },
+  { title: "DocVQA scans (public benchmark)", sample: "100 questions · Haiku · OCR-checked resolution ladder",
+    unit: "tokens per correct answer", rows: [["Evidence Zoom", 1574, "ours"], ["Original page", 4587, "base"]],
+    foot: "96 vs 96 correct (separately prompted page baseline) · ANLS 0.920 vs 0.931" },
+];
+const LIMITS = [
+  { title: "Layouts we never configured (synthetic)", sample: "416 questions · Haiku",
+    unit: "tokens per correct answer", rows: [["Evidence Zoom", 3110, "ours"], ["Plain smaller page", 2986, "alt"], ["Original page", 4894, "base"]],
+    foot: "No region selection here: a plain downscaled page was slightly cheaper than our route." },
+  { title: "Open models (Qwen 7B, earlier configuration)", sample: "248 receipt questions · local GPU",
+    unit: "wrong answers (fewer is better)", rows: [["Evidence Zoom", 31, "ours"], ["Original photo", 14, "base"]],
+    foot: "Routing gave more wrong answers, mostly missed review flags (72B: 13 vs 6)." },
+];
+function resCard(x) {
+  const card = document.createElement("div"); card.className = "res" + (x.lead ? " lead" : "");
+  const max = Math.max(...x.rows.map((r) => r[1]));
+  card.innerHTML = `<div class="res-head"><div><b></b><div class="res-sample"></div></div>${x.delta ? `<span class="res-delta">${x.delta}</span>` : ""}</div>` +
+    `<div class="vs">${x.rows.map(([l, v, c]) => `<div class="cmp-row"><span>${l}</span><div class="cbar"><i class="${c}" style="width:0%" ` +
+    `data-w="${(v / max) * 100}"></i></div><b>${v.toLocaleString()}</b></div>`).join("")}</div><div class="res-foot"></div>`;
+  card.querySelector(".res-head b").textContent = x.title;
+  card.querySelector(".res-sample").textContent = `${x.sample} · ${x.unit}`;
+  card.querySelector(".res-foot").textContent = x.foot;
+  return card;
+}
+function resultsVisual() {
+  const wrap = document.createElement("div");
+  const s1 = document.createElement("div"); s1.className = "res-sec"; s1.textContent = "Ours vs sending the original image";
+  wrap.append(s1, ...RESULTS.map(resCard));
+  const s2 = document.createElement("div"); s2.className = "res-sec"; s2.textContent = "Where it does not help";
+  wrap.append(s2, ...LIMITS.map(resCard));
+  requestAnimationFrame(() => requestAnimationFrame(() =>
+    wrap.querySelectorAll("i[data-w]").forEach((el) => { el.style.width = `${el.dataset.w}%`; })));
+  return wrap;
+}
+
+// ---- "How it works": the route as a diagram, lit step by step; then the guided demo -----------------------
+let howTimer = null;
+function howPlay() {
+  clearTimeout(howTimer);
+  const parts = [...$("flow").children];  // node, edge, node, ...
+  parts.forEach((el) => el.classList.remove("lit", "seen"));
+  $("hm-ours").style.width = "0%";
+  let k = 0;
+  const stepFn = () => {
+    if (k > 0) parts[k - 1].classList.replace("lit", "seen");
+    if (k >= parts.length) { $("hm-ours").style.width = "35.3%"; return; }
+    parts[k].classList.add("lit"); k += 1;
+    howTimer = setTimeout(stepFn, parts[k - 1].classList.contains("edge") ? 220 : 650);
+  };
+  stepFn();
+}
+function howOpen() { $("how").hidden = false; howPlay(); }
+function howClose() { clearTimeout(howTimer); $("how").hidden = true; }
+$("how-btn").onclick = howOpen;
+$("how-close").onclick = howClose;
+$("how-play").onclick = howPlay;
+$("how").onclick = (e) => { if (e.target === $("how")) howClose(); };
+$("how-demo").onclick = () => { howClose(); $("tour-btn").onclick(); tourGo(); };
+$("hero-more").onclick = () => $("claims-btn").onclick();
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (!$("how").hidden) howClose(); else if (!$("drawer").hidden) $("drawer").hidden = true;
+});
 
 init();
