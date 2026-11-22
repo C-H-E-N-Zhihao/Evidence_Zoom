@@ -21,3 +21,16 @@ What we learned:
 - **Prediction record:** fix 2's predictions (message 171) passed on ChartQA and on DocVQA cost, and failed on DocVQA ANLS, InfographicVQA and overall. Open-weights models on RCP (claude-zhihao, 170) show the same ordering: whole page > route with thumbnail > plain route.
 
 **Consequence for the app** (c1aeb22): General mode's "Any image" sends the whole page; OCR still runs locally for the boxes. "Worksheet: OCR text first" stays for printed worksheets, where the revised route scored 96/96 versus 95/96 at 69.5% of the API charge on the second held-out set (`REPORT_homework_v3_heldout.md`). The claim-form router (model-free OCR and template selection) is unchanged; that is where the large savings are measured.
+
+
+## Page resolution control (realdocs_v2, message 175; receipt `realdocs_v2_lowres1568/`, $0.0393)
+
+The app's whole-page call caps the long side at 1568 px; the evaluated whole-page arm sent the stored image (up to 2400 px).
+
+| source (70 each) | 1568 px page | full-size page | text-first route (v4) |
+|---|---:|---:|---:|
+| DocVQA ANLS / cost per q | **0.954 / $0.00029** | 0.951 / $0.00049 | 0.900 / $0.00029 |
+| InfographicVQA ANLS / cost per q | 0.690 / $0.00028 | **0.761 / $0.00033** | 0.619 / $0.00042 |
+
+- **On scanned documents, downscaling the whole page to 1568 px is the frugal winner.** It matches full resolution at 41% lower cost, and beats the text-first route at the same cost.
+- **Tall infographics lose detail when downscaled.** 31 of the 65 infographic pages are taller than 2:1, against 2 of 70 scans and no charts. The app now keeps up to 2400 px for pages taller than 2:1. That rule was chosen after this run (development), so its effect is not measured yet.

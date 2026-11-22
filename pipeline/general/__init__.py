@@ -27,6 +27,15 @@ MAX_LINES = 220
 # text (~chars/4) plus about TEXT_STEP_OVERHEAD input-equivalent tokens (system prompt ~400 + extra output ~120 tokens
 # priced ~5x input). If the image is cheaper, skip the text step and send the page.
 TEXT_STEP_OVERHEAD = 1000
+# Whole-page resolution (realdocs_v2 control, message 175/176): at a 1568 px long side DocVQA scans lose nothing
+# (ANLS .954 vs .951 at full size, 41% cheaper) but tall infographics do (.690 vs .761). Pages taller than 2:1 keep
+# up to 2400 px. Development rule (chosen after seeing realdocs_v2).
+PAGE_SIDE, TALL_PAGE_SIDE, TALL_ASPECT = 1568, 2400, 2.0
+
+
+def _page_side(image) -> int:
+    w, h = image.size
+    return TALL_PAGE_SIDE if max(w, h) / max(1, min(w, h)) > TALL_ASPECT else PAGE_SIDE
 PIXELS_PER_TOKEN = 800.0
 BAND_ABOVE, BAND_BELOW = 0.30, 0.30  # crop band around the named lines (page fractions). Drawings sit above their
 # labels (axis labels, legends, keys) as often as below their question text: homework_v2 held-out, 8264c05.
@@ -132,11 +141,13 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
                                        note=f"small image: whole page (~{img_tok:.0f} tok) is cheaper than its OCR text "
                                             f"(~{txt_tok:.0f} tok)"))
             return zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=res, model=model,
-                               look_for="the evidence for the question", target="full page", call=call, name="page")
+                               look_for="the evidence for the question", target="full page", call=call, name="page",
+                               max_crop_side=_page_side(image))
     if lines and not text_step:
         res.route.append(RouteStep("fallback", target="image", note="whole page (text step off)"))
         return zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=res, model=model,
-                           look_for="the evidence for the question", target="full page", call=call, name="page")
+                           look_for="the evidence for the question", target="full page", call=call, name="page",
+                               max_crop_side=_page_side(image))
     if lines:
         # 2. text-only call
         text = "\n".join(f"[L{i + 1}] {s['text'].strip()}" for i, s in enumerate(lines))
@@ -202,7 +213,7 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
         res.route.append(RouteStep("fallback", target="image", note="band crop was not enough; one look at the whole page"))
         res = zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=res, model=model,
                           look_for=look_for or "the evidence for the question", target="full page", call=call,
-                          name="page")
+                          name="page", max_crop_side=_page_side(image))
     return res
 
 
