@@ -506,7 +506,7 @@ const TOUR = [
     pair: "eas3b-003", side: "a", q: "What is vehicle A's insurance policy number?" },
   { say: "…and the template finds B's tick column on this layout too.",
     q: "Which circumstance boxes did driver B tick? Answer with the box numbers." },
-  { say: "Session cost, top right: this route against sending the whole page each time. That's the tour." },
+  { say: "The savings card, top right: tokens sent to the model against sending the original images. Now upload any photo and ask. That’s the tour." },
 ];
 let tourStep = -1;
 async function tourGo() {
