@@ -430,6 +430,26 @@ function addA(data, i, ours) {
     }
     d.append(strip);
   }
+  if (result.abstained) {  // human handoff: a ticket the agent can start from, built from what the bot already has
+    const tb = document.createElement("button"); tb.type = "button"; tb.className = "btn ticket-btn";
+    tb.textContent = "Create ticket for a human agent";
+    const tk = document.createElement("pre"); tk.className = "ticket"; tk.hidden = true;
+    tb.onclick = (ev) => {
+      ev.stopPropagation();
+      const q = data.question || "";
+      const words = q.toLowerCase().match(/[a-z0-9]{3,}/g) || [];
+      const ranked = (data.ticket_lines || []).map((t, k) => [words.filter((w) => t.toLowerCase().includes(w)).length, k, t])
+        .sort((a, b) => b[0] - a[0] || a[1] - b[1]).slice(0, 8).sort((a, b) => a[1] - b[1]).map((x) => "  " + x[2]);
+      tk.textContent = [`Customer question: ${q}`,
+        `Bot result: could not answer from the image${result.error ? " (" + result.error.slice(0, 80) + ")" : ""}`,
+        `Tried: ${steps.map((st) => st.step).join(" → ")} · ${inTok} input tokens`,
+        `Image: ${image ? image.width + "×" + image.height + " px" : ""} (attached in the conversation)`,
+        "Page text near the question (local OCR):", ...(ranked.length ? ranked : ["  (no text found)"])].join("\n");
+      tk.hidden = false; tb.textContent = "Copy ticket";
+      tb.onclick = (e2) => { e2.stopPropagation(); navigator.clipboard && navigator.clipboard.writeText(tk.textContent); tb.textContent = "Copied ✓"; };
+    };
+    d.append(tb, tk);
+  }
   d.append(how);
   how.onclick = (ev) => ev.stopPropagation();
   d.onclick = () => select(i);

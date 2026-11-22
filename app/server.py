@@ -422,7 +422,18 @@ def _ask(req: Ask):
                     check["agrees"] = (got == want) if got or "none" not in a else (want == [])
         except Exception as e:
             check = {"available": False, "reason": f"pixel check failed ({type(e).__name__})"}
+    ticket_lines = None
+    if result.get("abstained"):  # human handoff: give the agent the page text the bot could see (local OCR, $0)
+        try:
+            from pipeline.general import _keyword_band, _lines
+            from pipeline.ocr import recognize_page
+
+            lines = _lines(recognize_page(img)[0])
+            ticket_lines = [s["text"].strip() for s in lines][:60]
+        except Exception:
+            ticket_lines = None
     return {"result": result, "baseline": baseline, "source": source, "views": views, "live_error": live_error,
+            "ticket_lines": ticket_lines,
             "check": check,
             "model": chosen, "on_device": _on_device(chosen or ""),
             "question_index": meta["questions"] - 1,
