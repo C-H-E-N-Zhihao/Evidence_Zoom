@@ -6,6 +6,7 @@ let image = null;           // {image_id, width, height, url, fixture}
 let answers = [];           // [{result, baseline, source, views}]
 let active = -1;
 let totals = { ours: 0, cached: 0, full: 0 };
+let sess = { ours: 0, full: 0, n: 0 };
 let pair = null, side = "a";
 const sessions = {};        // fixture id -> {image, answers, totals, active, chat (DOM nodes)}
 const pairAnswers = {};     // pair_id -> question -> {a: answer, b: answer}
@@ -37,27 +38,11 @@ async function init() {
     pick.value = cfg.model || cfg.models[0].id;
     pick.onchange = () => { cfg.model = pick.value; cfg.on_device = !!(cfg.models.find((m) => m.id === pick.value) || {}).on_device; };
   }
-  if (cfg.live && (cfg.models || []).length > 1) {
+  if (cfg.live) {
     $("banner").hidden = false;
-    $("banner").innerHTML = `<b>Live demo.</b> <span class='src ocr'>LIVE OCR</span> answers are local ($0). ` +
-      `<span class='src model'>MODEL</span> answers come from the model chosen top right: ` +
-      cfg.models.map((m) => `<code>${m.id.replace(/^local:|^or:anthropic\//, "")}</code> ` + (m.on_device
-        ? "(<b>on this laptop</b>: no API call, no provider charge, the document never leaves the machine)"
-        : m.id.startsWith("local:") ? "(self-hosted server, no provider charge)" : "(<b>cloud API</b>, billed)")).join(" or ") +
-      `. Each answer names its model.` +
-      (cfg.replay ? " If a live call fails, that answer is replayed from fixture labels and marked REPLAY." : "");
-  } else if (cfg.live) {
-    $("banner").hidden = false;
-    $("banner").innerHTML = `<b>Live demo.</b> <span class='src ocr'>LIVE OCR</span> answers are local ($0). ` +
-      (cfg.on_device
-        ? `<span class='src model'>MODEL</span> answers come from <code>${cfg.model.slice(6)}</code> running <b>on this laptop</b> ` +
-          `(no API call, no provider charge, the document never leaves the machine), on the crop or the full page.`
-        : String(cfg.model || "").startsWith("local:")
-        ? `<span class='src model'>MODEL</span> answers come from <code>${cfg.model.slice(6)}</code> on a self-hosted server ` +
-          `(no provider charge), on the crop or the full page.`
-        : `<span class='src model'>MODEL</span> answers come from a real call to <code>${cfg.model || "the model"}</code> ` +
-          `on the crop (or the full page when no template anchor applies); their cost is billed.`) +
-      (cfg.replay ? " If a live call fails, that answer is replayed from fixture labels and marked REPLAY." : "");
+    const m = (cfg.models || []).map((x) => x.on_device ? "on this laptop ($0, the image never leaves it)" : "cloud").join(" or ");
+    $("banner").innerHTML = `<span class='src ocr'>LIVE</span> OCR runs free on this computer · the model only sees ` +
+      `the pixels it needs · switch cloud ↔ on-device top right`;
   } else if (cfg.replay) {
     $("banner").hidden = false;
     $("banner").innerHTML = "<b>Key-free rehearsal.</b> <span class='src ocr'>LIVE OCR</span> answers are real " +
@@ -142,13 +127,21 @@ document.querySelectorAll("#ab button").forEach((b) => b.onclick = () => {
   document.querySelectorAll("#ab button").forEach((x) => x.classList.toggle("on", x === b));
   loadFixture();
 });
-$("file").onchange = async (e) => {
-  const f = e.target.files[0]; if (!f) return;
+async function uploadFile(f) {
+  if (!f) return;
   saveSession();
   pair = null; $("pair").value = ""; $("ab").hidden = true; $("formnote").hidden = true;
   const fd = new FormData(); fd.append("file", f);
   loadImage(await fetch("/api/images", { method: "POST", body: fd }));
-};
+}
+$("file").onchange = (e) => uploadFile(e.target.files[0]);
+if ($("file2")) $("file2").onchange = (e) => uploadFile(e.target.files[0]);
+$("stage").addEventListener("dragover", (e) => { e.preventDefault(); $("stage").classList.add("dragging"); });
+$("stage").addEventListener("dragleave", () => $("stage").classList.remove("dragging"));
+$("stage").addEventListener("drop", (e) => {
+  e.preventDefault(); $("stage").classList.remove("dragging");
+  const f = e.dataTransfer.files && e.dataTransfer.files[0]; if (f) uploadFile(f);
+});
 $("showGrid").onchange = draw;
 img.onload = draw;
 window.onresize = draw;
@@ -156,7 +149,8 @@ window.onresize = draw;
 function setSuggestions() {
   const box = $("suggest"); box.innerHTML = "";
   const f = currentForm();
-  const qs = f ? f.questions : [];
+  const qs = f ? f.questions : (image ? ["What is the total amount?", "What is the date?", "How much tax was paid?",
+    "What is the invoice or order number?", "Who is the seller?"] : []);
   for (const q of qs) {
     const b = document.createElement("button"); b.type = "button"; b.title = q;
     const short = q.replace(/\s*Answer (with|yes|A or B|in)\b.*$/i, "");
@@ -195,6 +189,8 @@ async function askQ(q) {
     answers.push(data);
     const ours = data.result.usage.reduce((s, u) => s + (u.cost_usd || 0), 0);
     totals.ours += ours; totals.cached += data.baseline.cached_usd; totals.full += data.baseline.uncached_usd;
+    sess.ours += inputTokens(data.result); sess.full += (data.baseline.image_tokens || 0) + (data.baseline.text_tokens || 0);
+    sess.n += 1; updateSaving();
     addA(data, answers.length - 1, ours);
     if (pair && image.fixture) {
       const pa = (pairAnswers[pair.pair_id] ||= {});
@@ -364,7 +360,20 @@ function addA(data, i, ours) {
     tutor.textContent = tnote.split("explanation: ").slice(1).join("explanation: ");
   }
   const why = document.createElement("div"); why.className = "explain"; why.textContent = explain(data);
-  d.append(head, ...(tutor ? [tutor] : []), ...(why.textContent ? [why] : []), ...(ckEl ? [ckEl] : []), route, cost);
+  // the headline for a customer: what this answer cost in model tokens, against sending the original image
+  const pageTok = (baseline.image_tokens || 0) + (baseline.text_tokens || 0);
+  const pill = document.createElement("div"); pill.className = "pill";
+  if (data.answer_cache) pill.innerHTML = "<b>0 tokens</b> · same question as before, answered from the cache";
+  else if (!inTok) pill.innerHTML = "<b>0 model tokens</b> · read on this computer by OCR";
+  else {
+    const p = pageTok ? Math.max(0, Math.round((1 - inTok / pageTok) * 100)) : 0;
+    pill.innerHTML = `<b>${inTok.toLocaleString()} tokens</b> · ${p}% fewer than the original image (~${pageTok.toLocaleString()}, est.)`;
+  }
+  if (result.abstained) pill.classList.add("muted");
+  const how = document.createElement("details"); how.className = "how";
+  const sum = document.createElement("summary"); sum.textContent = "How this was answered";
+  how.append(sum, ...(why.textContent ? [why] : []), route, cost);
+  d.append(head, pill, ...(tutor ? [tutor] : []), ...(ckEl ? [ckEl] : []));
   // live only: ask the same model with the whole page, and show both sides with real (billed) numbers
   const wholePage = result.route.some((st) => st.step === "zoom" && st.target === "full page") &&
     !result.route.some((st) => st.step === "zoom" && st.target !== "full page");
@@ -390,10 +399,12 @@ function addA(data, i, ours) {
       } catch (e) { out.textContent = "Comparison failed: " + e; btn.disabled = false; }
       finally { clearInterval(tk); }
     };
-    d.append(btn, out);
+    how.append(btn, out);
   }
   if (views && views.length) {
     const strip = document.createElement("div"); strip.className = "views";
+    const cap0 = document.createElement("div"); cap0.className = "views-cap"; cap0.textContent = "What the model saw";
+    d.append(cap0);
     for (const v of views) {
       const fig = document.createElement("figure");
       const im = document.createElement("img"); im.src = v.data_url; im.alt = v.step;
@@ -403,6 +414,8 @@ function addA(data, i, ours) {
     }
     d.append(strip);
   }
+  d.append(how);
+  how.onclick = (ev) => ev.stopPropagation();
   d.onclick = () => select(i);
   d.dataset.i = i;
   $("chat").append(d); d.scrollIntoView({ block: "end" });
@@ -411,6 +424,19 @@ function select(i) {
   active = i;
   document.querySelectorAll(".msg-a").forEach((el) => el.classList.toggle("active", +el.dataset.i === i));
   draw();
+}
+
+function inputTokens(r) {
+  return (r.usage || []).reduce((a, u) => a + (u.input_image_tokens || 0) + (u.input_text_tokens || 0) +
+    (u.cache_read_tokens || 0) + (u.cache_write_tokens || 0), 0);
+}
+function updateSaving() {
+  const pct = sess.full ? Math.max(0, Math.round((1 - sess.ours / sess.full) * 100)) : null;
+  $("sv-pct").textContent = pct === null ? "–" : `${pct}%`;
+  $("sv-ours").textContent = `${sess.ours.toLocaleString()} tokens`;
+  $("sv-full").textContent = `${sess.full.toLocaleString()} tokens`;
+  $("sv-foot").textContent = sess.n ? `${sess.n} question${sess.n > 1 ? "s" : ""} this session · cached image tokens counted` +
+    " in full here (the provider bills them at ~10%)" : "Upload a photo or pick a sample, then ask a question.";
 }
 
 function updateMeter() {
