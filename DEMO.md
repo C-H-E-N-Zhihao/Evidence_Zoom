@@ -174,7 +174,7 @@ above are receipts.
 | OCR answers and their boxes | **real**: Apple Vision on your machine |
 | routing decision, anchor selection, crop (or full page), box mapping | **real** code path |
 | the vision model's reply (the answer and its box) | **replayed** from the test form's stored answer (`pipeline/visual/replay.py`) |
-| token counts and $ | **estimated**, calibrated on billed usage (~width × height / 800 tokens per image, no downscale; list prices in `eval/pricing.py`) |
+| token counts and $ | **estimated**, calibrated on billed Claude usage (~width × height / 800 tokens per image up to the provider cap; a Haiku/OpenRouter probe billed a 24.5 MP photo at 4,773 input tokens, so the estimate is capped at 4,750 image tokens; list prices in `eval/pricing.py`) |
 
 Measured results, their limits and their provenance are in `docs/NARRATIVE.md` (the reviewed source for any
 number you quote). In short: on the configured templates (the accident statement and a second layout), OCR
