@@ -134,7 +134,7 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
             return zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=res, model=model,
                                look_for="the evidence for the question", target="full page", call=call, name="page")
     if lines and not text_step:
-        res.route.append(RouteStep("fallback", target="image", note="small model: whole page (text step off)"))
+        res.route.append(RouteStep("fallback", target="image", note="whole page (text step off)"))
         return zoom_answer(image, question, [(0.0, 1.0)], [(0.0, 1.0)], prior=res, model=model,
                            look_for="the evidence for the question", target="full page", call=call, name="page")
     if lines:

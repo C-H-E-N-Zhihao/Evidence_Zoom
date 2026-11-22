@@ -9,10 +9,11 @@
 <body>
 <header>
   <div class="brand">Evidence Zoom <span class="tag">frugal multimodal QA</span></div>
-  <select id="mode-pick" class="model-pick" title="Which route answers: the claim-form router, or the general assistant (OCR text first) for any image">
-    <option value="">Auto (claim form / general)</option>
+  <select id="mode-pick" class="model-pick" title="Which route answers. Text first was cheaper on printed worksheets but lost on real documents, so other images default to the whole page.">
+    <option value="">Auto (claim form / worksheet)</option>
     <option value="claims">Claim form router</option>
-    <option value="general">General assistant (any image)</option>
+    <option value="worksheet">Worksheet: OCR text first</option>
+    <option value="general">Any image: whole page</option>
   </select>
   <select id="model-pick" class="model-pick" hidden title="Model used for questions that need pixels"></select>
   <button class="btn tour-btn" id="tour-btn" type="button">▶ Guided tour</button>

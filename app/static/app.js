@@ -186,7 +186,7 @@ async function askQ(q) {
   $("chat").append(wait); wait.scrollIntoView({ block: "end" });
   try {
     const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image_id: imageId, question: q, model: cfg.live ? cfg.model : null }) });
+      body: JSON.stringify({ image_id: imageId, question: q, model: cfg.live ? cfg.model : null, mode: $("mode-pick").value || null }) });
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || r.status);
     data.question = q;
@@ -255,6 +255,9 @@ function explain(data) {
   if (t === "full page" && small)
     return `This image is small, so sending it whole (${size}, ~${inTok} input tokens${est}) costs less than sending its OCR ` +
       `text and asking first; OCR still ran locally.`;
+  if (t === "full page" && r.route.some((st) => /text step off/.test(st.note || "")) && !data.on_device)
+    return `Any-image mode sends the whole page (${size}, ~${inTok} input tokens${est}): on real documents, reading the OCR text ` +
+      `first scored lower than the whole page in our tests. OCR still ran locally.`;
   if (t === "full page" && r.route.some((st) => /text step off/.test(st.note || "")))
     return `Small on-device models did not reliably tell when OCR text is not enough (measured on Qwen2.5-VL-7B), so this one was sent the whole page ` +
       `(${size}, ~${inTok} input tokens${est}); OCR still ran locally for the green boxes.`;
@@ -301,7 +304,9 @@ function addA(data, i, ours) {
   result.route.forEach((s, k) => {
     if (k) route.insertAdjacentHTML("beforeend", '<span class="arrow">→</span>');
     const c = document.createElement("span"); c.className = `chip ${s.step}`;
-    c.textContent = s.step === "fallback" ? "OCR not enough"
+    c.textContent = s.step === "fallback"
+      ? (/text step off/.test(s.note || "") ? "whole page" : /^small image/.test(s.note || "") ? "small image"
+        : /band crop was not enough/.test(s.note || "") ? "band not enough" : "OCR not enough")
       : s.target ? `${s.step} ${s.target.length > 18 ? s.target.slice(0, 18) + "…" : s.target}` : s.step;
     c.title = [s.target, s.note].filter(Boolean).join(" · ");
     route.append(c);
@@ -348,7 +353,7 @@ function addA(data, i, ours) {
       const tk = setInterval(() => { out.textContent = `Sending the whole page to the same model… ${((Date.now() - t0) / 1000).toFixed(0)} s`; }, 400);
       try {
         const r = await fetch("/api/compare", { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image_id: data.imageId, question: q, model: data.model }) });
+          body: JSON.stringify({ image_id: data.imageId, question: q, model: data.model, mode: data.mode || null }) });
         const c = await r.json(); if (!r.ok) throw new Error(c.detail || r.status);
         if (c.error) throw new Error(c.error);
         const bill = String(c.model).startsWith("local:") ? "no provider charge" : "billed";

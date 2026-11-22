@@ -275,7 +275,10 @@ def ask(req: Ask):
 
     live_error = None
     # route: the claims router for configured claim forms, the general assistant (OCR text first) otherwise
-    general = req.mode == "general" or (req.mode != "claims" and (meta.get("fixture") or "").startswith("hw-"))
+    # worksheet mode (OCR text first) where it was measured to save cost (printed worksheets, REPORT_homework_v3_heldout);
+    # "general" = any image: whole page, because text-first lost on real documents (REPORT_realdocs.md)
+    worksheet = req.mode == "worksheet" or (req.mode not in ("claims", "general") and (meta.get("fixture") or "").startswith("hw-"))
+    general = worksheet or req.mode == "general"
     pipe = importlib.import_module("pipeline.general") if general else pipeline
     with _replay_lock:  # the visual module's hooks are process-global; one question at a time
         chosen = _use_model(req.model) if LIVE else None
@@ -291,7 +294,7 @@ def ask(req: Ask):
                 visual.CALL_OVERRIDE = _cap
             # small local models do not reliably ask for pixels when OCR text is not enough
             # (REPORT_homework_v3_qwen7b.md): in general mode they get the whole page instead of the text step
-            kw = {"text_step": not (chosen or "").startswith("local:")} if general else {}
+            kw = {"text_step": worksheet and not (chosen or "").startswith("local:")} if general else {}
             try:
                 result = pipe.answer(img, req.question, **kw)
             finally:
