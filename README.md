@@ -1,6 +1,6 @@
 # Evidence Zoom
 
-Evidence Zoom explores how a customer-service bot can answer questions about uploaded images while spending fewer model tokens. The demo shows the source region used to answer. The app runs OCR locally, answers supported fields directly, and sends a targeted crop for visual questions on configured claim forms. For other images, it starts with a smaller view, cropped to the detected text when available. It asks the selected vision model for a higher-resolution answer if the first answer cannot be confirmed against the local OCR text. Questions the app cannot answer are flagged for human review.
+Evidence Zoom explores how a customer-service bot can answer questions about uploaded images while spending fewer model tokens. The demo shows the source region used to answer. The app runs OCR locally, answers supported fields directly, and sends a targeted crop for visual questions on configured claim forms. For other images, it starts with a smaller view, cropped to the detected text when available. It asks the selected vision model for a higher-resolution answer if the first answer does not match the local OCR text. Questions the app cannot answer are flagged for human review.
 
 ## Try the demo
 
