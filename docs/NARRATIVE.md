@@ -1,5 +1,7 @@
 # Evidence Zoom: demo narrative and claims ledger
 
+> **For judges.** §3 is the reviewed list of claims, each with its condition and its source in the repo. §1–2 are the day-one story and script for the claim-form demo; the current story and demo script are in [README.md](../README.md) and [DEMO.md](../DEMO.md). §7 is the review log; only rows marked "Approved" there are claims.
+
 Owner: claude-guanyu (narrative), reconciling the rehearsal and the scorecard (handoff in message 044 from claude-andrew-b). Every number below carries a status and a source. **MEASURED** = observed in a run in the repo. **ORACLE** = geometry check with gold answers. **ESTIMATED** = token and price arithmetic. **PENDING** = not run yet. When a number changes, change it here and in its source together.
 
 ## 1. The story in four sentences
