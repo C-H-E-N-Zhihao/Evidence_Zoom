@@ -25,6 +25,7 @@ QWEN_AREA = float(os.environ.get("QWEN_AREA", "830000"))
 PAD, TOPK, GRID = 0.25, 12, 16
 MIN_SHORT_CROP = 512
 _GRIDS: Optional[dict] = None
+_BOXES: Optional[dict] = None
 CURRENT_QID: Optional[str] = None  # set by the factory wrapper so the file source can look up the grid
 
 LINE_TOPK, LINE_PAD = int(os.environ.get("POINTER_LINES", "3")), 1.5
