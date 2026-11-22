@@ -138,11 +138,7 @@ The story: a customer sends a photo and asks a question, the way they would ask 
 - **OCR as a free check.** A small image is asked first. Its answer is accepted only if that string is in the page's own OCR text (a check that it is printed, not that it is right); otherwise a sharper image is sent. Coarse-to-fine resolution with a model-free stopping rule, through a hosted API.
 - **Layout-anchored crops without a model.** On a configured form, OCR finds the printed anchors (row numbers, labels) and the crop is cut from them: no model chooses where to look.
 - **Zero-token exits.** Printed fields, and common receipt fields with a consistency check, are answered by OCR alone.
-- **Honest accounting.** Each result names its baseline. Large-image cost is capped at what the provider was measured to bill. The negative results are kept in the repo:
-  - text-first on real documents;
-  - pointing with Qwen boxes;
-  - re-typesetting;
-  - speculative local-then-cloud.
+- **Honest accounting.** Each result names its baseline. Large-image cost is capped at what the provider was measured to bill. The negative results (text-first on real documents, pointing with Qwen boxes, re-typesetting, speculative local-then-cloud) are kept in the repo.
 
 ## The key-free walkthrough (replay, no API key: `./scripts/demo.sh`)
 
@@ -176,24 +172,8 @@ with the full page with and without prompt caching. **All costs are estimates** 
 
 ## Beyond claim forms: the general assistant (live only)
 
-**One automatic route for every image (no picker).** OCR runs locally first. If it recognises a configured claim-form layout, the router answers printed fields from OCR ($0) or sends the model only the located region. For anything else (receipts, uploads, worksheets), it sends the page as one image, cropped to where OCR found text and downscaled: short side ≥ 768 px, long side ≥ 1024 px, cap 2400 px. On 70 DocVQA scans, the whole page at 1024 px had the same mean score as full size, at about a third of the cost (`REPORT_realdocs.md`, resolution frontier). Infographics lost accuracy when downscaled. The OCR-area crop and this size rule were set from that test but not measured themselves; receipts_v1 tests them.
+**One automatic route for every image (no picker).** OCR runs locally first. If it recognises a configured claim-form layout, the router answers printed fields from OCR ($0) or sends the model only the located region. For anything else (receipts, uploads, worksheets), it sends the page as one image, cropped to where OCR found text and downscaled: short side ≥ 768 px, long side ≥ 1024 px, cap 2400 px. On 70 DocVQA scans, the whole page at 1024 px had the same mean score as full size, at about a third of the cost (`REPORT_realdocs.md`, resolution frontier). Infographics lost accuracy when downscaled. The OCR-area crop and this size rule were set from that test and are measured only as part of the whole route (the held-out receipts result above).
 Example: a 4284×5712 phone photo of a receipt is sent as a cropped, downscaled page. Qwen2.5-VL-7B on the laptop read the total and the VAT correctly (one receipt, development check). Sending the original photo to Haiku was billed 4,773 input tokens: the provider downscales large images itself, so the original-image baseline is capped at that measured maximum.
-
-Live script (about 30 s; Haiku billed, or Qwen on the laptop at $0):
-1. Upload a receipt photo (phone picture, any size) and ask "What is the total?". The answer shows the crop that was sent (the text area, downscaled) and its tokens against the original photo.
-2. Ask "How much VAT was paid in total?" on the same photo.
-3. Switch the model (top right) between the cloud model and the on-device Qwen to show the same route at $0.
-
-Earlier worksheet experiments (the text-first route, kept for the record, not used by the app any more):
-Billed results, Haiku on both arms:
-- **Development sheets** (`REPORT_homework_general.md`): route 79/80 at $0.0003 per question; whole page 80/80 at $0.0005.
-- **First held-out set** (`REPORT_homework_v2_heldout.md`, written blind by a subagent): route 83/96, whole page 94/96.
-  - The route's crop missed graphs and marks that sit *above* the lines the model pointed to.
-- **Second held-out set, after the crop fix** (`REPORT_homework_v3_heldout.md`; 96 clean synthetic worksheet questions, 6 new page kinds; receipts independently checked):
-  - route **96/96 for $0.0330**, whole-page Haiku **95/96 for $0.0475**;
-  - the route used 69.5% of the API charge and sent no image for 44 of 48 text questions.
-- Say: "on new worksheet types, the route matched the whole page at about 70% of the cost, and an earlier version lost (83 vs 94)".
-- Do not say: "more accurate than the whole page" (one question is not evidence) or "the fix explains the difference" (the fix and the dataset both changed between the two runs).
 
 **The OCR-checked ladder** (default on; approved in `andrew-review-ladder`). The model first sees a smaller page (about 768 px). The answer is accepted only if it appears in the page's local OCR text; otherwise the page is sent again at ≥ 1568 px.
 - **DocVQA scans** (100 questions, Haiku):
@@ -203,9 +183,9 @@ Billed results, Haiku on both arms:
 - **Real receipts** (CORD, 241 questions), against the fixed-size page: the same 179 answered correctly and 60 correctly flagged for human review. The answers matched the reference wording more closely (ANLS 0.970 vs 0.924), for 1,380 vs 1,218 tokens per correct answer.
 - **Limits:** always name the baseline. The 768/1568 pairing was chosen on a different DocVQA sample. One run each.
 
-Uploads and homework questions have no replay, so they need `./scripts/demo-live.sh` or `./scripts/demo-local.sh` (Ollama: `OLLAMA_CONTEXT_LENGTH=8192 ollama serve`).
+Uploads have no replay, so they need `./scripts/demo-live.sh` or `./scripts/demo-local.sh` (Ollama: `OLLAMA_CONTEXT_LENGTH=8192 ollama serve`).
 
-Why the app does not use text-first any more: small open models answered visual questions from OCR text instead of asking for the image (Qwen 7B 53/96 vs 75/96 with the page, `REPORT_homework_v3_qwen7b.md`). On real documents text-first scored lower overall (`REPORT_realdocs.md`). The cropped, downscaled page is meant to avoid both; receipts_v1 tests it.
+Why the app does not use text-first any more: small open models answered visual questions from OCR text instead of asking for the image (Qwen 7B 53/96 vs 75/96 with the page, `REPORT_homework_v3_qwen7b.md`). On real documents text-first scored lower overall (`REPORT_realdocs.md`). The cropped, downscaled page is meant to avoid both.
 
 ## Measured, billed (OpenRouter receipts; synthetic forms)
 
@@ -248,7 +228,8 @@ layouts and document types we did not configure, the anchors find nothing and th
 | `pipeline/visual/` | crop stitching (`View`), `zoom_answer`, overview path (not the default); `replay.py` = key-free stand-in for the model |
 | `eval/` | evaluation harness, test forms (`eval/data/accident_statement/`), scorecard |
 | `scripts/demo.sh`, `scripts/test.sh` | run the demo, run all checks |
-| `README.md`, `agent-messages/` | team dashboard and coordination log (background, not needed to run the demo) |
+| `README.md` | overview, results and links to the evidence |
+| `agent-messages/` | the team's coordination log (background, not needed to run the demo) |
 
 ## Troubleshooting
 
