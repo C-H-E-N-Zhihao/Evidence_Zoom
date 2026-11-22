@@ -293,7 +293,7 @@ function addA(data, i, ours) {
     const lines = (result.evidence_boxes || []).filter((e) => e.source === "ocr" && e.label).length;
     from.textContent = general
       ? (lines ? `cites ${lines} OCR line${lines > 1 ? "s" : ""} (green boxes)` : "read from the image; box not verified")
-      : (lab ? `from the line labelled "${lab}"` : (source === "ocr" ? "" : "field label not verified"));
+      : (lab ? `from the line labelled "${lab}"` : "");
     if (from.textContent) head.append(from);
   }
   if (source === "model" && data.model) {
@@ -308,12 +308,15 @@ function addA(data, i, ours) {
     head.append(le);
   }
   const route = document.createElement("div"); route.className = "route";
-  result.route.forEach((s, k) => {
+  // consecutive fallbacks (OCR declined, no form layout) read as one step
+  const steps = result.route.filter((s, k, a) => !(s.step === "fallback" && a[k + 1] && a[k + 1].step === "fallback"));
+  steps.forEach((s, k) => {
     if (k) route.insertAdjacentHTML("beforeend", '<span class="arrow">→</span>');
     const c = document.createElement("span"); c.className = `chip ${s.step}`;
     c.textContent = s.step === "fallback"
       ? (/text step off/.test(s.note || "") ? "whole page" : /^small image/.test(s.note || "") ? "small image"
-        : /band crop was not enough/.test(s.note || "") ? "band not enough" : "OCR not enough")
+        : /band crop was not enough/.test(s.note || "") ? "band not enough"
+        : /no OCR answer or anchor/.test(s.note || "") ? "no form layout: page" : "OCR not enough")
       : s.target ? `${s.step} ${s.target.length > 18 ? s.target.slice(0, 18) + "…" : s.target}` : s.step;
     c.title = [s.target, s.note].filter(Boolean).join(" · ");
     route.append(c);
