@@ -324,3 +324,7 @@ main { height: calc(100vh - 58px); }
 .tok-delta { margin-top: 0; }
 .res-sample { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
 .res-head .res-delta { font-size: 24px; font-weight: 800; color: var(--accent); letter-spacing: -.02em; }
+.steps { flex-wrap: wrap; row-gap: 6px; overflow: visible; }
+.st { min-width: 0; padding: 4px 8px; }
+.st-edge { flex-basis: 10px; }
+.saving.idle #sv-pct { color: var(--line); }

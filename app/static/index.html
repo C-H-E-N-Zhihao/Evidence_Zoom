@@ -47,11 +47,11 @@
         <div class="flow-mini" aria-label="How a question is answered">
           <span class="fm"><i>1</i>Read locally<small>OCR · $0</small></span><span class="fm-arrow">→</span>
           <span class="fm"><i>2</i>Send less<small>crop or small page</small></span><span class="fm-arrow">→</span>
-          <span class="fm"><i>3</i>Check<small>is it printed?</small></span><span class="fm-arrow">→</span>
+          <span class="fm"><i>3</i>Check<small>in the OCR text?</small></span><span class="fm-arrow">→</span>
           <span class="fm"><i>4</i>Answer<small>or flag for review</small></span>
         </div>
         <div class="hero-result" id="hero-result">
-          <div class="hr-kicker">Held-out test · 60 fresh receipt photos · 248 questions · Haiku</div>
+          <div class="hr-kicker">Held-out test · 60 fresh receipt photos · 248 questions · Haiku · one paired run</div>
           <div class="hr-big"><b>65%</b><span>fewer tokens per correct answer<br>than sending the original photo</span></div>
           <div class="vs">
             <div class="cmp-row"><span>Evidence Zoom</span><div class="cbar"><i class="ours" style="width:35.3%"></i></div><b>968</b></div>
@@ -113,15 +113,15 @@
     <div class="flow" id="flow">
       <div class="node" data-n="0"><div class="n-ico">📷</div><b>Photo + question</b><span>receipt, form, document</span></div>
       <div class="edge"></div>
-      <div class="node" data-n="1"><div class="n-ico">🔎</div><b>Read locally</b><span>OCR on this computer. A printed field is answered here.</span><em class="tag-free">no model · $0</em></div>
+      <div class="node" data-n="1"><div class="n-ico">🔎</div><b>Read locally</b><span>OCR on this computer. Some printed fields are answered here.</span><em class="tag-free">no model · $0</em></div>
       <div class="edge"></div>
       <div class="node" data-n="2"><div class="n-ico">✂️</div><b>Send less</b><span>Known form: its layout picks the crop. Anything else: a small page (768 px).</span><em class="tag-model">vision model</em></div>
       <div class="edge"></div>
-      <div class="node" data-n="3"><div class="n-ico">✓</div><b>Check</b><span>Is the answer printed on the page? If not, send a sharper page (≥ 1568 px).</span><em class="tag-free">no model · $0</em></div>
+      <div class="node" data-n="3"><div class="n-ico">✓</div><b>Check</b><span>Small page: is the answer in the OCR text? If not, send a sharper page (≥ 1568 px).</span><em class="tag-free">no model · $0</em></div>
       <div class="edge"></div>
       <div class="node" data-n="4"><div class="n-ico">💬</div><b>Answer, or flag it</b><span>The answer with its evidence on the image, or flagged for human review with a ticket.</span><em class="tag-human">flagged for review</em></div>
     </div>
-    <div class="how-models">Vision model: <b>Claude Haiku</b> in the cloud, or <b>Qwen2.5-VL 7B</b> on this laptop (switch top right).</div>
+    <div class="how-models">Vision model: <b>Claude Haiku</b> in the cloud, or <b>Qwen2.5-VL 7B</b> on this laptop (live mode: switch top right).</div>
     <div class="how-meter">
       <div class="hm-title">What that saves, measured on 248 held-out receipt questions</div>
       <div class="vs">

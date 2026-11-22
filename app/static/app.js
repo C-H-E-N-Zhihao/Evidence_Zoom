@@ -454,7 +454,9 @@ function addA(data, i, ours) {
   how.onclick = (ev) => ev.stopPropagation();
   d.onclick = () => select(i);
   d.dataset.i = i;
-  $("chat").append(d); d.scrollIntoView({ block: "end" });
+  $("chat").append(d);
+  const qEl = d.previousElementSibling;  // keep the question and the answer line in view
+  (qEl && qEl.classList.contains("msg-q") ? qEl : d).scrollIntoView({ block: "start" });
 }
 // Token comparison: what we sent against sending the original image (same estimate as the pill).
 function tokenBars(inTok, pageTok, pill) {
@@ -488,8 +490,8 @@ function pathSteps(data) {
     if (anchor) steps.push(["Layout crop", px(anchor) || "region", "hit"]);
     else if (zooms.length) steps.push([zooms[0].target === "full page" && zooms.length === 1 && !/small image|ladder|low-resolution/.test(notes)
       ? "Page" : "Small page", px(zooms[0]) || "image", "hit"]);
-    if (/found in the OCR text|answer located by OCR/.test(notes)) steps.push(["OCR check", "✓ printed on page", "free"]);
-    else if (/ladder: answer not in the OCR text/.test(notes)) steps.push(["OCR check", "not printed", "miss"]);
+    if (/found in the OCR text|answer located by OCR/.test(notes)) steps.push(["OCR check", "✓ in OCR text", "free"]);
+    else if (/ladder: answer not in the OCR text/.test(notes)) steps.push(["OCR check", "not in OCR text", "miss"]);
     if (!anchor && zooms.length > 1) steps.push(["Sharper page", px(zooms[zooms.length - 1]) || "image", "hit"]);
   }
   steps.push(r.abstained ? ["Human review", "flagged · ticket", "handoff"] : ["Answer", "+ evidence box", "ok"]);
@@ -673,7 +675,7 @@ const RESULTS = [
     foot: "84 correct each, plus 12 correct deferrals · 48 questions answered by OCR alone" },
   { title: "Second configured layout (synthetic)", sample: "96 questions · Haiku",
     unit: "tokens per correct answer", rows: [["Evidence Zoom", 841, "ours"], ["Original page", 5946, "base"]],
-    foot: "84 vs 81 correct" },
+    foot: "84 vs 81 correct · the template engine was tuned on this layout before the freeze" },
   { title: "DocVQA scans (public benchmark)", sample: "100 questions · Haiku · OCR-checked resolution ladder",
     unit: "tokens per correct answer", rows: [["Evidence Zoom", 1574, "ours"], ["Original page", 4587, "base"]],
     foot: "96 vs 96 correct (separately prompted page baseline) · ANLS 0.920 vs 0.931" },
