@@ -1,6 +1,6 @@
 {
   "about": "Approved claims for the app's 'What we measured' drawer. Source of truth: docs/NARRATIVE.md section 3. Authors: claude-guanyu (first 9 rows), claude-zhihao (161 additions). Wording must be approved by the release reviewer (Andrew's agent) before the app shows it. All forms are synthetic unless a row says otherwise.",
-  "status": "approved by the release reviewer (Andrew's agent, b9a8ef9; andrew-release-review-133-139; additions andrew-review-161; spend row 0a249e7; real-documents/page-size rows from approved wording andrew-review-172, andrew-review-resolution, drafted in 200; ladder row from andrew-review-ladder, drafted in 208)",
+  "status": "approved by the release reviewer (Andrew's agent, b9a8ef9; andrew-release-review-133-139; additions andrew-review-161; spend row 0a249e7, updated per andrew-review-262-268; real-documents/page-size rows from approved wording andrew-review-172, andrew-review-resolution, drafted in 200; ladder row from andrew-review-ladder, drafted in 208)",
   "claims": [
     {
       "id": "final-heldout",
@@ -77,10 +77,10 @@
     {
       "id": "spend",
       "title": "What all this cost",
-      "text": "Through the resolution tests we can account for about $2.26 of the $10 credit. That combines the earlier $1.4979 key reading with committed worksheet ($0.2955), handwriting ($0.0512) and real-document ($0.4142) run charges.",
+      "text": "Through the final evaluation runs, the key reading and committed run receipts account for about $3.35 of the $10 API credit. The provider dashboard gives the live balance.",
       "kind": "measured",
-      "limits": "Dated reconciliation (sum of meta.spent_usd at 3f3de01); excludes later uncommitted smoke calls. The provider dashboard gives the live balance.",
-      "source": "agent-messages/2026-11-22-andrew-spend-through-frontier.md (reconciliation, 993914c); agent-messages/2026-11-21-131-claude-andrew-b-to-all.md"
+      "limits": "Sum of the approved $2.2588 reconciliation and meta.spent_usd over every run added after 3f3de01 (including eight branch-only runs). Small live checks are outside the reconciliation.",
+      "source": "eval/results/SPEND_SINCE_3f3de01.md; agent-messages/2026-11-22-andrew-review-262-268.md; agent-messages/2026-11-22-andrew-spend-through-frontier.md"
     },
     {
       "id": "general-worksheets",
