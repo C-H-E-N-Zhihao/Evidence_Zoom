@@ -164,3 +164,5 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 18px; pa
           background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; margin-bottom: 4px; }
 .how3 b { display: block; color: var(--ink); font-size: 13px; margin-bottom: 2px; }
 @media (max-width: 700px) { .how3 { grid-template-columns: 1fr; } }
+.chat:empty::before { content: "Ask in any language, for example “What is the total?”. Each answer shows what the model saw and how many tokens it took.";
+  color: var(--muted); font-size: 13px; text-align: center; margin: auto; max-width: 300px; line-height: 1.5; }
