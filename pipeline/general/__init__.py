@@ -163,6 +163,25 @@ def _page_call(image, question, res, model, call, lines, look_for="the evidence 
     GENERAL_KEYWORD_CROP=1, a band around the OCR lines that match the question is tried first."""
     from pipeline.visual import zoom_answer
 
+    if os.environ.get("OCR_FIELDS") == "1" and lines:
+        # Zero-token field answers (message 216): a printed label and the number on its row, read by local OCR, no
+        # model. Only the fields that were 98-100% precise on receipts_v1 (dev: change, item price) or answers that pass
+        # the cash - change = total consistency check (confidence >= 0.95); everything else continues to the model.
+        try:
+            from pipeline.ocr_fields import extract_from_spans
+
+            ex = extract_from_spans(lines, question)
+            if ex.get("answer") and ((ex.get("field") in ("change", "item") and ex.get("confidence", 0) >= 0.9)
+                                     or ex.get("confidence", 0) >= 0.95):
+                res.answer, res.abstained = str(ex["answer"]), False
+                if ex.get("box"):
+                    res.evidence_boxes = [EvidenceBox([round(v, 4) for v in ex["box"]], source="ocr",
+                                                      label=str(ex.get("line") or "")[:60])]
+                res.route.append(RouteStep("answer", note=f"read by local OCR from the '{ex.get('field')}' row, no model "
+                                                          f"(confidence {ex.get('confidence')})"))
+                return res
+        except Exception:
+            pass
     if os.environ.get("REDACT_PII") == "1" and lines:
         image, kinds = _redact(image, question, lines)
         if kinds:
