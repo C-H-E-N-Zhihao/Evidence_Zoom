@@ -49,7 +49,7 @@ Open **http://localhost:8000**, then click **How it works** or **▶ Guided tour
 |---|---|
 | **Held-out receipts** (the headline) | [run receipts](eval/results/receipts_v2_final/) |
 | **Configured forms** (774 vs 5,696 tokens per correct answer, both 84 correct; 841 vs 5,946, 84 vs 81 correct) | [claims ledger](docs/NARRATIVE.md) |
-| **DocVQA scans** (1,574 vs 4,587; both 96 correct, mean ANLS 0.920 vs 0.931) | [page-size test](eval/results/REPORT_realdocs.md) |
+| **DocVQA scans** (1,574 vs 4,587; both 96 correct, mean ANLS 0.920 vs 0.931) | [ladder runs](eval/results/TOKEN_TABLE.md) · [page-size test](eval/results/REPORT_realdocs.md) |
 | **Limits** (open models; unconfigured layouts) | [open-model runs](eval/results/receipts_v2_open/) · [unconfigured runs](eval/results/unconfigured_haiku/) |
 | **Every claim** with its limits and receipt | [docs/NARRATIVE.md](docs/NARRATIVE.md) |
 

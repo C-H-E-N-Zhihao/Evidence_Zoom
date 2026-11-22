@@ -52,7 +52,7 @@ These runs predate the OCR field exits and redaction defaults now in the app.
 ## Run it (macOS, about 2 minutes the first time)
 
 ```bash
-git clone git@github.com:C-H-E-N-Zhihao/Evidence_Zoom.git evidence-zoom
+git clone https://github.com/C-H-E-N-Zhihao/Evidence_Zoom.git evidence-zoom
 cd evidence-zoom
 ./scripts/demo.sh
 ```

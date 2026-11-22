@@ -128,7 +128,7 @@
       "text": "The app asks on a small page first and keeps the answer only if it appears in the local OCR text; otherwise it asks again at higher resolution. Against the same route at a fixed size: on 241 real receipt questions (CORD), both answered 179 correctly, correctly flagged 60 for human review and got 2 wrong; answers matched the reference wording more closely (ANLS 0.970 vs 0.924) at 1,380 vs 1,218 provider tokens per correct answer. On 100 DocVQA questions (97 scans) both had 96 correct (ANLS 0.920 vs 0.877) at an 11% higher charge. Against the original DocVQA page (a separately prompted baseline), the ladder used 1,574 vs 4,587 tokens per correct answer.",
       "kind": "measured, billed, held-out",
       "limits": "Haiku, one run each. The OCR check shows the answer appears in the OCR text, not that it is right. The 768/1568 px pairing was chosen on realdocs_v2 DocVQA.",
-      "source": "eval/results/ (receipts_v1 and realdocs_v1 ladder runs)"
+      "source": "eval/results/TOKEN_TABLE.md; eval/results/receipts_v1_ladder/, eval/results/receipts_v1_page/, eval/results/receipts_v1_full/, eval/results/realdocs_v1_ladder/, eval/results/realdocs_v1_ladder_off/, eval/results/realdocs_haiku/"
     }
   ]
 }
