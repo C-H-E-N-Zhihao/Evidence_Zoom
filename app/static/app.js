@@ -291,8 +291,8 @@ function addA(data, i, ours) {
   const src = document.createElement("span"); src.className = `src ${source}`; src.textContent = label; src.title = tip;
   const txt = document.createElement("span");
   txt.textContent = result.abstained
-    ? (result.error ? "No answer: " + result.error + " → passed to a human agent."
-      : "I can't answer this from the image, so I'm passing it to a human agent.")
+    ? (result.error ? "No answer: " + result.error + ". Human review needed."
+      : "I can’t answer this from the image. Human review needed.")
     : result.answer;
   head.append(src, txt);
   // which printed line answered (message 124): the OCR'd field label, or an explicit "not verified" for model answers
