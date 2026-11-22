@@ -2,8 +2,8 @@
 
 **What it is.** A customer-service assistant that answers questions about whatever image a customer sends (a
 receipt, a document, a form, a screenshot) while spending as few model tokens as possible. It answers and **shows
-the evidence on the image** (the OCR box it read, or the region the model was sent), or **passes the question to a
-human agent** when it cannot answer.
+the evidence on the image** (the OCR box it read, or the region the model was sent), or **flags the question for
+human review** when it cannot answer.
 One automatic route, cheapest step first:
 
 1. **OCR on the device ($0).** Local OCR reads the image first, with no model call.
@@ -19,7 +19,7 @@ One automatic route, cheapest step first:
 4. **Repeated questions are free.** The same image, question and model returns the stored answer (0 tokens).
 5. **Checkable answer or handoff.** The answer comes with a box on the original image (the OCR line it read, or
    the region sent to the model; not a citation by the model), so a person can check it. If the model reports the
-   answer is not in the image, the bot says so and hands off to a human, instead of inventing one.
+   answer is not in the image, the demo displays “Human review needed.”
 
 By default the demo runs **without any API key**. OCR is real. The vision model's replies are **replayed** from the
 answers stored with each test form, and every replayed answer is labelled as such. A labelled **live mode** also
@@ -106,7 +106,7 @@ reviewer approves `docs/claims.json`.
    The policy number is still read by OCR, because only the tick differs.
 5. Optional: click **"What is driver A's driving licence number?"** (not on the form). No anchor applies, so the
    route falls back to the page (cropped to its text area and downscaled) and the replayed answer is "not on the
-   form": the bot says it cannot answer and passes the question to a human agent. Type **"Is there a dog in the picture?"** and you get **NO ANSWER**
+   form": the bot says it cannot answer and flags the question for human review. Type **"Is there a dog in the picture?"** and you get **NO ANSWER**
    with the reason: there is no stored answer to replay, so nothing is invented.
 
 The **Session cost** panel compares this route with sending the full page to the same model every time,
