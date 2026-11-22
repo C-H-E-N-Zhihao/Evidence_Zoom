@@ -77,7 +77,7 @@
     {
       "id": "general-worksheets",
       "title": "Beyond insurance forms: worksheets",
-      "text": "In worksheet mode, the model reads OCR text first and requests pixels when needed. On a first blind set of 96 synthetic worksheet questions, the frozen route scored 83/96 against 94/96 for the whole page. After revising the crop, on a second blind set of 96 questions it scored 96/96 for $0.0330 against 95/96 for $0.0475 (69.5 % of the API charge), sending no image for 44 of 48 text questions.",
+      "text": "In an earlier worksheet mode (no longer used by the app), the model read OCR text first and requested pixels when needed. On a first blind set of 96 synthetic worksheet questions, the frozen route scored 83/96 against 94/96 for the whole page. After revising the crop, on a second blind set of 96 questions it scored 96/96 for $0.0330 against 95/96 for $0.0475 (69.5 % of the API charge), sending no image for 44 of 48 text questions.",
       "kind": "measured, billed, held-out",
       "limits": "Generated worksheets; same Haiku model on both sides. The route and the data both changed between the two sets, so the difference does not isolate the crop fix, and one question does not show higher accuracy.",
       "source": "eval/results/REPORT_homework_v2_heldout.md, eval/results/REPORT_homework_v3_heldout.md"
