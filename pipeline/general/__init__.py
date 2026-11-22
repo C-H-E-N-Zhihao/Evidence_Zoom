@@ -139,8 +139,9 @@ def _redact(image, question, lines):
             continue  # the customer asked about this field: keep it visible
         for s in lines:
             t = _norm(s["text"])
-            if re.search(r"invoice|facture|rechnung|order|commande|transaction|trx|receipt|recu|ticket|n[o°]\b|nr\b", t):
-                continue  # document identifiers, not personal data (audit 215)
+            if kind in ("card", "phone") and re.search(
+                    r"invoice|facture|rechnung|order|commande|transaction|trx|receipt|recu|ticket|n[o°]\b|nr\b", t):
+                continue  # number-only detectors skip document identifiers (audit 215); email/IBAN/AHV stay on (codex)
             hit = re.search(pat.replace("__luhn__|", ""), t) if "__luhn__" in pat else re.search(pat, t)
             if not hit and "__luhn__" in pat:
                 hit = any(_luhn(m) for m in re.findall(r"(?<!\d)(?:\d[ -]?){13,19}(?!\d)", t))
