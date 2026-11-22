@@ -1,6 +1,6 @@
 # Evidence Zoom
 
-Evidence Zoom helps claims handlers ask questions about a document and see the region used to answer. The app runs OCR locally, answers supported fields directly, and sends a targeted crop for visual questions on configured claim forms. For other images, it tries to crop to the text detected by OCR and downscales the page before sending it to the selected vision model.
+Evidence Zoom explores how a customer-service bot can answer questions about uploaded images while spending fewer model tokens. The demo shows the source region used to answer. The app runs OCR locally, answers supported fields directly, and sends a targeted crop for visual questions on configured claim forms. For other images, it tries to crop to the text detected by OCR and downscales the page before sending it to the selected vision model.
 
 ## Try the demo
 
