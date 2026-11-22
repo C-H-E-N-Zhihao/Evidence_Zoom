@@ -12,14 +12,21 @@ One automatic route, cheapest step first:
    (which boxes are ticked, what the sketch shows), the form's own OCR'd layout picks the region, with no model
    call. The vision model sees only that crop, cut from the original high-resolution page. Regions far apart
    on the same rows (a tick and its row number) are stitched side by side.
-3. **Any other image: a small page first.** The page is cropped to where OCR found text and asked at a small
+3. **Common receipt fields with no model.** For change and item prices, or totals that pass a cash − change = total
+   check, the number on the labelled row is read by local OCR and returned with 0 model tokens (development check:
+   29 of 241 CORD receipt questions, 0 wrong).
+4. **Any other image: a small page first.** The page is cropped to where OCR found text and asked at a small
    size (768 px). If the answer is found in the local OCR text, that is the reply. Otherwise the page is asked
    again at a higher resolution (≥ 1568 px). This is where most customer images go. There is no region selection,
    so savings come from the image size only (see the general section below for what was measured).
-4. **Repeated questions are free.** The same image, question and model returns the stored answer (0 tokens).
-5. **Checkable answer or handoff.** The answer comes with a box on the original image (the OCR line it read, or
+5. **Personal data masked on the page path.** Before the page image is sent, lines that local OCR reads as card,
+   IBAN, email, phone or AHV numbers are blacked out unless the question asks for that field (pattern-based, not a
+   guarantee; configured-form crops are not masked). A redaction re-run on CORD receipts changed 0 of 241 answers.
+6. **Repeated questions are free.** The same image, question and model returns the stored answer (0 tokens).
+7. **Checkable answer or handoff.** The answer comes with a box on the original image (the OCR line it read, or
    the region sent to the model; not a citation by the model), so a person can check it. If the model reports the
-   answer is not in the image, the demo displays “Human review needed.”
+   answer is not in the image, the demo displays “Human review needed.” and can prepare a copyable ticket for a person (question, what was tried,
+   tokens spent, nearest OCR lines).
 
 By default the demo runs **without any API key**. OCR is real. The vision model's replies are **replayed** from the
 answers stored with each test form, and every replayed answer is labelled as such. A labelled **live mode** also
