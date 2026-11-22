@@ -255,6 +255,21 @@ def t_run_eval_mock() -> None:
             check("mock accuracy 1 and complete", rep["summary"]["all"]["accuracy"] == 1 and rep["complete"])
 
 
+def t_token_score() -> None:
+    ocr = Usage(0, "local", "Apple Vision OCR")
+    gpu = Usage(1, "local", "qwen", input_image_tokens=500, output_tokens=5, device="gpu")
+    api = Usage(1, "openrouter", "haiku", input_image_tokens=80, input_text_tokens=15, output_tokens=5, cost_usd=.001)
+    pairs = [(item("A", qid="1"), res("A", usage=[ocr])),                      # local, correct
+             (item("B", qid="2"), res("B", usage=[ocr, gpu, api])),            # escalated to cloud, correct
+             (item("C", qid="3"), res("D", usage=[ocr, api])),                 # cloud, wrong
+             (item("E", qid="4"), res(None, abst=True, usage=[ocr, api]))]     # handoff on answerable
+    s = summarize(pairs)["all"]
+    check("token score: counts", (s["correct"], s["answered_locally"], s["cloud_escalations"], s["handoffs"],
+                                  s["handoffs_on_answerable"], s["wrong_answers"]) == (2, 1, 3, 1, 1, 1), str(s))
+    check("token score: cloud vs local tokens", s["cloud_tokens_total"] == 300 and s["local_tokens_total"] == 505)
+    check("token score: per correct", s["cloud_tokens_per_correct"] == 150 and abs(s["cost_usd_per_correct"] - .0015) < 1e-12)
+
+
 def t_grid_coverage() -> None:
     from .grid_coverage import score_item, summarize_grid
     g = [[0.0] * 4 for _ in range(4)]
@@ -278,7 +293,7 @@ def t_grid_coverage() -> None:
 
 def main() -> None:
     for t in (t_metrics, t_pricing, t_compose_and_guard, t_pairs_curve_report, t_geometry, t_run_eval_mock,
-              t_grid_coverage):
+              t_grid_coverage, t_token_score):
         try:
             t()
         except Exception as e:  # a crash in a group is a failure of that group
