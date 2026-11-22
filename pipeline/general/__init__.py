@@ -108,15 +108,24 @@ def _keyword_band(question, lines):
     return max(0.0, y0 - 2.5 * lh), min(1.0, y1 + 2.5 * lh), best
 
 
-# Personal data redaction (message 214): before an image leaves the device, OCR lines that look like personal data
-# are blacked out, unless the customer's question asks about that kind of field. Off in eval runs; the app turns it on.
+# Personal data redaction (message 214, audit 215): on the PAGE path only, lines that local OCR reads as card (Luhn-valid
+# or masked), IBAN, email, phone or AHV numbers are blacked out unless the question asks for that field. Pattern-based,
+# not a guarantee: configured-form crops and text OCR did not read go out unredacted. Off in eval runs; on in the app.
 PII = {
-    "card": (r"\b(?:\d[ -]?){13,19}\b|\b(?:x{4,}|\*{4,})[ -]?\d{4}\b", r"card|visa|mastercard|amex|carte|karte"),
+    "card": (r"__luhn__|\b(?:x{4,}|\*{4,})[ -]?\d{4}\b", r"card|visa|mastercard|amex|carte|karte"),
     "iban": (r"\b[a-z]{2}\d{2}(?: ?[a-z0-9]{4}){3,7}\b", r"iban|account|bank|konto|compte"),
     "email": (r"[\w.+-]+@[\w-]+\.[\w.]+", r"e-?mail|mail"),
     "phone": (r"(?:\+|00)\d{2}[ \d]{8,14}|\b0\d{2}[ ./-]?\d{3}[ ./-]?\d{2}[ ./-]?\d{2}\b", r"phone|tel|call|number to"),
     "ahv": (r"\b756[.\s]?\d{4}[.\s]?\d{4}[.\s]?\d{2}\b", r"ahv|avs|social|insurance number|ssn"),
 }
+
+
+def _luhn(run: str) -> bool:
+    d = [int(c) for c in run if c.isdigit()]
+    if not 13 <= len(d) <= 19:
+        return False
+    tot = sum(x if i % 2 == 0 else (x * 2 - 9 if x * 2 > 9 else x * 2) for i, x in enumerate(reversed(d)))
+    return tot % 10 == 0
 
 
 def _redact(image, question, lines):
@@ -129,7 +138,13 @@ def _redact(image, question, lines):
         if re.search(ask, q):
             continue  # the customer asked about this field: keep it visible
         for s in lines:
-            if re.search(pat, _norm(s["text"])):
+            t = _norm(s["text"])
+            if re.search(r"invoice|facture|rechnung|order|commande|transaction|trx|receipt|recu|ticket|n[o°]\b|nr\b", t):
+                continue  # document identifiers, not personal data (audit 215)
+            hit = re.search(pat.replace("__luhn__|", ""), t) if "__luhn__" in pat else re.search(pat, t)
+            if not hit and "__luhn__" in pat:
+                hit = any(_luhn(m) for m in re.findall(r"(?<!\d)(?:\d[ -]?){13,19}(?!\d)", t))
+            if hit:
                 boxes.append(s["box"]); kinds.append(kind)
     if not boxes:
         return image, []

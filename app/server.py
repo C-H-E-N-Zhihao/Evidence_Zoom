@@ -14,7 +14,7 @@ import io
 import json
 import os
 os.environ.setdefault("VISION_CACHE", "1")
-os.environ.setdefault("REDACT_PII", "1")  # black out card/IBAN/email/phone/AHV lines before any cloud call  # prompt-cache images: follow-up questions on the same crop are ~10% price
+os.environ.setdefault("REDACT_PII", "1")  # page path: black out OCR-read card/IBAN/email/phone/AHV lines (pattern-based)  # prompt-cache images: follow-up questions on the same crop are ~10% price
 import re
 import threading
 import uuid
