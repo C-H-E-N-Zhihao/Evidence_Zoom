@@ -289,6 +289,33 @@ def _page_call(image, question, res, model, call, lines, look_for="the evidence 
         res.route.append(RouteStep("fallback", target="image",
                                    note="ladder: answer not in the OCR text; ask again at higher resolution"))
         side = max(side, LADDER_HIGH)
+        low_answer = None if res.abstained else res.answer
+        if os.environ.get("LADDER_POINTER") == "qwen":
+            # Pointer rung (message 231): free-form answers (marks, colours, charts) cannot be checked against OCR. Instead of
+            # the whole page at high resolution, a local pointer (Qwen2.5-VL on the device, $0) names the region; only that
+            # region is sent sharp. Accept when it agrees with the small-page answer; otherwise the whole page follows.
+            try:
+                from pipeline.pointer import PAD, _qwen_box
+
+                box, _raw = _qwen_box(image, question, rows, cols, res)
+            except Exception:
+                box = None
+            if box:
+                X0, X1, Y0, Y1 = cols[0][0], cols[0][1], rows[0][0], rows[0][1]
+                bw, bh = box[2] - box[0], box[3] - box[1]
+                bx0, bx1 = max(0.0, box[0] - PAD * bw), min(1.0, box[2] + PAD * bw)
+                by0, by1 = max(0.0, box[1] - PAD * bh), min(1.0, box[3] + PAD * bh)
+                fx = (X0 + bx0 * (X1 - X0), X0 + bx1 * (X1 - X0))
+                fy = (Y0 + by0 * (Y1 - Y0), Y0 + by1 * (Y1 - Y0))
+                res.route.append(RouteStep("fallback", target="image", note="pointer rung: on-device model points; sharp crop"))
+                res = zoom_answer(image, question, [fy], [fx], prior=res, model=model, look_for=look_for,
+                                  target="pointed region", call=call, name="pointed", max_crop_side=LADDER_HIGH)
+                if res.error:
+                    return res
+                if not res.abstained and (_same_answer(res.answer, low_answer) or _in_ocr(res.answer, lines)):
+                    res.route.append(RouteStep("answer", note="pointed crop agrees with the small page: accepted"))
+                    return res
+                res.route.append(RouteStep("fallback", target="image", note="pointed crop disagrees; whole page"))
     return zoom_answer(image, question, rows, cols, prior=res, model=model, look_for=look_for, target="full page",
                        call=call, name="page", max_crop_side=side)
 
