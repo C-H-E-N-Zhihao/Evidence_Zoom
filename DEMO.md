@@ -45,7 +45,9 @@ The numerator counts every question's input, cache and output tokens; correct ha
 | five unconfigured layouts (synthetic, Haiku) | 3,110 | 4,894 (original page); 2,986 (plain downscaled page) |
 | real receipts, CORD (Haiku, OCR-checked ladder) | **1,380** | 2,727 (original photo); 179 correct + 60 correct deferrals + 2 wrong in both |
 
-These runs predate the OCR field exits and redaction defaults now in the app. A final held-out run of the shipped defaults is planned on receipts_v2 (message 218).
+These runs predate the OCR field exits and redaction defaults now in the app.
+
+**The app as shipped, held out (approved, `andrew-review-final-cord`).** On 248 questions about 60 fresh CORD validation receipts (a split nothing was tuned on), the router with the app's defaults answered 188 correctly and flagged all 60 unanswerable questions for review, with no wrong answers. Sending the original photo to the same model (Haiku): 187 correct, the same 60 flagged, 1 wrong. The router used **968 vs 2,740** provider tokens per correctly answered question (65% fewer) and cost $0.0234 vs $0.0584 (60% less); 31 questions were answered locally without calling Haiku. Scope: one paired run on receipts, provider prompt caching off, no masking triggered. With open models (Qwen 7B/72B, an earlier configuration) routing recorded more wrong answers (7B 31 vs 14; 72B 13 vs 6, across all 248), mostly from missed review flags.
 
 ## Run it (macOS, about 2 minutes the first time)
 

@@ -3,6 +3,14 @@
   "status": "approved by the release reviewer (Andrew's agent, b9a8ef9; andrew-release-review-133-139; additions andrew-review-161; spend row 0a249e7; real-documents/page-size rows from approved wording andrew-review-172, andrew-review-resolution, drafted in 200; ladder row from andrew-review-ladder, drafted in 208)",
   "claims": [
     {
+      "id": "final-heldout",
+      "title": "The app as shipped, on receipts nobody tuned on",
+      "text": "On 248 questions about 60 fresh CORD validation receipts, the router with the app's defaults answered 188 correctly and flagged all 60 unanswerable questions for review, with no wrong answers. Sending the original photo to the same model (Haiku): 187 correct, the same 60 flagged, 1 wrong. The router used 968 vs 2,740 provider tokens per correctly answered question (65% fewer) and cost $0.0234 vs $0.0584 (60% less); 31 questions were answered locally without calling Haiku.",
+      "kind": "measured, billed, held-out",
+      "limits": "One paired run on receipts, provider prompt caching off, no masking triggered. With open models (Qwen 7B/72B, an earlier configuration) routing recorded more wrong answers (7B 31 vs 14; 72B 13 vs 6, across all 248), mostly from missed review flags.",
+      "source": "eval/results/receipts_v2_final/, eval/results/receipts_v2_open/; agent-messages/2026-11-22-andrew-review-final-cord.md; codex check 550bac3"
+    },
+    {
       "id": "billed-cross-model",
       "title": "Same accuracy, about 1/25 of the API cost",
       "text": "On 96 questions about 12 accident-statement forms, Claude Haiku 5.5 on our route scored 96/96 for $0.0098 in total. Claude Sonnet 5.5 on the cached whole page scored 96/96 for $0.2425. 48 questions were answered by local OCR, 36 from a crop and 12 from the whole page.",
