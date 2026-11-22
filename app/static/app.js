@@ -236,6 +236,8 @@ function explain(data) {
   if (txt && zoom) {
     const fb = r.route.find((st) => st.step === "fallback" && st.target === "image");
     const why = fb && fb.note ? fb.note.replace(/^needs pixels: /, "") : "";
+    if (zoom.target !== "full page" && r.route.some((st) => st.step === "zoom" && st.target === "full page"))
+      return `The model inspected a band around the cited OCR lines, then the router sent the whole page. Total input across the route was ${inTok} tokens${est}.`;
     const pxs = /(\d+)x(\d+)px/.exec(zoom.note || "");
     return `The OCR text was not enough${why ? ` (needs: ${why})` : ""}, so the model was sent ` +
       `${zoom.target === "full page" ? "the whole page" : "a band of the page around the lines it pointed to"}` +
@@ -253,8 +255,8 @@ function explain(data) {
   }
   const small = r.route.find((st) => /^small image/.test(st.note || ""));
   if (t === "full page" && small)
-    return `This image is small, so sending it whole (${size}, ~${inTok} input tokens${est}) costs less than sending its OCR ` +
-      `text and asking first; OCR still ran locally.`;
+    return `The router estimated that the whole image would use fewer or equal input tokens than the OCR-text request. ` +
+      `It sent the whole page (${size}, ~${inTok} input tokens${est}). OCR ran locally.`;
   if (t === "full page" && r.route.some((st) => /text step off/.test(st.note || "")) && !data.on_device)
     return `Any-image mode sends the whole page (${size}, ~${inTok} input tokens${est}): on real documents, reading the OCR text ` +
       `first scored lower than the whole page overall in our tests. OCR still ran locally.`;

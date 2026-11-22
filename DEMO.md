@@ -120,7 +120,7 @@ The mode picker (top left) has four settings.
 - **Claim form router.**
 - **Worksheet: OCR text first.**
 - **Any image: whole page.** On real documents (DocVQA, InfographicVQA, ChartQA samples, `REPORT_realdocs.md`), reading the OCR text first scored lower than the whole page overall. Pick this mode to skip the router and send the whole page; OCR still runs locally for the boxes.
-The general route runs OCR on the page first and sends the model only the numbered text lines, with no image. The model answers from the text and cites the lines, which show as green boxes. If the answer depends on something OCR cannot capture (a circle, a chart, a drawing), the model asks for pixels, and only a band around the lines it named is sent.
+In Worksheet mode with Haiku, the router runs OCR locally. It sends small images whole when the input-token estimate favors that path. Otherwise the model reads numbered OCR lines and can cite them or ask for pixels. The router sends a band around the cited lines, or the whole page if none are cited. If the model abstains on a band, the router tries the whole page once.
 
 Live script (about 30 s, Haiku, billed):
 1. Pick **homework · hw-001** and click "Solve problem 1. What is x?". The answer comes from OCR text only, about $0.0001.

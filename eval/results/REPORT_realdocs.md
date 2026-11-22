@@ -15,9 +15,9 @@ Metrics: ANLS for DocVQA and InfographicVQA; Pix2Struct relaxed accuracy for Cha
 | **v2 ChartQA (70)** | fix 2 (size rule: all 70 sent whole) | relaxed | **33** | **31** | $0.0115 / $0.0113 |
 
 What we learned:
-- **Printed text-heavy documents (DocVQA):** text first saves about 40% but loses about 0.05 ANLS. Answer wording explains part of it (fix 2 narrowed the gap from 0.075 to 0.052), and OCR misreads the rest ("WIT" for "W77").
+- **Printed text-heavy documents (DocVQA):** text first saves about 40% but loses about 0.05 ANLS. The two sets used different questions and route versions. Observed failures included OCR reading "W77" as "WIT".
 - **Infographics:** OCR text loses the layout that ties numbers to labels. The route is both worse and more expensive, because it often asks for pixels after the text call.
 - **Small charts:** the image is cheaper than its OCR text. The size rule now sends them whole, which brings the cost back to parity and accuracy level with the page.
 - **Prediction record:** fix 2's predictions (message 171) passed on ChartQA and on DocVQA cost, and failed on DocVQA ANLS, InfographicVQA and overall. Open-weights models on RCP (claude-zhihao, 170) show the same ordering: whole page > route with thumbnail > plain route.
 
-**Consequence for the app** (c1aeb22): General mode's "Any image" sends the whole page; OCR still runs locally for the boxes. "Worksheet: OCR text first" stays for printed worksheets, where it was measured to match the page at 69% of the cost (`REPORT_homework_v3_heldout.md`). The claim-form router (model-free OCR and template selection) is unchanged; that is where the large savings are measured.
+**Consequence for the app** (c1aeb22): General mode's "Any image" sends the whole page; OCR still runs locally for the boxes. "Worksheet: OCR text first" stays for printed worksheets, where the revised route scored 96/96 versus 95/96 at 69.5% of the API charge on the second held-out set (`REPORT_homework_v3_heldout.md`). The claim-form router (model-free OCR and template selection) is unchanged; that is where the large savings are measured.
