@@ -110,10 +110,40 @@ only that crop: ~N tokens instead of ~M for the whole page"). **What we measured
 results, each with its limits and the path of its receipt in the repository. It stays empty until the release
 reviewer approves `docs/claims.json`.
 
-## The two-minute judge script
+## The two-minute judge script (live: `./scripts/demo-live.sh`)
 
-1. In the **Fixture form** menu, choose **`eas-002 · pair: B's ticks differ`**.
-   Form *a* opens. Form *b* is the same form with one of driver B's ticks moved (the menu does not say which).
+The story: a customer sends a photo and asks a question, the way they would ask a support agent.
+
+1. **Upload a phone photo of a receipt** (drag it onto the page) and click **"What is the total amount?"**
+   - The answer comes back with "✓ found in the page text": green boxes mark the line(s) where that total is printed.
+   - The pill shows its input tokens against sending the original photo.
+   - "What the model saw" shows the small cropped page; the image outside the region sent is dimmed.
+2. **Ask "How much VAT was paid in total?"** The image is read from the provider's prompt cache. If the receipt shows a card number or phone number, the card says it was masked before sending.
+3. **Ask something the receipt cannot answer** ("What is the customer's loyalty number?").
+   - The small page already shows it is not there, so no larger image is sent: "Human review needed".
+   - **Create ticket for a human agent** prepares a copyable ticket: the question, what was tried, the tokens spent and the nearest page text.
+4. **Switch the model** (top right) to the on-device Qwen and ask again: the same route at $0, and the image never leaves the laptop.
+5. **Pick a sample claim form** ("Accident claim form #2") and ask the policy number, then which boxes driver B ticked.
+   - The policy number is read by OCR: 0 model tokens.
+   - The ticks are answered from a ~150-pixel-wide crop of B's tick column, picked by the form's own layout.
+   - Switch to **version B** (one tick moved): the answer and the box move.
+6. **The savings card** (top right) sums the session: input tokens sent against sending the original images, and the projection to 1,000 questions.
+
+## What is new here
+
+- **OCR as a free verifier.** A small image is asked first. Its answer is accepted only if that string is in the page's own OCR text; otherwise a sharper image is sent. Coarse-to-fine resolution with a model-free stopping rule, through a hosted API.
+- **Layout-anchored crops without a model.** On a configured form, OCR finds the printed anchors (row numbers, labels) and the crop is cut from them: no model chooses where to look.
+- **Zero-token exits.** Printed fields, and common receipt fields with a consistency check, are answered by OCR alone.
+- **Honest accounting.** Every number names its baseline. Large-image cost is capped at what the provider was measured to bill. The negative results are kept in the repo:
+  - text-first on real documents;
+  - pointing with Qwen boxes;
+  - re-typesetting;
+  - speculative local-then-cloud.
+
+## The key-free walkthrough (replay, no API key: `./scripts/demo.sh`)
+
+1. In the **Samples** menu, choose **Accident claim form #2 (two versions: B's ticks differ)**.
+   Version A opens. Version B is the same form with one of driver B's ticks moved.
 2. Click the suggestion **"What is vehicle A's insurance policy number?"**
    You see the **LIVE OCR** badge, the policy number, a green box on it in the page, and the route
    `ocr → answer` at **$0**.
@@ -121,7 +151,7 @@ reviewer approves `docs/claims.json`.
    You see the **REPLAY** badge and the answer **8**. The route is `zoom anchor:ticks → answer`.
    Under the answer is the one image that would be sent to a model: the **anchor crop** (about 147×883 px),
    with the row numbers stitched next to driver B's tick column. On the page, a pink box marks the tick.
-4. Click **form b** and ask the tick question again. The answer changes to **7** and the box moves one row up.
+4. Click **version B** and ask the tick question again. The answer changes to **7** and the box moves one row up.
    The line above the page now shows `a: 8 · b: 7`; switching back to form a keeps its conversation.
    The policy number is still read by OCR, because only the tick differs.
 5. Optional: click **"What is driver A's driving licence number?"** (not on the form). No anchor applies, so the
@@ -129,15 +159,15 @@ reviewer approves `docs/claims.json`.
    form": the bot says it cannot answer and flags the question for human review. Type **"Is there a dog in the picture?"** and you get **NO ANSWER**
    with the reason: there is no stored answer to replay, so nothing is invented.
 
-The **Session cost** panel compares this route with sending the full page to the same model every time,
-with and without prompt caching. **All costs are estimates** from token arithmetic.
+The **savings card** compares this route with sending the original images; the **Cost detail** under it compares
+with the full page with and without prompt caching. **All costs are estimates** from token arithmetic.
 
-6. **A different layout.** In the menu, choose **`layout 3 (configured template) · eas3b-003`**. This form has a
+6. **A different layout.** In the menu, choose **Accident claim form, style 3 #3**. This form has a
    different design: stacked vehicle bands, values under their labels, bare row numbers, both tick columns left of
    the text. The built-in rules cannot read it; a short **configured template** (10 lines) can. Ask the policy
    number: **LIVE OCR**, route `ocr → answer`, and the answer says it came *from the line labelled "Policy No"*.
    Ask B's ticks: the template picks B's tick column (`zoom anchor:ticks`); form a has 3, 16 and form b has 2, 3.
-   Optional: on **`layout 2 · eas2-001`** the policy number is *not* answered by OCR. Vision reads `J1-…` for
+   Optional: on **Accident claim form, style 2 #1** the policy number is *not* answered by OCR. Vision reads `J1-…` for
    `JI-…`, and the look-alike guard sends it to the page instead of risking a wrong ID.
 
 ## Beyond claim forms: the general assistant (live only)
