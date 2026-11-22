@@ -108,10 +108,50 @@ def _keyword_band(question, lines):
     return max(0.0, y0 - 2.5 * lh), min(1.0, y1 + 2.5 * lh), best
 
 
+# Personal data redaction (message 214): before an image leaves the device, OCR lines that look like personal data
+# are blacked out, unless the customer's question asks about that kind of field. Off in eval runs; the app turns it on.
+PII = {
+    "card": (r"\b(?:\d[ -]?){13,19}\b|\b(?:x{4,}|\*{4,})[ -]?\d{4}\b", r"card|visa|mastercard|amex|carte|karte"),
+    "iban": (r"\b[a-z]{2}\d{2}(?: ?[a-z0-9]{4}){3,7}\b", r"iban|account|bank|konto|compte"),
+    "email": (r"[\w.+-]+@[\w-]+\.[\w.]+", r"e-?mail|mail"),
+    "phone": (r"(?:\+|00)\d{2}[ \d]{8,14}|\b0\d{2}[ ./-]?\d{3}[ ./-]?\d{2}[ ./-]?\d{2}\b", r"phone|tel|call|number to"),
+    "ahv": (r"\b756[.\s]?\d{4}[.\s]?\d{4}[.\s]?\d{2}\b", r"ahv|avs|social|insurance number|ssn"),
+}
+
+
+def _redact(image, question, lines):
+    """(image copy with personal-data lines blacked out, list of redacted kinds). Same image if nothing found."""
+    import re
+
+    q = _norm(question)
+    boxes, kinds = [], []
+    for kind, (pat, ask) in PII.items():
+        if re.search(ask, q):
+            continue  # the customer asked about this field: keep it visible
+        for s in lines:
+            if re.search(pat, _norm(s["text"])):
+                boxes.append(s["box"]); kinds.append(kind)
+    if not boxes:
+        return image, []
+    from PIL import ImageDraw
+
+    out = image.convert("RGB").copy()
+    d = ImageDraw.Draw(out)
+    W, H = out.size
+    for x0, y0, x1, y1 in boxes:
+        d.rectangle([x0 * W - 2, y0 * H - 2, x1 * W + 2, y1 * H + 2], fill=(0, 0, 0))
+    return out, sorted(set(kinds))
+
+
 def _page_call(image, question, res, model, call, lines, look_for="the evidence for the question"):
     """The whole page as one image: cropped to the text area, then downscaled by _page_side. With
     GENERAL_KEYWORD_CROP=1, a band around the OCR lines that match the question is tried first."""
     from pipeline.visual import zoom_answer
+
+    if os.environ.get("REDACT_PII") == "1" and lines:
+        image, kinds = _redact(image, question, lines)
+        if kinds:
+            res.route.append(RouteStep("ocr", note=f"redacted before sending: {', '.join(kinds)}"))
 
     if os.environ.get("GENERAL_KEYWORD_CROP") == "1" and lines:
         kb = _keyword_band(question, lines)

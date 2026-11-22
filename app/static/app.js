@@ -379,10 +379,17 @@ function addA(data, i, ours) {
       : `${-p}% more than the original image (~${pageTok.toLocaleString()}, est.)`);
   }
   if (result.abstained) pill.classList.add("muted");
+  const red = result.route.find((st) => /^redacted before sending: /.test(st.note || ""));
+  let redEl = null;
+  if (red) {
+    redEl = document.createElement("div"); redEl.className = "privacy";
+    redEl.textContent = "🔒 Hidden from the model before sending: " + red.note.replace(/^redacted before sending: /, "") +
+      " (found by the local OCR)";
+  }
   const how = document.createElement("details"); how.className = "how";
   const sum = document.createElement("summary"); sum.textContent = "How this was answered";
   how.append(sum, ...(why.textContent ? [why] : []), route, cost);
-  d.append(head, pill, ...(tutor ? [tutor] : []), ...(ckEl ? [ckEl] : []));
+  d.append(head, pill, ...(redEl ? [redEl] : []), ...(tutor ? [tutor] : []), ...(ckEl ? [ckEl] : []));
   // live only: ask the same model with the whole page, and show both sides with real (billed) numbers
   const wholePage = result.route.some((st) => st.step === "zoom" && st.target === "full page") &&
     !result.route.some((st) => st.step === "zoom" && st.target !== "full page");
