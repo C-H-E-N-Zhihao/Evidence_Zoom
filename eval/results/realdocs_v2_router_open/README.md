@@ -49,3 +49,19 @@ The whole page is further capped by vLLM's `max_pixels` (≈ 1.6 MP), so it send
 - **Overall:** route 0.797 / 0.823 vs page 0.816 / 0.848 ANLS (7B / 72B), at 78 % of the input tokens; better than the fixed 1024 px page for 72B (0.801) and level for 7B (0.787).
 - Caveats: one run, 177/210 items, open models (Qwen was likely trained on these benchmarks' train splits), receipts `pipeline_equals_freeze: false` (the
   freeze tag in the harness is `freeze-ladder-v1`; the code is c7a53c7, clean).
+
+## Router arm at master b04b251 (ladder on), same 177 items
+
+| model | source | ANLS (ladder, b04b251) | ANLS (no ladder, c7a53c7) | input tok/q ladder / no ladder |
+|---|---|---:|---:|---|
+| 7B | DocVQA | 0.930 | 0.943 | 1036 / 1299 |
+| 7B | InfographicVQA | 0.657 | 0.655 | 1504 / 1452 |
+| 7B | ChartQA | 0.751 | 0.771 | 840 / 779 |
+| 7B | all | 0.787 | 0.797 | 1122 / 1183 |
+| 72B | DocVQA | 0.934 | 0.949 | 999 / 1299 |
+| 72B | InfographicVQA | 0.730 | 0.724 | 1408 / 1452 |
+| 72B | ChartQA | 0.785 | 0.775 | 812 / 779 |
+| 72B | all | 0.822 | 0.823 | 1069 / 1183 |
+
+With open models, the ladder keeps overall accuracy about level (−0.010 / −0.001) at 5–10 % fewer input tokens. DocVQA drops slightly, because small-page answers that are
+printed on the page are accepted even when they're the wrong field.
