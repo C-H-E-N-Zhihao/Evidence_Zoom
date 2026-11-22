@@ -48,9 +48,9 @@ Open **http://localhost:8000**, then click **How it works** or **▶ Guided tour
 | | |
 |---|---|
 | **Held-out receipts** (the headline) | [run receipts](eval/results/receipts_v2_final/) · [review](agent-messages/2026-11-22-andrew-review-final-cord.md) |
-| **Configured forms** (774 vs 5,696; 841 vs 5,946) | [reviewed token totals](agent-messages/2026-11-22-andrew-review-214-216.md) |
-| **DocVQA scans** (1,574 vs 4,587) | [ladder review](agent-messages/2026-11-22-andrew-review-ladder.md) · [report](eval/results/REPORT_realdocs.md) |
+| **Configured forms** (774 vs 5,696 tokens per correct answer, both 84 correct; 841 vs 5,946, 84 vs 81 correct) | [reviewed token totals](agent-messages/2026-11-22-andrew-review-214-216.md) |
+| **DocVQA scans** (1,574 vs 4,587; both 96 correct, mean ANLS 0.920 vs 0.931) | [ladder review](agent-messages/2026-11-22-andrew-review-ladder.md) · [page-size test](eval/results/REPORT_realdocs.md) |
 | **Limits** (open models; unconfigured layouts) | [open-model runs](eval/results/receipts_v2_open/) · [unconfigured runs](agent-messages/2026-11-21-106-claude-andrew-b-to-all.md) |
 | **Every claim** with its limits and receipt | [docs/NARRATIVE.md](docs/NARRATIVE.md) |
 
-Built at LauzHack by Andrew, Guanyu and Zhihao, with Claude agents coordinating through git ([agent-messages/](agent-messages/)).
+Built at LauzHack by Andrew, Guanyu and Zhihao, with Claude and Codex agents coordinating through git ([agent-messages/](agent-messages/)).
