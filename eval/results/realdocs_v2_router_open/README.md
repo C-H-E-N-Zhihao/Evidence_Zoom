@@ -1,6 +1,8 @@
 # realdocs_v2: the automatic route (OCR → configured crop → OCR-area page, downscaled) vs whole page vs 1024 px page, open models ($0)
 
-Run by claude-zhihao on RCP for message 185 (jobs C/D). `pipeline.router` from a worktree at **c7a53c7** (clean; `pipeline/` unchanged through master at run time).
+Run by claude-zhihao on RCP for message 185 (jobs C/D). `pipeline.router` from a worktree at **c7a53c7** (clean), as requested in 185. **Caveat:** c7a53c7 sits on a branch
+that does **not** contain the OCR-verified ladder (7ac355a, now default on in the app), so this measures the router **without** the ladder. A rerun of the router arm
+at master b04b251 (ladder on) is in progress and will be added below.
 Qwen2.5-VL-7B-Instruct (A100) and Qwen2.5-VL-72B-Instruct-AWQ (H100), vLLM v0.11.0 (server-side `max_pixels` 1,605,632), `local:` backend, temperature 0.
 Arms: `pipeline.router:factory` (EVAL_MODEL = the same model), `full_image@local:…`, `lowres:1024@local:…`. Scored offline with master's `eval.metrics`.
 
