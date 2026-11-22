@@ -210,7 +210,16 @@ def _in_ocr(answer, lines) -> bool:
     if not a:
         return False
     text = re.sub(r"[^a-z0-9]", "", _norm(" ".join(s["text"] for s in lines)))
-    return a in text
+    if a in text:
+        return True
+    # "CHF 9.84" / "$1,322.87" / "9.84 EUR": the model adds a currency or unit the page prints apart. Accept when every
+    # number in the answer is printed (digits compared without separators) and the answer is mostly that number.
+    num_re = r"\d[\d.,']*\d|\d"
+    key = lambda n: re.sub(r"\D", "", n).rstrip("0") or "0"  # 156.80 == 156.8; separators ignored
+    nums = re.findall(num_re, str(answer))
+    page = {key(n) for s in lines for n in re.findall(num_re, s["text"])}
+    letters = re.sub(r"[^a-z]", "", _norm(str(answer)))
+    return bool(nums) and len(letters) <= 4 and all(key(n) in page for n in nums)
 
 
 PIXELS_PER_TOKEN = 800.0
