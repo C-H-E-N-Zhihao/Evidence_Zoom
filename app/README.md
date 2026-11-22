@@ -50,7 +50,7 @@ licence number?" takes `fallback page → zoom full page → abstain` (not on th
 
 ## Live demo (release check C1)
 
-Visual questions go to a real model on the crop (or the full page when no template anchor applies):
+Visual questions go to a real model on the crop (or, when no template applies, the page cropped to its OCR text area and downscaled):
 
 ```bash
 export OPENROUTER_API_KEY=...   # from the key holder, in your shell only; never commit it or paste it in a message
