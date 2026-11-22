@@ -7,15 +7,18 @@ are normalized [x0, y0, x1, y1] on the same image, as in EvalItem.evidence_boxes
     s = score_item(scores_16x16, item.evidence_boxes, k=16)   # one item
     summarize_grid([s, ...])                                   # means plus the random baselines to compare against
 
-Metrics per item (the best gold box counts when there are several):
-- `centre_in_topk`: the gold box centre falls in one of the k highest-scoring cells. Random rate = k / (R*C).
-- `box_cells_in_topk`: share of the top-k cells that overlap the gold box. Random rate = share of grid cells that
-  overlap the box (reported per item as `box_cells_rate`), so small boxes are not penalised relative to big ones.
-- `mass_in_box`: softmax-free share of non-negative score mass on cells overlapping the box (scores clipped at 0).
-- `argmax_hit`: the single best cell overlaps the gold box (the pointing-hit analogue on documents).
+Metrics per item. With several gold boxes, "the box" means the union of their cells, fixed before scoring:
+- `centre_in_topk`: some gold box centre falls in one of the k highest-scoring cells. Random rate with m distinct
+  centre cells: 1 - C(N-m, k) / C(N, k) (= k/N for one box).
+- `box_cells_in_topk`: share of the top-k cells that overlap the box. Random rate = share of grid cells that
+  overlap it (reported per item as `box_cells_rate`), so small boxes are not penalised relative to big ones.
+- `mass_in_box`: share of non-negative score mass on cells overlapping the box (scores clipped at 0, no softmax).
+- `argmax_hit`: the single best cell overlaps the box (the pointing-hit analogue on documents).
+Compare each mean with its random rate as a ratio of means (summarize_grid gives both).
 """
 from __future__ import annotations
 
+from math import comb
 from statistics import mean
 
 
@@ -60,23 +63,24 @@ def score_item(scores: list[list[float]] | list[float], gold_boxes: list[list[fl
     top = set(order[:k])
     pos = [max(v, 0.0) for v in flat]
     total = sum(pos)
-    best = None
+    # Fixed before scoring (codex-guanyu, grid-null): overlap metrics use the UNION of all gold boxes' cells, and the
+    # centre metric accepts any of the m distinct gold centre cells, so the random rates below are exact.
+    cells: set[int] = set()
+    centres: set[int] = set()
     for b in gold_boxes:
-        cells = _cells_overlapping(b, rows, cols)
-        cx, cy = (b[0] + b[2]) / 2, (b[1] + b[3]) / 2
-        s = {
-            "centre_in_topk": _cell_of(cx, cy, rows, cols) in top,
-            "box_cells_in_topk": len(top & cells) / k,
-            "box_cells_rate": len(cells) / n,
-            "mass_in_box": (sum(pos[i] for i in cells) / total) if total > 0 else 0.0,
-            "argmax_hit": order[0] in cells,
-        }
-        key = (s["centre_in_topk"], s["box_cells_in_topk"], s["mass_in_box"])
-        if best is None or key > best[0]:
-            best = (key, s)
-    out = best[1]
-    out.update({"k": k, "grid": [rows, cols], "random_centre_rate": k / n})
-    return out
+        cells |= _cells_overlapping(b, rows, cols)
+        centres.add(_cell_of((b[0] + b[2]) / 2, (b[1] + b[3]) / 2, rows, cols))
+    m = len(centres)
+    return {
+        "centre_in_topk": bool(top & centres),
+        # P(k uniform cells without replacement hit at least one of m centres) = 1 - C(N-m, k) / C(N, k)
+        "random_centre_rate": 1.0 - (comb(n - m, k) / comb(n, k)),
+        "box_cells_in_topk": len(top & cells) / k,
+        "box_cells_rate": len(cells) / n,  # expected box_cells_in_topk, mass_in_box and argmax_hit under uniform
+        "mass_in_box": (sum(pos[i] for i in cells) / total) if total > 0 else 0.0,
+        "argmax_hit": order[0] in cells,
+        "k": k, "grid": [rows, cols], "n_centre_cells": m,
+    }
 
 
 def summarize_grid(per_item: list[dict | None]) -> dict:

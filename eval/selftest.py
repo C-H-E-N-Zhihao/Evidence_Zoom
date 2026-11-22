@@ -265,7 +265,13 @@ def t_grid_coverage() -> None:
     check("grid: random rates are k/N and box share", s["random_centre_rate"] == 1 / 16 and s["box_cells_rate"] == 1 / 16)
     s2 = score_item(g, [[0.75, 0.0, 1.0, 0.25]], k=1)
     check("grid: wrong corner misses", not s2["argmax_hit"] and not s2["centre_in_topk"] and s2["mass_in_box"] == 0.0)
-    check("grid: flat list, best of two gold boxes", score_item([v for r in g for v in r], [[0.75, 0, 1, 0.25], box], k=1)["argmax_hit"])
+    two = score_item([v for r in g for v in r], [[0.75, 0, 1, 0.25], box], k=1)
+    check("grid: flat list, union of two gold boxes", two["argmax_hit"] and two["centre_in_topk"]
+          and two["box_cells_rate"] == 2 / 16 and two["mass_in_box"] == 1.0)
+    # any-of-m centres: 1 - C(N-m,k)/C(N,k); N=256, k=16, m=2 -> 1 - (240*239)/(256*255) (codex-guanyu, grid-null)
+    check("grid: random centre rate, two centres", abs(two["random_centre_rate"] - 2 / 16) < 1e-12
+          and abs(score_item([0.0] * 256, [[0, 0, .01, .01], [.99, .99, 1, 1]], k=16)["random_centre_rate"]
+                  - (1 - 240 * 239 / (256 * 255))) < 1e-12)
     check("grid: no gold box -> None, summary skips it", score_item(g, []) is None
           and summarize_grid([s, None, s2])["n"] == 2 and summarize_grid([s, s2])["centre_in_topk"] == 0.5)
 
