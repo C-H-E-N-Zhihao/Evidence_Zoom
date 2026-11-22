@@ -27,6 +27,8 @@ MIN_SHORT_CROP = 512
 _GRIDS: Optional[dict] = None
 CURRENT_QID: Optional[str] = None  # set by the factory wrapper so the file source can look up the grid
 
+LINE_TOPK, LINE_PAD = int(os.environ.get("POINTER_LINES", "3")), 1.5
+
 PROMPT = ("Find where the answer to this question is printed on the image: {q}\n"
           "Output the bounding box of the text that holds the answer (and its label) as JSON.")
 
@@ -117,9 +119,40 @@ def answer(image, question: str, prior: Optional[PipelineResult] = None, model: 
     ptr_note = f"pointer {src} {ms:.0f}ms box={[round(v, 3) for v in box] if box else None}"
     res.route.append(RouteStep("pointer", target=src, box=None, note=ptr_note + ("" if box else f" | no box: {raw[:80]}")))
 
+    # 3a. line mode (message 224): the head's heat ranks the OCR lines; crop whole lines (full text width), so the
+    # crop never cuts through digits. Grids from run.py infer cover the WHOLE image (resized to 448x448).
+    if src == "file" and os.environ.get("POINTER_MODE") == "lines" and lines:
+        g = _GRIDS.get(qid or CURRENT_QID) if _GRIDS else None
+        if g and len(g) == GRID * GRID:
+            def heat(b):
+                c0, c1 = int(b[0] * GRID), min(GRID - 1, int(b[2] * GRID))
+                r0, r1 = int(b[1] * GRID), min(GRID - 1, int(b[3] * GRID))
+                cells = [g[r * GRID + c] for r in range(r0, r1 + 1) for c in range(c0, c1 + 1)]
+                return max(cells) if cells else -1e9
+            ranked = sorted(lines, key=lambda s: -heat(s["box"]))[:LINE_TOPK]
+            lh = max(0.008, sum(s["box"][3] - s["box"][1] for s in ranked) / len(ranked))
+            spans = sorted((max(0.0, s["box"][1] - LINE_PAD * lh), min(1.0, s["box"][3] + LINE_PAD * lh)) for s in ranked)
+            band = [list(spans[0])]
+            for a_, b_ in spans[1:]:
+                if a_ <= band[-1][1]:
+                    band[-1][1] = max(band[-1][1], b_)
+                else:
+                    band.append([a_, b_])
+            res.route.append(RouteStep("pointer", target="lines", note=f"head ranks OCR lines: {[s['text'][:20] for s in ranked]}"))
+            res = zoom_answer(image, question, [tuple(b) for b in band], cols, prior=res, model=model,
+                              target="pointer lines", name="pointer", max_crop_side=1568)
+            if not res.error and not res.abstained and len(re.sub(r'[^A-Za-z0-9]', '', res.answer or '')) >= 2 \
+                    and _in_ocr(res.answer, lines):
+                res.route.append(RouteStep("answer", note="pointer-lines answer found in the OCR text: accepted"))
+                return res
+            if res.error:
+                return res
+            res.route.append(RouteStep("fallback", target="image", note="pointer lines: answer not verified; page ladder"))
+            box = None
     # 3. zoom on the (padded) region, mapped back to the full image
     if box:
-        X0, X1, Y0, Y1 = cols[0][0], cols[0][1], rows[0][0], rows[0][1]
+        # file grids cover the whole image; Qwen boxes are relative to the text-area crop it was shown
+        X0, X1, Y0, Y1 = (0.0, 1.0, 0.0, 1.0) if src == "file" else (cols[0][0], cols[0][1], rows[0][0], rows[0][1])
         bw, bh = box[2] - box[0], box[3] - box[1]
         x0, x1 = max(0.0, box[0] - PAD * bw), min(1.0, box[2] + PAD * bw)
         y0, y1 = max(0.0, box[1] - PAD * bh), min(1.0, box[3] + PAD * bh)
