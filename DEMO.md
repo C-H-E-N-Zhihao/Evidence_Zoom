@@ -115,7 +115,11 @@ with and without prompt caching. **All costs are estimates** from token arithmet
 
 ## Beyond claim forms: the general assistant (live only)
 
-The mode picker (top left) has three settings: **Auto**, **Claim form router** and **General assistant (any image)**. Auto sends the homework fixtures and the claim forms to the right route.
+The mode picker (top left) has four settings. It was cosmetic before c1aeb22; homework fixtures were routed automatically.
+- **Auto:** claim forms go to the router, homework fixtures to the worksheet route.
+- **Claim form router.**
+- **Worksheet: OCR text first.**
+- **Any image: whole page.** On real documents (DocVQA, InfographicVQA, ChartQA samples, `REPORT_realdocs.md`), reading the OCR text first scored lower than the whole page, so other images get the whole page; OCR still runs locally for the boxes.
 The general route runs OCR on the page first and sends the model only the numbered text lines, with no image. The model answers from the text and cites the lines, which show as green boxes. If the answer depends on something OCR cannot capture (a circle, a chart, a drawing), the model asks for pixels, and only a band around the lines it named is sent.
 
 Live script (about 30 s, Haiku, billed):
