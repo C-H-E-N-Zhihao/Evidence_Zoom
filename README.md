@@ -1,8 +1,72 @@
-# Evidence Zoom
+<div align="center">
+
+# ◎ Evidence Zoom
+
+**Ask about any image. We send the model as little of the image as we can.**
+
+Built for the AXA challenge at LauzHack: frugal use of multimodal AI.
+
+<img src="docs/img/demo.gif" width="860" alt="Evidence Zoom: a receipt total checked against OCR, a question flagged for review, a claim form's ticks read from a small crop">
+
+</div>
+
+## The problem
+
+A customer sends a support bot a photo (a receipt, a claim form) and asks a question. The usual approach sends the **whole high-resolution image** to a large vision model, every time. That is the expensive path, and the answer doesn't show where it came from.
+
+## How it works
+
+<img src="docs/img/how-it-works.png" width="860" alt="Read locally, send less, check against OCR, answer or flag for review">
+
+| Step | What happens | Model? |
+|---|---|---|
+| **1 · Read locally** | OCR on this computer. Some printed fields are answered here. | no · $0 |
+| **2 · Send less** | A known form's layout picks the crop. Anything else gets a small page (768 px). | vision model |
+| **3 · Check** | Small page: is the answer in the OCR text? If not, a sharper page (≥ 1568 px). | no · $0 |
+| **4 · Answer, or flag it** | The evidence is drawn on the image (the OCR line it read, or the region sent). Otherwise: flagged for human review, with a ticket. | no |
+
+Vision model: Claude Haiku in the cloud, or Qwen2.5-VL 7B on the laptop (on-device mode, nothing leaves the machine with the default local endpoint).
+
+## Results
+
+<img src="docs/img/results.svg" width="860" alt="Tokens per correct answer: ours vs the original image, four tests">
+
+**Held out:** on 248 questions about 60 fresh CORD receipt photos, the app with its shipped defaults answered **188** correctly against 187 for the original photo, with **0** wrong answers against 1, and both flagged all 60 unanswerable questions for review. It used **968 vs 2,740 tokens per correct answer (65% fewer)**, and 31 questions were answered without any model call. Haiku, one paired run.
+
+**Where it does not help:** with open models (Qwen 7B/72B, an earlier configuration) routing recorded more wrong answers (31 vs 14; 13 vs 6), mostly missed review flags. On layouts we never configured there is no region selection, and a plain downscaled page was slightly cheaper than our route.
+
+<table><tr>
+<td width="50%"><img src="docs/img/receipt.png" alt="Receipt: answer found in the OCR text, tokens against the original photo"></td>
+<td width="50%"><img src="docs/img/claim-form.png" alt="Claim form: driver B's ticks read from a small crop picked by the layout"></td>
+</tr><tr>
+<td>Any photo: a small page first, accepted only if the answer is in the local OCR text.</td>
+<td>A configured form: the layout picks the crop; printed fields cost 0 model tokens.</td>
+</tr></table>
+
+## Why it fits AXA
+
+- **Recurring forms.** The European Accident Statement is [harmonised across Europe](https://www.evz.de/en/travelling-motor-vehicles/motor-vehicles/car-accident-in-europe), one layout in every language. Configure a layout once: printed fields are read by OCR for $0, and ticks come from a small crop.
+- **Customer photos.** Receipts and documents get a small page checked against OCR instead of the full photo (held-out receipts above).
+- **In-house option.** On-device mode runs the same route with an open 7B model on a laptop: 83/96 on the development forms, no provider charge.
+
+## Try it
+
+```bash
+./scripts/demo.sh          # key-free: real OCR, replayed visual answers (labelled)
+./scripts/demo-live.sh     # live: Claude Haiku via OpenRouter (key in .env)
+./scripts/demo-local.sh    # on-device: Qwen2.5-VL 7B via Ollama
+```
+
+Open **http://localhost:8000**, then click **How it works** or **▶ Guided tour**. Needs macOS with the Xcode command-line tools (Apple Vision OCR). Checks: `./scripts/test.sh`. [Demo guide](DEMO.md)
+
+---
+
+<details>
+<summary><b>All measurements, limits and receipts</b> (the full evidence behind every number above)</summary>
 
 Evidence Zoom explores how a customer-service bot can answer questions about uploaded images while spending fewer model tokens. The demo shows the evidence: the OCR line it read, or the region sent to the model. The app runs OCR locally, answers supported fields directly, and sends a targeted crop for visual questions on configured claim forms. For other images, it starts with a smaller view, cropped to the detected text when available. It asks the selected vision model for a higher-resolution answer if the first answer does not match the local OCR text. Questions the app cannot answer are flagged for human review.
 
-## Try the demo
+### Try the demo
 
 On macOS with the Xcode command-line tools, clone this repository and run:
 
@@ -12,7 +76,7 @@ On macOS with the Xcode command-line tools, clone this repository and run:
 
 Open **http://localhost:8000** and start the guided tour. This launch uses local OCR and replays fixture answers for the visual steps. Use the live or on-device launcher to ask questions about an uploaded document. [Demo guide](DEMO.md)
 
-## What we measured
+### What we measured
 
 - **Fresh receipt photos.** On 248 questions about 60 CORD validation receipts, the tested Haiku router used **968 versus 2,740 provider tokens per correct answer** and cost **$0.0234 versus $0.0584** compared with sending the original photo to the same model. It answered 188 correctly, including 31 without calling Haiku. The original-photo arm answered 187 correctly and gave one wrong answer. Both correctly flagged all 60 unanswerable questions for human review. Prompt caching was off and masking did not trigger. With open models (Qwen 7B/72B, an earlier configuration) routing recorded more wrong answers (7B 31 vs 14; 72B 13 vs 6). [Haiku receipts](eval/results/receipts_v2_final/) · [Review](agent-messages/2026-11-22-andrew-review-final-cord.md)
 - **Configured synthetic forms.** With Sonnet on both sides, the router used **774 versus 5,696 cloud tokens per correct answer** against the cached whole page. Both arms answered 84 correctly, and 48 questions were answered locally by OCR. The cached page was cheaper on visual questions alone. On a second layout, the frozen Haiku router used **841 versus 5,946** tokens and answered 84 versus 81 correctly. [Reviewed token totals](agent-messages/2026-11-22-andrew-review-214-216.md)
@@ -21,7 +85,7 @@ Open **http://localhost:8000** and start the guided tour. This launch uses local
 
 The Haiku receipt result covers one paired run. Earlier Qwen receipt runs used a different reply format and got more answers wrong with routing than with the original photo (31 versus 14 for 7B and 13 versus 6 for 72B), mostly from missed review flags. The template savings were measured on configured synthetic forms. The app uses Apple Vision OCR on macOS. Overlays show the image region sent or the OCR line where the answer appears. The fixed-resolution tests measured whole pages. Cropping and adaptive resolution are evaluated in separate comparisons.
 
-## Team dashboard
+### Team dashboard
 
 An earlier experimental text-first route scored 178/210 against 184/210 for the whole page by substring match on public document questions. [Real-document report](eval/results/REPORT_realdocs.md)
 
@@ -40,3 +104,5 @@ An earlier experimental text-first route scored 178/210 against 184/210 for the 
 **Paid evaluation.** On 96 clean questions from 12 synthetic development forms, router v2 with Haiku and a cached full-page Sonnet baseline both answered 96 correctly. Their API charges for the set were $0.009829 and $0.242536. The full-page Haiku control answered 91 correctly for $0.052166. The router handled 48 questions locally, used crops for 36, and sent 12 full pages. A separate clean comparison used Sonnet for both routes. Both scored 96/96. Routing cost $0.161986 versus $0.242476 for the cached page across all questions (33.2% lower). On the 36 visual questions alone, the cached page was cheaper. [Same-model receipts](eval/results/REPORT_same_model_sonnet.md) On five unconfigured synthetic layouts, all 416 questions went to a full-page call. Haiku answered 401 correctly through the router and 397 from the original page; the fallback used a smaller page and a different prompt, and their individual effects on cost were not isolated. [Unconfigured runs](agent-messages/2026-11-21-106-claude-andrew-b-to-all.md) The phone-photo run used a different pipeline tree. [Billed report](eval/results/paid_20261121-162336/REPORT.md) · [Independent audit](agent-messages/2026-11-21-codex-guanyu-paid-pitch-verdict.md)
 
 **Working together.** Point-of-contact names reflect existing contributions. Each collaborator can suggest a change, flag a gap or pick up an open check by posting a uniquely named file in [agent-messages/](agent-messages/). Link the dashboard goal, change or result, and relevant commit. Codex Guanyu monitors incoming results and checks run receipts. Claude Guanyu audits judge-visible wording, Claude Zhihao maintains the claims ledger, and Andrew’s agent handles release review. Coordinator-launched agents use Sol within the shared two-day quota; teammates choose their own tools.
+
+</details>
