@@ -417,7 +417,8 @@ def zoom_answer(
     abstain = stop == "refusal" or bool(d.get("abstain")) or ans is None or d.get("action") == "zoom"
     res.answer, res.abstained = (None if abstain else str(ans)), abstain
     boxes = view.boxes_to_orig(normalize_box(d["box"], view.image)) if _valid_box(d.get("box")) and not abstain else []
-    res.route.append(RouteStep(step="abstain" if abstain else "answer", box=boxes[0] if boxes else None))
+    res.route.append(RouteStep(step="abstain" if abstain else "answer", box=boxes[0] if boxes else None,
+                               note="absent" if abstain and d.get("absent") is True else None))
     res.evidence_boxes += [EvidenceBox(box=b, source="zoom") for b in boxes]
     return res
 

@@ -268,9 +268,16 @@ def _page_call(image, question, res, model, call, lines, look_for="the evidence 
         # printed in the OCR text (a model-free check that catches low-resolution misreads); otherwise ask again at a
         # higher resolution. Answers that are not printed strings (yes/no, computed) always escalate.
         low = max(512, round(side * LADDER_LOW))
-        res = zoom_answer(image, question, rows, cols, prior=res, model=model, look_for=look_for, target="full page",
+        stop_absent = os.environ.get("LADDER_ABSENT_STOP") == "1"
+        lf = look_for + ('. If the requested information is clearly not on this page at all (not merely too small to '
+                         'read), abstain and also set "absent": true' if stop_absent else "")
+        res = zoom_answer(image, question, rows, cols, prior=res, model=model, look_for=lf, target="full page",
                           call=call, name="page_low", max_crop_side=low)
         if res.error:
+            return res
+        if stop_absent and res.abstained and res.route and res.route[-1].note == "absent":
+            # the small page already shows the information is not there: hand off without a larger image (message 217)
+            res.route.append(RouteStep("abstain", note="not on the page (seen on the small version): no larger image sent"))
             return res
         if not res.abstained and _in_ocr(res.answer, lines):
             hits = _locate(res.answer, lines)
