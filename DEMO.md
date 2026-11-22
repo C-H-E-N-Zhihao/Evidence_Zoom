@@ -16,8 +16,8 @@ One automatic route, cheapest step first:
    check, the number on the labelled row is read by local OCR and returned with 0 model tokens (development check:
    29 of 241 CORD receipt questions, 0 wrong).
 4. **Any other image: a small page first.** The page is cropped to where OCR found text and asked at a small
-   size (768 px). If the answer is found in the local OCR text, that is the reply. Otherwise the page is asked
-   again at a higher resolution (≥ 1568 px). This is where most customer images go. There is no region selection,
+   size (about 768 px). If the answer is found in the local OCR text, that is the reply. Otherwise the page is asked
+   again at a higher resolution (≥ 1568 px if the photo allows; a small photo is never enlarged). This is where most customer images go. There is no region selection,
    so savings come from the image size only (see the general section below for what was measured).
 5. **Personal data masked on the page path.** Before the page image is sent, lines that local OCR reads as card,
    IBAN, email, phone or AHV numbers are blacked out unless the question asks for that field (pattern-based, not a
@@ -175,7 +175,7 @@ with the full page with and without prompt caching. **All costs are estimates** 
 **One automatic route for every image (no picker).** OCR runs locally first. If it recognises a configured claim-form layout, the router answers printed fields from OCR ($0) or sends the model only the located region. For anything else (receipts, uploads, worksheets), it sends the page as one image, cropped to where OCR found text and downscaled: short side ≥ 768 px, long side ≥ 1024 px, cap 2400 px. On 70 DocVQA scans, the whole page at 1024 px had the same mean score as full size, at about a third of the cost (`REPORT_realdocs.md`, resolution frontier). Infographics lost accuracy when downscaled. The OCR-area crop and this size rule were set from that test and are measured only as part of the whole route (the held-out receipts result above).
 Example: a 4284×5712 phone photo of a receipt is sent as a cropped, downscaled page. Qwen2.5-VL-7B on the laptop read the total and the VAT correctly (one receipt, development check). Sending the original photo to Haiku was billed 4,773 input tokens: the provider downscales large images itself, so the original-image baseline is capped at that measured maximum.
 
-**The OCR-checked ladder** (default on; approved in `andrew-review-ladder`). The model first sees a smaller page (about 768 px). The answer is accepted only if it appears in the page's local OCR text; otherwise the page is sent again at ≥ 1568 px.
+**The OCR-checked ladder** (default on; approved in `andrew-review-ladder`). The model first sees a smaller page (about 768 px). The answer is accepted only if it appears in the page's local OCR text; otherwise the page is sent again at ≥ 1568 px (or at the photo's own size if smaller).
 - **DocVQA scans** (100 questions, Haiku):
   - 96 correct, the same as the original full page (a separately prompted baseline);
   - ANLS 0.920 vs 0.931;
