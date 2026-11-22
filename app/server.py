@@ -214,7 +214,7 @@ class Ask(BaseModel):
     image_id: str
     question: str
     model: str | None = None  # live only: one of APP_MODELS
-    mode: str | None = None  # "claims" (form router) | "general" (OCR text first, any image) | None = auto
+    mode: str | None = None  # "claims" (form router) | "worksheet" (OCR text first) | "general" (whole page) | None = auto
 
 
 @app.post("/api/compare")

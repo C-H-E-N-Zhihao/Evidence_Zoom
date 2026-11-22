@@ -257,7 +257,7 @@ function explain(data) {
       `text and asking first; OCR still ran locally.`;
   if (t === "full page" && r.route.some((st) => /text step off/.test(st.note || "")) && !data.on_device)
     return `Any-image mode sends the whole page (${size}, ~${inTok} input tokens${est}): on real documents, reading the OCR text ` +
-      `first scored lower than the whole page in our tests. OCR still ran locally.`;
+      `first scored lower than the whole page overall in our tests. OCR still ran locally.`;
   if (t === "full page" && r.route.some((st) => /text step off/.test(st.note || "")))
     return `Small on-device models did not reliably tell when OCR text is not enough (measured on Qwen2.5-VL-7B), so this one was sent the whole page ` +
       `(${size}, ~${inTok} input tokens${est}); OCR still ran locally for the green boxes.`;
