@@ -103,9 +103,9 @@ reviewer approves `docs/claims.json`.
 4. Click **form b** and ask the tick question again. The answer changes to **7** and the box moves one row up.
    The line above the page now shows `a: 8 · b: 7`; switching back to form a keeps its conversation.
    The policy number is still read by OCR, because only the tick differs.
-5. Optional: click **"What is driver A's driving licence number?"** (not on the form). The route is
-   `fallback page → zoom full page → abstain`: no anchor applies, so the full page would be sent, and the
-   replayed answer is "not on the form". Type **"Is there a dog in the picture?"** and you get **NO ANSWER**
+5. Optional: click **"What is driver A's driving licence number?"** (not on the form). No anchor applies, so the
+   route falls back to the page (cropped to its text area and downscaled) and the replayed answer is "not on the
+   form": the bot says it cannot answer and passes the question to a human agent. Type **"Is there a dog in the picture?"** and you get **NO ANSWER**
    with the reason: there is no stored answer to replay, so nothing is invented.
 
 The **Session cost** panel compares this route with sending the full page to the same model every time,
