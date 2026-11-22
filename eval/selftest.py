@@ -262,10 +262,11 @@ def t_token_score() -> None:
     pairs = [(item("A", qid="1"), res("A", usage=[ocr])),                      # local, correct
              (item("B", qid="2"), res("B", usage=[ocr, gpu, api])),            # escalated to cloud, correct
              (item("C", qid="3"), res("D", usage=[ocr, api])),                 # cloud, wrong
-             (item("E", qid="4"), res(None, abst=True, usage=[ocr, api]))]     # handoff on answerable
+             (item("E", qid="4"), res(None, abst=True, usage=[ocr, api])),     # handoff on answerable
+             (item(None, ok=False, boxes=[], qid="5"), res(None, abst=True, usage=[ocr]))]  # correct handoff, not an answer
     s = summarize(pairs)["all"]
     check("token score: counts", (s["correct"], s["answered_locally"], s["cloud_escalations"], s["handoffs"],
-                                  s["handoffs_on_answerable"], s["wrong_answers"]) == (2, 1, 3, 1, 1, 1), str(s))
+                                  s["handoffs_on_answerable"], s["wrong_answers"], s["correct_answered"]) == (3, 1, 3, 2, 1, 1, 2), str(s))
     check("token score: cloud vs local tokens", s["cloud_tokens_total"] == 300 and s["local_tokens_total"] == 505)
     check("token score: per correct", s["cloud_tokens_per_correct"] == 150 and abs(s["cost_usd_per_correct"] - .0015) < 1e-12)
 
