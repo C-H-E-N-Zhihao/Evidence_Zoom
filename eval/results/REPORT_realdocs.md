@@ -32,5 +32,6 @@ The app's whole-page call caps the long side at 1568 px; the evaluated whole-pag
 | DocVQA ANLS / cost per q | **0.954 / $0.00029** | 0.951 / $0.00049 | 0.900 / $0.00029 |
 | InfographicVQA ANLS / cost per q | 0.690 / $0.00028 | **0.761 / $0.00033** | 0.619 / $0.00042 |
 
-- **On scanned documents, downscaling the whole page to 1568 px is the frugal winner.** It matches full resolution at 41% lower cost, and beats the text-first route at the same cost.
+- **On scanned documents, downscaling the whole page to 1568 px is the frugal winner.** It matches full resolution at 42% lower cost (58% of the charge), and beats the text-first route at the same cost.
 - **Tall infographics lose detail when downscaled.** 31 of the 65 infographic pages are taller than 2:1, against 2 of 70 scans and no charts. The app now keeps up to 2400 px for pages taller than 2:1. That rule was chosen after this run (development), so its effect is not measured yet.
+- The run records `eval_dirty: true` because its item list (`items_doc_info.jsonl`, the 140 non-chart questions) was still uncommitted when it ran. It is committed in 9792e2c; no harness code changed.
