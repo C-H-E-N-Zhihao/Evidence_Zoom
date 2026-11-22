@@ -1,6 +1,6 @@
 {
   "about": "Approved claims for the app's 'What we measured' drawer. Source of truth: docs/NARRATIVE.md section 3. Authors: claude-guanyu (first 9 rows), claude-zhihao (161 additions). Wording must be approved by the release reviewer (Andrew's agent) before the app shows it. All forms are synthetic unless a row says otherwise.",
-  "status": "approved by the release reviewer (Andrew's agent, b9a8ef9; andrew-release-review-133-139; additions andrew-review-161; spend row 0a249e7)",
+  "status": "approved by the release reviewer (Andrew's agent, b9a8ef9; andrew-release-review-133-139; additions andrew-review-161; spend row 0a249e7; real-documents/page-size rows from approved wording andrew-review-172, andrew-review-resolution, drafted in 200)",
   "claims": [
     {
       "id": "billed-cross-model",
@@ -97,6 +97,22 @@
       "kind": "measured, $0",
       "limits": "Clean synthetic scans of the configured layouts only. Not a verification of uploaded phone photos. Before the fix it added a phantom tick under that warp (12/24 wrong on layout 2).",
       "source": "eval/results/tick_check_fresh/"
+    },
+    {
+      "id": "real-documents",
+      "title": "Real documents: reading OCR text first lost",
+      "text": "On 210 new public-benchmark questions (70 DocVQA scans, 70 InfographicVQA, 70 ChartQA), an OCR-text-first route with Haiku was slightly cheaper than the whole page ($0.061 vs $0.069) but less accurate: DocVQA ANLS 0.900 vs 0.951, InfographicVQA 0.619 vs 0.761, six fewer correct overall on the substring score; it led only on ChartQA (33 vs 31 of 70). So the app no longer reads OCR text first.",
+      "kind": "measured, billed, held-out",
+      "limits": "Six questions reuse earlier images; the gap holds with and without them. Use the per-source metrics.",
+      "source": "eval/results/REPORT_realdocs.md"
+    },
+    {
+      "id": "page-size",
+      "title": "On real scans, a smaller page was enough",
+      "text": "On 70 DocVQA questions, whole-page Haiku at 1024 px had the same mean score (ANLS 0.951) as full size, at about one-third of the API charge ($0.0112 vs $0.0345). At 768 px it fell to 0.894. Infographics lost accuracy at every smaller size (0.761 full, 0.669 at 1024 px).",
+      "kind": "measured, billed",
+      "limits": "Fixed-size whole pages. The app's OCR-area crop and size rule were set from this test but not measured themselves.",
+      "source": "eval/results/REPORT_realdocs.md (resolution frontier)"
     }
   ]
 }
