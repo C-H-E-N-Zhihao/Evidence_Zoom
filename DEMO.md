@@ -27,6 +27,19 @@ exists (`DEMO_LIVE=1` with an OpenRouter key; see `app/README.md`), checked end 
 
 ---
 
+## Tokens per correctly answered question (approved, `andrew-review-214-216`)
+
+The numerator counts every question's input, cache and output tokens; correct handoffs are not in the denominator. Always name the baseline.
+
+| set | our route | baseline |
+|---|---:|---:|
+| configured accident form (synthetic, Sonnet on both sides) | **774** | 5,696 (cached whole page); both 84 correct + 12 correct deferrals |
+| second configured layout (synthetic, Haiku) | **841** (84 correct) | 5,946 (original page, 81 correct) |
+| five unconfigured layouts (synthetic, Haiku) | 3,110 | 4,894 (original page); 2,986 (plain downscaled page) |
+| real receipts, CORD (Haiku, OCR-checked ladder) | **1,380** | 2,727 (original photo); 179 correct + 60 correct deferrals + 2 wrong in both |
+
+These runs predate the OCR field exits and redaction defaults now in the app. A final held-out run of the shipped defaults is planned on receipts_v2 (message 218).
+
 ## Run it (macOS, about 2 minutes the first time)
 
 ```bash
