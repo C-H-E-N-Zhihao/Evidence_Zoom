@@ -6,7 +6,7 @@
 
 Built for the AXA challenge at LauzHack: frugal use of multimodal AI.
 
-<img src="docs/img/demo.gif" width="860" alt="Evidence Zoom: a receipt total checked against OCR, a question flagged for review, a claim form's ticks read from a small crop">
+<img src="docs/img/demo.gif" width="100%" alt="Evidence Zoom: a receipt total checked against OCR, a question flagged for review, a claim form's ticks read from a small crop">
 
 </div>
 
