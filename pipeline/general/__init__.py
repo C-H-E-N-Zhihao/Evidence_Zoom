@@ -61,15 +61,103 @@ def _content_spans(image, lines):
     return [(y0, y1)], [(x0, x1)]
 
 
+# Model-free question -> region crop (message 190, idea 1). Words of the question, plus synonyms for fields a
+# customer-service bot is asked about, are matched against the OCR lines; a band around the best lines is sent first.
+# If the model abstains on the band, the cropped page follows. Off unless GENERAL_KEYWORD_CROP=1 (being measured).
+SYN = {
+    "total": "total amount sum due pay payable paid balance grand ttc betrag montant summe", "amount": "total amount sum due",
+    "spending": "total amount sum paid", "spent": "total amount sum paid", "cost": "total price amount cost",
+    "price": "price prix preis cost amount", "tax": "tax vat tva mwst gst", "vat": "vat tax tva mwst",
+    "change": "change rendu", "discount": "discount rabais rebate reduction", "date": "date datum",
+    "when": "date datum time", "time": "time heure zeit", "order": "order invoice receipt number no id",
+    "invoice": "invoice facture rechnung number no", "number": "number no nr id", "phone": "phone tel telephone",
+    "address": "address adresse street rue", "email": "email mail", "name": "name nom", "card": "card visa mastercard",
+}
+_STOP = set("what which who whom whose when where why how is are was were the a an of in on for to this that these those "
+            "does did do with from by at and or it its be been as much many there their your my our please tell me".split())
+
+
+def _norm(t: str) -> str:
+    import unicodedata
+
+    return "".join(c for c in unicodedata.normalize("NFKD", t.lower()) if not unicodedata.combining(c))
+
+
+def _keyword_band(question, lines):
+    import re
+
+    words = [w for w in re.findall(r"[a-z0-9]+", _norm(question)) if len(w) >= 3 and w not in _STOP]
+    terms = set(words)
+    for w in words:
+        terms |= set(SYN.get(w, "").split())
+    if not terms:
+        return None
+    scored = []
+    for s in lines:
+        toks = set(re.findall(r"[a-z0-9]+", _norm(s["text"])))
+        hit = sum(1 for t in terms if t in toks or (len(t) >= 5 and any(t in k for k in toks)))
+        hit += sum(1 for w in words if w in toks)  # the customer's own words count double
+        if hit:
+            scored.append((hit, s))
+    if not scored:
+        return None
+    best = max(h for h, _ in scored)
+    top = [s for h, s in scored if h == best][:3]
+    y0 = min(s["box"][1] for s in top); y1 = max(s["box"][3] for s in top)
+    lh = max(0.01, sum(s["box"][3] - s["box"][1] for s in top) / len(top))
+    return max(0.0, y0 - 2.5 * lh), min(1.0, y1 + 2.5 * lh), best
+
+
 def _page_call(image, question, res, model, call, lines, look_for="the evidence for the question"):
-    """The whole page as one image: cropped to the text area, then downscaled by _page_side."""
+    """The whole page as one image: cropped to the text area, then downscaled by _page_side. With
+    GENERAL_KEYWORD_CROP=1, a band around the OCR lines that match the question is tried first."""
     from pipeline.visual import zoom_answer
+
+    if os.environ.get("GENERAL_KEYWORD_CROP") == "1" and lines:
+        kb = _keyword_band(question, lines)
+        if kb:
+            rows_c, cols_c = _content_spans(image, lines)
+            y0, y1, score = kb
+            res.route.append(RouteStep("fallback", target="image", note=f"keyword band (score {score})"))
+            res = zoom_answer(image, question, [(y0, y1)], cols_c, prior=res, model=model, look_for=look_for,
+                              target="keyword band", call=call, name="keyword_band", max_crop_side=MAX_LONG)
+            if not res.abstained or res.error:
+                return res
+            res.route.append(RouteStep("fallback", target="image", note="band crop was not enough; one look at the whole page"))
 
     rows, cols = _content_spans(image, lines)
     cw = round(image.width * (cols[0][1] - cols[0][0])); ch = round(image.height * (rows[0][1] - rows[0][0]))
     side = _page_side(type("S", (), {"size": (cw, ch)})())
+    if os.environ.get("GENERAL_LADDER", "0") == "1" and lines:
+        # OCR-verified resolution ladder (message 192): ask on a smaller page first; accept the answer only if it is
+        # printed in the OCR text (a model-free check that catches low-resolution misreads); otherwise ask again at a
+        # higher resolution. Answers that are not printed strings (yes/no, computed) always escalate.
+        low = max(512, round(side * LADDER_LOW))
+        res = zoom_answer(image, question, rows, cols, prior=res, model=model, look_for=look_for, target="full page",
+                          call=call, name="page_low", max_crop_side=low)
+        if res.error:
+            return res
+        if not res.abstained and _in_ocr(res.answer, lines):
+            res.route.append(RouteStep("answer", note="low-resolution answer found in the OCR text: accepted"))
+            return res
+        res.route.append(RouteStep("fallback", target="image",
+                                   note="ladder: answer not in the OCR text; ask again at higher resolution"))
+        side = max(side, LADDER_HIGH)
     return zoom_answer(image, question, rows, cols, prior=res, model=model, look_for=look_for, target="full page",
                        call=call, name="page", max_crop_side=side)
+
+
+LADDER_LOW, LADDER_HIGH = 0.75, 1568  # 1024 -> 768 px first; escalate to >= 1568 px (simulated on realdocs_v2: 192)
+
+
+def _in_ocr(answer, lines) -> bool:
+    import re
+
+    a = re.sub(r"[^a-z0-9]", "", _norm(str(answer or "")))
+    if not a:
+        return False
+    text = re.sub(r"[^a-z0-9]", "", _norm(" ".join(s["text"] for s in lines)))
+    return a in text
 
 
 PIXELS_PER_TOKEN = 800.0
