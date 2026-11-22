@@ -255,8 +255,24 @@ def t_run_eval_mock() -> None:
             check("mock accuracy 1 and complete", rep["summary"]["all"]["accuracy"] == 1 and rep["complete"])
 
 
+def t_grid_coverage() -> None:
+    from .grid_coverage import score_item, summarize_grid
+    g = [[0.0] * 4 for _ in range(4)]
+    g[3][0] = 5.0  # bottom-left cell
+    box = [0.0, 0.75, 0.25, 1.0]  # exactly that cell
+    s = score_item(g, [box], k=1)
+    check("grid: argmax on the box hits", s["argmax_hit"] and s["centre_in_topk"] and s["mass_in_box"] == 1.0)
+    check("grid: random rates are k/N and box share", s["random_centre_rate"] == 1 / 16 and s["box_cells_rate"] == 1 / 16)
+    s2 = score_item(g, [[0.75, 0.0, 1.0, 0.25]], k=1)
+    check("grid: wrong corner misses", not s2["argmax_hit"] and not s2["centre_in_topk"] and s2["mass_in_box"] == 0.0)
+    check("grid: flat list, best of two gold boxes", score_item([v for r in g for v in r], [[0.75, 0, 1, 0.25], box], k=1)["argmax_hit"])
+    check("grid: no gold box -> None, summary skips it", score_item(g, []) is None
+          and summarize_grid([s, None, s2])["n"] == 2 and summarize_grid([s, s2])["centre_in_topk"] == 0.5)
+
+
 def main() -> None:
-    for t in (t_metrics, t_pricing, t_compose_and_guard, t_pairs_curve_report, t_geometry, t_run_eval_mock):
+    for t in (t_metrics, t_pricing, t_compose_and_guard, t_pairs_curve_report, t_geometry, t_run_eval_mock,
+              t_grid_coverage):
         try:
             t()
         except Exception as e:  # a crash in a group is a failure of that group
