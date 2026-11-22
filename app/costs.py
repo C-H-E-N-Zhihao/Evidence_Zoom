@@ -22,9 +22,15 @@ def billed_size(w: int, h: int) -> tuple[int, int]:
     return int(w), int(h)
 
 
+# Measured 2026-11-22 (message 212): the provider caps a large image at ~4,750 image tokens. The original 4284x5712
+# receipt photo (24.5 MP) and a 2142x2856 copy were both billed 4,773 input tokens with a ~20-token prompt; a 1500x2000
+# copy was billed 3,921 (= w*h/800 + prompt). Anthropic's vision docs give a 4,784-token cap for current models.
+MAX_IMAGE_TOKENS = 4750
+
+
 def image_tokens(w: int, h: int) -> int:
     bw, bh = billed_size(w, h)
-    return max(1, round(bw * bh / PIXELS_PER_TOKEN))
+    return max(1, min(MAX_IMAGE_TOKENS, round(bw * bh / PIXELS_PER_TOKEN)))
 
 
 def price(u: Usage) -> float:

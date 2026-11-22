@@ -41,8 +41,8 @@ async function init() {
   if (cfg.live) {
     $("banner").hidden = false;
     const m = (cfg.models || []).map((x) => x.on_device ? "on this laptop ($0, the image never leaves it)" : "cloud").join(" or ");
-    $("banner").innerHTML = `<span class='src ocr'>LIVE</span> OCR runs free on this computer · the model only sees ` +
-      `the pixels it needs · switch cloud ↔ on-device top right`;
+    $("banner").innerHTML = `<span class='src ocr'>LIVE</span> OCR runs free on this computer · the model sees a smaller ` +
+      `image: a crop on known forms, a small checked page otherwise · switch cloud ↔ on-device top right`;
   } else if (cfg.replay) {
     $("banner").hidden = false;
     $("banner").innerHTML = "<b>Key-free rehearsal.</b> <span class='src ocr'>LIVE OCR</span> answers are real " +
@@ -189,8 +189,10 @@ async function askQ(q) {
     answers.push(data);
     const ours = data.result.usage.reduce((s, u) => s + (u.cost_usd || 0), 0);
     totals.ours += ours; totals.cached += data.baseline.cached_usd; totals.full += data.baseline.uncached_usd;
-    sess.ours += inputTokens(data.result); sess.full += (data.baseline.image_tokens || 0) + (data.baseline.text_tokens || 0);
-    sess.n += 1; updateSaving();
+    if (!data.answer_cache) {  // repeats are not a measured saving: keep them out of the card (audit 211)
+      sess.ours += inputTokens(data.result); sess.full += (data.baseline.image_tokens || 0) + (data.baseline.text_tokens || 0);
+      sess.n += 1; updateSaving();
+    }
     addA(data, answers.length - 1, ours);
     if (pair && image.fixture) {
       const pa = (pairAnswers[pair.pair_id] ||= {});
@@ -433,6 +435,7 @@ function inputTokens(r) {
   return (r.usage || []).reduce((a, u) => a + (u.input_image_tokens || 0) + (u.input_text_tokens || 0) +
     (u.cache_read_tokens || 0) + (u.cache_write_tokens || 0), 0);
 }
+function fmtTok(n) { return n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : `${Math.round(n)}`; }
 function updateSaving() {
   const pct = sess.full ? Math.round((1 - sess.ours / sess.full) * 100) : null;
   $("sv-pct").textContent = pct === null ? "–" : `${Math.abs(pct)}%`;
@@ -440,8 +443,9 @@ function updateSaving() {
     : "fewer input tokens than sending the original images";
   $("sv-ours").textContent = `${sess.ours.toLocaleString()} input tokens`;
   $("sv-full").textContent = `${sess.full.toLocaleString()} input tokens`;
-  $("sv-foot").textContent = sess.n ? `${sess.n} question${sess.n > 1 ? "s" : ""} this session · cached image tokens counted` +
-    " in full here (the provider bills them at ~10%)" : "Upload a photo or pick a sample, then ask a question.";
+  $("sv-foot").textContent = sess.n ? `At this rate, 1,000 customer questions ≈ ${fmtTok(sess.ours / sess.n * 1000)} input ` +
+    `tokens instead of ${fmtTok(sess.full / sess.n * 1000)} · ${sess.n} question${sess.n > 1 ? "s" : ""} so far · cached ` +
+    "image tokens counted in full (billed at ~10%)" : "Upload a photo or pick a sample, then ask a question.";
 }
 
 function updateMeter() {
@@ -481,6 +485,14 @@ function draw() {
   }
   if (!res) return;
   const zooms = res.route.filter((s) => s.step === "zoom" && s.box);
+  // spotlight: dim everything the model did not see (the last region sent, or the OCR line for an OCR answer)
+  const lit = zooms.length ? [zooms[zooms.length - 1].box]
+    : (res.evidence_boxes || []).filter((e) => e.source === "ocr").map((e) => e.box);
+  if (lit.length) {
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, H);
+    lit.forEach((b) => ctx.rect(b[0] * W, b[1] * H, (b[2] - b[0]) * W, (b[3] - b[1]) * H));
+    ctx.fillStyle = "rgba(15, 18, 40, 0.55)"; ctx.fill("evenodd"); ctx.restore();
+  }
   ctx.setLineDash([6, 4]); ctx.lineWidth = 2; ctx.strokeStyle = css("--cell");
   zooms.forEach(({ box: b }) => ctx.strokeRect(b[0] * W, b[1] * H, (b[2] - b[0]) * W, (b[3] - b[1]) * H));
   ctx.setLineDash([]);
