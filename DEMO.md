@@ -122,7 +122,7 @@ The story: a customer sends a photo and asks a question, the way they would ask 
    - "What the model saw" shows the small cropped page; the image outside the region sent is dimmed.
 2. **Ask "How much VAT was paid in total?"** The image is read from the provider's prompt cache. If the receipt shows a card number or phone number, the card says it was masked before sending.
 3. **Ask something the receipt cannot answer** ("What is the customer's loyalty number?").
-   - On the small page the model reports that it is not there, so no larger image is sent: "Human review needed".
+   - The app reports "Human review needed" instead of inventing an answer. If the model says on the small page that the information is not there, it stops early; otherwise it may first try a sharper image (in the 10:25 live check it did, twice).
    - **Create ticket for a human agent** prepares a copyable ticket: the question, what was tried, the tokens spent and the nearest page text.
 4. **Switch the model** (top right) to the on-device Qwen and ask again: the same route at $0; with the default local endpoint the image never leaves the laptop.
 5. **Pick a sample claim form** ("Accident claim form #2") and ask the policy number, then which boxes driver B ticked.
