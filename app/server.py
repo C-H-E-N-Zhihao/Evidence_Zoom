@@ -14,6 +14,7 @@ import io
 import json
 import os
 os.environ.setdefault("VISION_CACHE", "1")
+os.environ.setdefault("LADDER_ABSENT_STOP", "1")  # hand off from the small page when the info is clearly absent
 os.environ.setdefault("OCR_FIELDS", "1")  # zero-token field answers for high-precision fields
 os.environ.setdefault("REDACT_PII", "1")  # page path: black out OCR-read card/IBAN/email/phone/AHV lines (pattern-based)  # prompt-cache images: follow-up questions on the same crop are ~10% price
 import re

@@ -331,6 +331,7 @@ function addA(data, i, ours) {
         : /band crop was not enough/.test(s.note || "") ? "band not enough"
         : /no OCR answer or anchor/.test(s.note || "") ? "no form layout: page"
         : /^ladder:/.test(s.note || "") ? "not in OCR text: higher res" : "OCR not enough")
+      : s.step === "abstain" && /no larger image sent/.test(s.note || "") ? "not on the page: handed off"
       : s.target ? `${s.step} ${s.target.length > 18 ? s.target.slice(0, 18) + "…" : s.target}` : s.step;
     c.title = [s.target, s.note].filter(Boolean).join(" · ");
     route.append(c);
