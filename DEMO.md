@@ -151,7 +151,7 @@ On the second worksheet set the 7B text step answered 44 of the 48 visual or mix
   original page 93/96 for $0.052 (Haiku on both sides).
 - Five unconfigured layouts, 416 questions: all went to a full-page call; Haiku 401 through the router, 397 from
   the original page. The cost difference there comes from the page resolution, not routing.
-- Total API spend for all experiments: $1.4979 of the $10 credit at the key check (message 131); about $1.79 after the worksheet runs.
+- Total API spend: through the resolution tests we can account for about $2.26 of the $10 credit: the $1.4979 key reading (message 131) plus committed worksheet ($0.2955), handwriting ($0.0512) and real-document ($0.4142) run charges. The provider dashboard gives the live balance.
 
 Sources and limits: `docs/NARRATIVE.md` §3. The app's session meter is a per-question **estimate**; the figures
 above are receipts.
