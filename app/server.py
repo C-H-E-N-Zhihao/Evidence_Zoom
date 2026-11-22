@@ -13,6 +13,7 @@ import importlib
 import io
 import json
 import os
+os.environ.setdefault("VISION_CACHE", "1")  # prompt-cache images: follow-up questions on the same crop are ~10% price
 import re
 import threading
 import uuid
