@@ -383,8 +383,7 @@ function addA(data, i, ours) {
   let redEl = null;
   if (red) {
     redEl = document.createElement("div"); redEl.className = "privacy";
-    redEl.textContent = "🔒 Hidden from the model before sending: " + red.note.replace(/^redacted before sending: /, "") +
-      " (found by the local OCR)";
+    redEl.textContent = "Masked OCR-detected lines in the page image sent to the model: " + red.note.replace(/^redacted before sending: /, "");
   }
   const how = document.createElement("details"); how.className = "how";
   const sum = document.createElement("summary"); sum.textContent = "How this was answered";
@@ -396,7 +395,7 @@ function addA(data, i, ours) {
   if (cfg.live && (source === "model" || source === "ocr") && !wholePage) {  // nothing to compare if we sent the page
     const q = data.question || (d.previousElementSibling && d.previousElementSibling.textContent) || "";
     const btn = document.createElement("button"); btn.type = "button"; btn.className = "btn ghost cmp-btn";
-    btn.textContent = "Compare: ask the whole page instead";
+    btn.textContent = "Compare: send the original, unmasked image";
     const out = document.createElement("div"); out.className = "cmp";
     btn.onclick = async () => {
       btn.disabled = true; const t0 = Date.now();
