@@ -30,7 +30,17 @@ ROOT = Path(__file__).parent.parent.absolute()  # not resolve(): keep the mount 
 def _items_for(run: dict):
     p = Path(run["meta"]["items"])
     p = p if p.is_absolute() else ROOT / p
+    if not p.exists() and (p.parent / "items.jsonl").exists():
+        p = p.parent / "items.jsonl"  # an uncommitted subset file: the full set is a superset; results join by question_id
     return load_items(p)
+
+
+def _qids(path: str) -> set[str]:
+    """Question ids of an item file (.jsonl) or of the results in a run JSON."""
+    text = (ROOT / path).read_text()
+    if path.endswith(".json"):
+        return {d.get("question_id") for rep in json.loads(text)["report"].values() for d in rep.get("results", [])}
+    return {json.loads(l)["question_id"] for l in text.splitlines() if l.strip()}
 
 
 def _run_order(items):
@@ -87,8 +97,7 @@ def main() -> None:
     for spec in a.row:
         parts = [s.strip() for s in spec.split("|")]
         label, pat, only = parts[0], parts[1], (parts[2] if len(parts) > 2 and parts[2] else None)
-        keep = ({json.loads(l)["question_id"] for l in (ROOT / parts[3]).read_text().splitlines() if l.strip()}
-                if len(parts) > 3 and parts[3] else None)  # restrict to the questions of another item file
+        keep = _qids(parts[3]) if len(parts) > 3 and parts[3] else None  # restrict to another item file's / run's questions
         paths = sorted(glob.glob(str(ROOT / pat)))
         if not paths:
             lines.append(f"| {label} | (no runs match `{pat}`) | | | | | | | | | | | |")
