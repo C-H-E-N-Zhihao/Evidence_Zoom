@@ -115,18 +115,15 @@ with and without prompt caching. **All costs are estimates** from token arithmet
 
 ## Beyond claim forms: the general assistant (live only)
 
-The mode picker (top left) has four settings.
-- **Auto:** homework fixtures go to the worksheet route. Other images, uploads included, go to the claim-form router, which sends the whole page when no configured template matches.
-- **Claim form router.**
-- **Worksheet: OCR text first.**
-- **Any image: whole page.** On real documents (DocVQA, InfographicVQA, ChartQA samples, `REPORT_realdocs.md`), reading the OCR text first scored lower than the whole page overall. Pick this mode to skip the router and send the whole page; OCR still runs locally for the boxes.
-In Worksheet mode with Haiku, the router runs OCR locally. It sends small images whole when the input-token estimate favors that path. Otherwise the model reads numbered OCR lines and can cite them or ask for pixels. The router sends a band around the cited lines, or the whole page if none are cited. If the model abstains on a band, the router tries the whole page once.
+**One automatic route for every image (no picker).** OCR runs locally first. If it recognises a configured claim-form layout, the router answers printed fields from OCR ($0) or sends the model only the located region. For anything else (receipts, uploads, worksheets), it sends the page as one image, cropped to where OCR found text and downscaled: short side ≥ 768 px, long side ≥ 1024 px, cap 2400 px. On real scans that size scored the same as full resolution at about a third of the cost (`REPORT_realdocs.md`, resolution frontier).
+Example: a 4284×5712 phone photo of a receipt is sent as a 710×2400 crop. Qwen2.5-VL-7B on the laptop read the total and the VAT correctly, and Haiku used ~2.5k input tokens against ~30.6k estimated for the original photo (one receipt, development check).
 
-Live script (about 30 s, Haiku, billed):
-1. Pick **homework · hw-001** and click "Solve problem 1. What is x?". The answer comes from OCR text only, about $0.0001.
-2. Type "Is the circled answer in problem 4 correct? Explain why." The model says OCR is not enough and gets a band crop; the answer includes the arithmetic, about $0.0005.
-3. Switch to form b and ask the same question. The circle has moved, so the answer changes.
+Live script (about 30 s; Haiku billed, or Qwen on the laptop at $0):
+1. Upload a receipt photo (phone picture, any size) and ask "What is the total?". The answer shows the crop that was sent (the text area, downscaled) and its tokens against the original photo.
+2. Ask "How much VAT was paid in total?" on the same photo.
+3. Switch the model (top right) between the cloud model and the on-device Qwen to show the same route at $0.
 
+Earlier worksheet experiments (the text-first route, kept for the record, not used by the app any more):
 Billed results, Haiku on both arms:
 - **Development sheets** (`REPORT_homework_general.md`): route 79/80 at $0.0003 per question; whole page 80/80 at $0.0005.
 - **First held-out set** (`REPORT_homework_v2_heldout.md`, written blind by a subagent): route 83/96, whole page 94/96.
@@ -137,10 +134,9 @@ Billed results, Haiku on both arms:
 - Say: "on new worksheet types, the route matched the whole page at about 70% of the cost, and an earlier version lost (83 vs 94)".
 - Do not say: "more accurate than the whole page" (one question is not evidence) or "the fix explains the difference" (the fix and the dataset both changed between the two runs).
 
-There is no replay for homework questions, so this needs `./scripts/demo-live.sh` or `./scripts/demo-local.sh`.
+Uploads and homework questions have no replay, so they need `./scripts/demo-live.sh` or `./scripts/demo-local.sh` (Ollama: `OLLAMA_CONTEXT_LENGTH=8192 ollama serve`).
 
-With the on-device model (Qwen2.5-VL-7B), General mode skips the OCR-text step and sends the whole page; the answer says so.
-On the second worksheet set the 7B text step answered 44 of the 48 visual or mixed questions from OCR text instead of asking for the image. It scored 53/96 that way, against 75/96 with the whole page (`REPORT_homework_v3_qwen7b.md`, development measurement, not reviewed).
+Why the app does not use text-first any more: small open models answered visual questions from OCR text instead of asking for the image (Qwen 7B 53/96 vs 75/96 with the page, `REPORT_homework_v3_qwen7b.md`). On real documents text-first scored lower overall (`REPORT_realdocs.md`). The cropped, downscaled page avoids both.
 
 ## Measured, billed (OpenRouter receipts; synthetic forms)
 

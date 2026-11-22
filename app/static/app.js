@@ -266,8 +266,11 @@ function explain(data) {
     return `Small on-device models did not reliably tell when OCR text is not enough (measured on Qwen2.5-VL-7B), so this one was sent the whole page ` +
       `(${size}, ~${inTok} input tokens${est}); OCR still ran locally for the green boxes.`;
   if (t === "full page")
-    return `No configured layout covers this question, so the whole page was sent (${size}, ~${inTok} input tokens${est}).` +
-      (r.abstained && !r.error ? " The model reported that the answer is not on the form, instead of inventing one." : "");
+    return `No configured form layout covers this question, so the page was sent as one image: cropped to where OCR found ` +
+      `text and downscaled to ${size} (~${inTok} input tokens${est} instead of ~${pageTok} (estimated) for the original ` +
+      `image, ${pageTok ? Math.max(0, Math.round((1 - inTok / pageTok) * 100)) : 0}% fewer). On real scans this size scored ` +
+      `the same as full resolution.` +
+      (r.abstained && !r.error ? " The model reported that the answer is not in the image, instead of inventing one." : "");
   return `A model chose the region to inspect (${t}).`;
 }
 
